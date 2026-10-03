@@ -432,3 +432,84 @@ O Analista IA hoje cobre a análise de cada incidente; as listas abaixo são can
 - **Experimento para o TCC:** comparar IA na nuvem (Gemini) e IA local (Ollama) em qualidade, tempo e custo.
 - **Avaliação da IA:** botão "útil / não útil" em cada análise, gerando métricas de precisão para a monografia.
 - **Testes de falha agendados:** derrubar a fibra de propósito toda semana, com aprovação, e medir se a redundância continua funcionando.
+
+## 13. Guia de acesso: tudo o que existe e como acessar
+
+Esta seção reúne, num lugar só, cada serviço, endereço, usuário e onde fica cada credencial em 03/10/2026. A coluna **Senha** está em branco de propósito: preencha você mesmo, se quiser, e nunca copie esta seção preenchida para o GitHub.
+
+### Endereços e acessos
+
+Do notebook use sempre os endereços `192.168.137.x` (rede interna do VMware, funcionam com ou sem a bancada). Da rede da empresa (Matriz ou Filial) use `192.168.10.50`.
+
+| O quê | Endereço | Usuário | Senha | Onde a senha está / como obter |
+| --- | --- | --- | --- | --- |
+| Zabbix (web) | `http://192.168.137.50/zabbix` · `http://192.168.10.50/zabbix` | `Admin` |  | A que você definiu; se nunca trocou, ainda é a padrão de instalação do Zabbix (trocar!) |
+| Mapa da topologia | `http://192.168.137.50/zabbix/zabbix.php?action=map.view&sysmapid=2` | `Admin` |  | Mesma do Zabbix |
+| Grafana — TV do NOC (sem login) | `http://192.168.137.50:3000/d/noc-redundancia?kiosk` | visitante | — | Somente leitura, não pede senha |
+| Grafana — administração | `http://192.168.137.50:3000` | `admin` |  | Na VM: `cat /root/.grafana_admin` (gerada aleatoriamente) |
+| Página de status | `http://192.168.137.50/status` · `http://192.168.10.50/status` | — | — | Pública na rede, sem login |
+| VM — SSH | `ssh aluno@192.168.137.50` | `aluno` |  | Senha do usuário criada na instalação do Debian |
+| VM — administrador | `su -` dentro da sessão SSH | `root` |  | Senha de root criada na instalação do Debian |
+| VM — SSH por chave (sem senha) | `ssh -i ~/.ssh/id_ed25519_zabbix root@192.168.137.50` | `root` | — | Chave `id_ed25519_zabbix` na pasta `.ssh` do seu usuário no notebook |
+| VM — console | Janela da VM no VMware Workstation | `aluno` / `root` |  | Mesmas senhas acima |
+| Banco do Zabbix (MariaDB) | `localhost:3306`, base `zabbix` | `zabbix` |  | Na VM: `grep DBPassword /etc/zabbix/zabbix_server.conf` |
+| R-MATRIZ (Winbox/SSH) | `192.168.10.1` | `admin_senai` |  | A definida no script `r-matriz.rsc` ao colar (`<SENHA_ADMIN_MATRIZ>`) |
+| R-FILIAL (Winbox/SSH) | `192.168.20.1` | `admin_senai` |  | A definida no script `r-filial.rsc` ao colar (`<SENHA_ADMIN_FILIAL>`) |
+| R-FILIAL — usuário da IA | `192.168.20.1` (SSH) | `zabbix-ia` (somente leitura) |  | Login por chave (`/root/.ssh/id_ed25519_mikrotik` na VM); senha = a que você colocar no lugar de `TROQUE_POR_UMA_SENHA_FORTE` |
+| SW-MATRIZ / SW-FILIAL (se gerenciáveis) | `192.168.10.2` / `192.168.20.2` | `admin_senai` |  | Mesma do roteador do lado correspondente |
+| Rádios P2P (interface web) | `http://10.0.2.3` (Matriz) / `http://10.0.2.4` (Filial) | conforme o fabricante |  | Definida na configuração web dos rádios |
+| SNMP do R-FILIAL | `192.168.20.1:161`, v2c | comunidade `public_senai` | — | Macro `{$SNMP_COMMUNITY}` no host R-FILIAL |
+
+### Credenciais guardadas na VM (todas `chmod 600`, só o root lê)
+
+| Arquivo | O que é | Para que serve |
+| --- | --- | --- |
+| `/root/.zabbix_token` | Token da API do Zabbix do usuário Admin | Scripts de configuração e ferramentas da IA |
+| `/root/.zabbix_token_analista` | Token do usuário `noc-analista` | Publicar o comentário da IA nos eventos |
+| `/etc/grafana/provisioning/datasources/zabbix.yaml` | Token do usuário `grafana-leitura` | Grafana ler o Zabbix |
+| `/root/.gemini_key` | Chave da API do Google Gemini | Analista IA |
+| `/root/.grafana_admin` e `/etc/grafana/admin_password` | Senha do `admin` do Grafana | Login de administração |
+| `/root/.ssh/id_ed25519_mikrotik` | Chave SSH do analista | Consultas de leitura no R-FILIAL |
+| `/etc/zabbix/zabbix_server.conf` (`DBPassword`) | Senha do banco | Zabbix server falar com o MariaDB |
+| Mídia "Gmail Alertas SENAI" (banco do Zabbix) | Senha de app do Gmail | Envio de e-mail; o Zabbix não a exibe de volta |
+
+Para trocar um token do Zabbix: crie outro em *Users > API tokens* e grave no arquivo com `echo "NOVO" > /root/.zabbix_token && chmod 600 /root/.zabbix_token`. Para trocar a senha de app do Gmail: gere outra em myaccount.google.com/apppasswords e edite a mídia em *Alerts > Media types*.
+
+### Contas e serviços externos
+
+| Serviço | Conta | Onde gerenciar | Observação |
+| --- | --- | --- | --- |
+| Google (envio e recebimento dos alertas) | `matheus.ziravello@aluno.senai.br` | myaccount.google.com/apppasswords | Senha de app "Zabbix NOC" usada pelo Zabbix |
+| Google AI Studio (Gemini) | Sua conta Google | aistudio.google.com > API keys | Camada gratuita, sem cartão |
+| GitHub | `MathZiraA` | https://github.com/MathZiraA/noc-senai-tcc | Repositório **privado** com todo o código e esta documentação (sem senhas) |
+| GitHub CLI no notebook | `MathZiraA` | `gh auth status` | Login feito em 03/10/2026, guardado no cofre do Windows |
+| Esta documentação | Sua conta Claude | Link deste documento | Privada até você compartilhar |
+| Anthropic (Claude API) | — | console.anthropic.com | Não usada (paga); o código aceita se um dia existir `/root/.anthropic_key` |
+
+### Inventário completo
+
+| Onde | O que existe |
+| --- | --- |
+| Zabbix — hosts e grupos | Host `R-FILIAL` no grupo "Rede SENAI - Equipamentos", template "Mikrotik by SNMP" |
+| Zabbix — itens criados | 10: estado, latência e perda de cada enlace, caminho ativo, alcance da LAN (1 s), tempo de failover |
+| Zabbix — triggers criados | 9 (seção 4) |
+| Zabbix — ações | "Notificação NOC - Redundância e Enlaces" e "Analista IA - Investigação de incidentes" ativas; "Notificação de Redundância - Link Fibra/Rádio" desativada |
+| Zabbix — tipos de mídia | "Gmail Alertas SENAI" (e-mail) e "Analista IA" (webhook) |
+| Zabbix — usuários | `Admin`, `noc-analista` (comenta eventos), `grafana-leitura` (leitura); os dois últimos no grupo "NOC Automação", sem acesso ao site |
+| Zabbix — dashboards e mapa | "NOC - Monitoramento de Redundância (OFICIAL)" (3 páginas) e mapa "Topologia NOC SENAI - Fibra x Rádio" |
+| Zabbix — manutenção | "Montagem da bancada - TCC", encerra sozinha quando um enlace responder |
+| Grafana | Painel "NOC - Redundância Fibra x Rádio" (pasta NOC SENAI), fonte "Zabbix NOC", plugin Zabbix 6.8.0 |
+| Serviços na VM | `zabbix-server`, `zabbix-agent2`, `apache2`, `mariadb`, `grafana-server`, `noc-analista` (todos iniciam sozinhos) |
+| Tarefas agendadas (cron, a cada minuto) | `noc-fim-manutencao`, `noc-failover`, `noc-status` em `/etc/cron.d/` |
+| Logs | `/var/log/zabbix/`, `journalctl -u noc-analista`, `/var/log/noc_*.log` |
+| Relatórios da IA | `/var/lib/noc-analista/` |
+| Código | `/root/noc` na VM · `Documents\Claude\noc-senai-tcc` no notebook · GitHub |
+| Backups | Tabela de partições antiga em `/root/sda-particoes-antes.sfdisk`; scripts antigos em `/root/scripts-antigos/` |
+
+### Pendências antes da apresentação
+
+- [ ] Montar a bancada e seguir o checklist da seção 9
+- [ ] Rodar o roteiro de testes de failover e guardar os e-mails e prints para a monografia
+- [ ] Conferir o mapa da topologia com a rede no ar (rótulos de latência)
+- [ ] Trocar a senha do Admin do Zabbix, se ainda for a padrão
+- [ ] Revogar a senha de app do Gmail exposta em chat e trocar a senha pessoal do Gmail
