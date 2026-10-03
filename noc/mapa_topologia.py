@@ -2,7 +2,9 @@
 
 Visual: fundo e ícones gerados por mapa_visual.py (pasta mapa/), enviados ao Zabbix como imagens.
 Enlaces mudam de cor pelos triggers: verde = normal, vermelho = caído, laranja = perda/instável,
-amarelo = previsão de piora. O R-FILIAL e as antenas trocam para o ícone vermelho quando há problema.
+amarelo = previsão de piora. O R-FILIAL troca para o ícone vermelho quando tem problema.
+(Rótulos com expressões como {?last(...)*1000} não são renderizados pelo mapa do Zabbix 7.0: a latência
+fica no dashboard e no Grafana.)
 """
 import base64
 from pathlib import Path
@@ -49,9 +51,10 @@ def pos(cx, cy):
     return {"x": cx - ICONE // 2, "y": cy - ICONE // 2}
 
 
-def imagem(sid, icone, cx, cy, rotulo):
+def imagem(sid, icone, cx, cy, rotulo, lado=0):
+    """lado do rótulo: 0 = embaixo, 1 = esquerda, 2 = direita, 3 = em cima."""
     return {"selementid": sid, "elementtype": 4, "iconid_off": img[icone], "label": rotulo,
-            "label_location": 0, **pos(cx, cy)}
+            "label_location": lado, **pos(cx, cy)}
 
 
 def com_estado(sid, tipo, elementos, icone, cx, cy, rotulo):
@@ -65,28 +68,25 @@ def ligacao(a, b, gatilhos=(), rotulo="", tracejado=False):
             "linktriggers": [{"triggerid": i, "drawtype": 4 if tracejado else 2, "color": cor} for i, cor in gatilhos]}
 
 
-ANTENAS = [{"triggerid": i} for i in (RADIO_CAIU, RADIO_PERDA, RADIO_PREV)]
 selements = [
-    # Matriz (zona azul, x 30-520)
-    imagem("pcm", "pcs", 170, 215, "PCs da Matriz"),
+    # Matriz (zona azul, x 30-520). Antenas sem estado próprio: o estado do rádio está na cor da linha
+    imagem("pcm", "pcs", 170, 215, "PCs da Matriz", lado=2),
     imagem("swm", "switch", 170, 330, "SW-MATRIZ"),
     imagem("zbx", "servidor", 170, 520, "Zabbix NOC + IA\n192.168.10.50"),
     imagem("rm", "roteador", 400, 330, "R-MATRIZ\n192.168.10.1"),
-    com_estado("am", 2, ANTENAS, "antena", 400, 555, "Rádio Matriz\n10.0.2.3"),
+    imagem("am", "antena", 400, 555, "Rádio Matriz\n10.0.2.3"),
     # Filial (zona verde, x 880-1370)
     com_estado("rf", 0, [{"hostid": hostid}], "roteador", 1000, 330, "R-FILIAL\n192.168.20.1"),
-    com_estado("af", 2, ANTENAS, "antena", 1000, 555, "Rádio Filial\n10.0.2.4"),
+    imagem("af", "antena", 1000, 555, "Rádio Filial\n10.0.2.4"),
     imagem("swf", "switch", 1230, 330, "SW-FILIAL"),
-    imagem("pcf", "pcs", 1230, 215, "PCs da Filial"),
+    imagem("pcf", "pcs", 1230, 215, "PCs da Filial", lado=1),
 ]
-LAT = "{{?last(/R-FILIAL/icmppingsec[%s,3,,,500])*1000}.fmtnum(1)} ms"
 radio = [(RADIO_CAIU, VERMELHO), (ISOLADA, VERMELHO), (RADIO_PERDA, LARANJA), (RADIO_LAT, LARANJA),
          (RADIO_PREV, AMARELO), (RADIO_NORMAL, AMARELO)]
 links = [
     ligacao("pcm", "swm"), ligacao("zbx", "swm"), ligacao("swm", "rm"),
-    ligacao("rm", "rf", [(FIBRA_CAIU, VERMELHO), (ISOLADA, VERMELHO), (FIBRA_INSTAVEL, LARANJA)],
-            LAT % "10.0.1.2"),
-    ligacao("rm", "am", radio), ligacao("am", "af", radio, LAT % "10.0.2.2", tracejado=True), ligacao("af", "rf", radio),
+    ligacao("rm", "rf", [(FIBRA_CAIU, VERMELHO), (ISOLADA, VERMELHO), (FIBRA_INSTAVEL, LARANJA)]),
+    ligacao("rm", "am", radio), ligacao("am", "af", radio, tracejado=True), ligacao("af", "rf", radio),
     ligacao("rf", "swf"), ligacao("swf", "pcf"),
 ]
 
