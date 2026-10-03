@@ -90,9 +90,12 @@ links = [
     ligacao("rf", "swf"), ligacao("swf", "pcf"),
 ]
 
-for antigo in call("map.get", {"filter": {"name": [NOME]}, "output": ["sysmapid"]}):
-    call("map.delete", [antigo["sysmapid"]])
-mapa = call("map.create", {"name": NOME, "width": 1400, "height": 790, "backgroundid": fundo,
-                           "highlight": 0, "expandproblem": 0, "markelements": 0, "label_type": 0,
-                           "label_location": 0, "selements": selements, "links": links})["sysmapids"][0]
-print(f"[ok] mapa criado (id {mapa})")
+config = {"name": NOME, "width": 1400, "height": 790, "backgroundid": fundo, "highlight": 0, "expandproblem": 0,
+          "markelements": 0, "label_type": 0, "label_location": 0, "selements": selements, "links": links}
+existente = call("map.get", {"filter": {"name": [NOME]}, "output": ["sysmapid"]})
+if existente:  # atualiza no lugar: o id (e o endereço do mapa) não muda
+    mapa = existente[0]["sysmapid"]
+    call("map.update", {"sysmapid": mapa, **config})
+else:
+    mapa = call("map.create", config)["sysmapids"][0]
+print(f"[ok] mapa pronto: http://192.168.137.50/zabbix/zabbix.php?action=map.view&sysmapid={mapa}")
