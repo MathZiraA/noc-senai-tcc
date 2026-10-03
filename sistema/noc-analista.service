@@ -1,0 +1,13 @@
+[Unit]
+Description=Analista NOC com IA para o Zabbix
+After=network-online.target zabbix-server.service
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/root/noc
+ExecStart=/opt/noc-analista/bin/python /root/noc/analista.py --servico
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

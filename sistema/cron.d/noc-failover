@@ -1,0 +1,1 @@
+* * * * * root cd /root/noc && /opt/noc-analista/bin/python failover_registro.py >> /var/log/noc_failover.log 2>&1

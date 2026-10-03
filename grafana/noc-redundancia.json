@@ -1,0 +1,907 @@
+{
+ "uid": "noc-redundancia",
+ "title": "NOC - Redundância Fibra x Rádio",
+ "tags": [
+  "NOC",
+  "TCC"
+ ],
+ "timezone": "browser",
+ "refresh": "10s",
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "schemaVersion": 39,
+ "editable": false,
+ "graphTooltip": 1,
+ "panels": [
+  {
+   "id": 1,
+   "type": "stat",
+   "title": "CAMINHO ATIVO MATRIZ ↔ FILIAL",
+   "datasource": {
+    "type": "alexanderzobnin-zabbix-datasource",
+    "uid": "zabbix-noc"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/^Caminho ativo/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "mappings": [
+      {
+       "type": "range",
+       "options": {
+        "from": 1.5,
+        "to": 3.5,
+        "result": {
+         "text": "FIBRA",
+         "color": "green",
+         "index": 0
+        }
+       }
+      },
+      {
+       "type": "range",
+       "options": {
+        "from": 0.5,
+        "to": 1.5,
+        "result": {
+         "text": "RÁDIO (failover)",
+         "color": "orange",
+         "index": 1
+        }
+       }
+      },
+      {
+       "type": "range",
+       "options": {
+        "from": -0.5,
+        "to": 0.5,
+        "result": {
+         "text": "FILIAL ISOLADA",
+         "color": "red",
+         "index": 2
+        }
+       }
+      }
+     ],
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 0.5
+       },
+       {
+        "color": "green",
+        "value": 1.5
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   }
+  },
+  {
+   "id": 2,
+   "type": "stat",
+   "title": "FIBRA (principal)",
+   "datasource": {
+    "type": "alexanderzobnin-zabbix-datasource",
+    "uid": "zabbix-noc"
+   },
+   "gridPos": {
+    "x": 6,
+    "y": 0,
+    "w": 5,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/^Enlace FIBRA - estado/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "mappings": [
+      {
+       "type": "range",
+       "options": {
+        "from": 0.5,
+        "to": 1.5,
+        "result": {
+         "text": "UP",
+         "color": "green",
+         "index": 0
+        }
+       }
+      },
+      {
+       "type": "range",
+       "options": {
+        "from": -0.5,
+        "to": 0.5,
+        "result": {
+         "text": "DOWN",
+         "color": "red",
+         "index": 1
+        }
+       }
+      }
+     ],
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   }
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "RÁDIO (backup)",
+   "datasource": {
+    "type": "alexanderzobnin-zabbix-datasource",
+    "uid": "zabbix-noc"
+   },
+   "gridPos": {
+    "x": 11,
+    "y": 0,
+    "w": 5,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/^Enlace RÁDIO - estado/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "mappings": [
+      {
+       "type": "range",
+       "options": {
+        "from": 0.5,
+        "to": 1.5,
+        "result": {
+         "text": "UP",
+         "color": "green",
+         "index": 0
+        }
+       }
+      },
+      {
+       "type": "range",
+       "options": {
+        "from": -0.5,
+        "to": 0.5,
+        "result": {
+         "text": "DOWN",
+         "color": "red",
+         "index": 1
+        }
+       }
+      }
+     ],
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   }
+  },
+  {
+   "id": 4,
+   "type": "stat",
+   "title": "Latência FIBRA",
+   "datasource": {
+    "type": "alexanderzobnin-zabbix-datasource",
+    "uid": "zabbix-noc"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 0,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/^Enlace FIBRA - latência/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "decimals": 1,
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "sem resposta",
+         "color": "text",
+         "index": 0
+        }
+       }
+      }
+     ],
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "yellow",
+        "value": 0.02
+       },
+       {
+        "color": "red",
+        "value": 0.05
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   }
+  },
+  {
+   "id": 5,
+   "type": "stat",
+   "title": "Latência RÁDIO",
+   "datasource": {
+    "type": "alexanderzobnin-zabbix-datasource",
+    "uid": "zabbix-noc"
+   },
+   "gridPos": {
+    "x": 20,
+    "y": 0,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/^Enlace RÁDIO - latência/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "decimals": 1,
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "sem resposta",
+         "color": "text",
+         "index": 0
+        }
+       }
+      }
+     ],
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "yellow",
+        "value": 0.02
+       },
+       {
+        "color": "red",
+        "value": 0.05
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   }
+  },
+  {
+   "id": 6,
+   "type": "state-timeline",
+   "title": "LINHA DO TEMPO DOS ENLACES — cada troca de cor é uma queda ou retorno",
+   "datasource": {
+    "type": "alexanderzobnin-zabbix-datasource",
+    "uid": "zabbix-noc"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 5,
+    "w": 24,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/^Enlace FIBRA - estado/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    },
+    {
+     "refId": "B",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/^Enlace RÁDIO - estado/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "mappings": [
+      {
+       "type": "range",
+       "options": {
+        "from": 0.5,
+        "to": 1.5,
+        "result": {
+         "text": "UP",
+         "color": "green",
+         "index": 0
+        }
+       }
+      },
+      {
+       "type": "range",
+       "options": {
+        "from": -0.5,
+        "to": 0.5,
+        "result": {
+         "text": "DOWN",
+         "color": "red",
+         "index": 1
+        }
+       }
+      }
+     ],
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": ".*FIBRA.*"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Fibra"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": ".*RÁDIO.*"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Rádio"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showValue": "auto",
+    "mergeValues": true,
+    "rowHeight": 0.8,
+    "legend": {
+     "showLegend": false
+    }
+   }
+  },
+  {
+   "id": 7,
+   "type": "timeseries",
+   "title": "Latência Fibra x Rádio",
+   "datasource": {
+    "type": "alexanderzobnin-zabbix-datasource",
+    "uid": "zabbix-noc"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 11,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/^Enlace FIBRA - latência/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    },
+    {
+     "refId": "B",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/^Enlace RÁDIO - latência/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "min": 0,
+     "custom": {
+      "fillOpacity": 10,
+      "lineWidth": 2,
+      "axisSoftMax": 0.05
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": ".*FIBRA.*"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Fibra"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": ".*RÁDIO.*"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Rádio"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 8,
+   "type": "timeseries",
+   "title": "Tráfego: no failover ele sai da Fibra (ether2) e vai para o Rádio (ether3)",
+   "datasource": {
+    "type": "alexanderzobnin-zabbix-datasource",
+    "uid": "zabbix-noc"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 11,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/ether2.*Bits/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    },
+    {
+     "refId": "B",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "0",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/^R-FILIAL/"
+     },
+     "itemTag": {
+      "filter": ""
+     },
+     "item": {
+      "filter": "/ether3.*Bits/"
+     },
+     "functions": [],
+     "options": {
+      "showDisabledItems": false
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bps",
+     "custom": {
+      "fillOpacity": 15,
+      "lineWidth": 2
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 9,
+   "type": "alexanderzobnin-zabbix-triggers-panel",
+   "title": "PROBLEMAS (com comentários da IA)",
+   "datasource": {
+    "type": "alexanderzobnin-zabbix-datasource",
+    "uid": "zabbix-noc"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 19,
+    "w": 24,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "alexanderzobnin-zabbix-datasource",
+      "uid": "zabbix-noc"
+     },
+     "queryType": "5",
+     "group": {
+      "filter": "Rede SENAI - Equipamentos"
+     },
+     "host": {
+      "filter": "/.*/"
+     },
+     "proxy": {
+      "filter": ""
+     },
+     "application": {
+      "filter": ""
+     },
+     "trigger": {
+      "filter": ""
+     },
+     "tags": {
+      "filter": ""
+     },
+     "options": {
+      "minSeverity": 0,
+      "acknowledged": 2,
+      "sortProblems": "default",
+      "hostsInMaintenance": true,
+      "showProblems": "problems",
+      "limit": 100
+     }
+    }
+   ],
+   "options": {
+    "layout": "table",
+    "showTags": true,
+    "hostField": true,
+    "severityField": true,
+    "ackField": true,
+    "ageField": true,
+    "descriptionField": true
+   }
+  }
+ ]
+}

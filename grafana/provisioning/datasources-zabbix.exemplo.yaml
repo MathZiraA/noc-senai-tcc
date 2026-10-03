@@ -1,0 +1,19 @@
+# Exemplo da fonte de dados do Grafana. O arquivo real (/etc/grafana/provisioning/datasources/zabbix.yaml)
+# é gerado por noc/setup_grafana.py com o token do usuário "grafana-leitura" e NÃO vai para o repositório.
+apiVersion: 1
+datasources:
+  - name: Zabbix NOC
+    type: alexanderzobnin-zabbix-datasource
+    uid: zabbix-noc
+    access: proxy
+    url: http://localhost/zabbix/api_jsonrpc.php
+    isDefault: true
+    editable: false
+    jsonData:
+      authType: token
+      trends: true
+      trendsFrom: 7d
+      trendsRange: 4d
+      cacheTTL: 30s
+    secureJsonData:
+      apiToken: <TOKEN_DO_USUARIO_grafana-leitura>
