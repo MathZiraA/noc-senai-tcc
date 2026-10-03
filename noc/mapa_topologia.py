@@ -1,13 +1,35 @@
 """Cria o mapa "Topologia NOC SENAI - Fibra x Rádio" no Zabbix (recria se já existir).
-Os enlaces mudam de cor pelos triggers: verde = normal, vermelho = caído, laranja = perda/instável,
-amarelo = previsão de degradação. O R-FILIAL e as antenas acendem conforme os problemas."""
+
+Visual: fundo e ícones gerados por mapa_visual.py (pasta mapa/), enviados ao Zabbix como imagens.
+Enlaces mudam de cor pelos triggers: verde = normal, vermelho = caído, laranja = perda/instável,
+amarelo = previsão de piora. O R-FILIAL e as antenas trocam para o ícone vermelho quando há problema.
+"""
+import base64
+from pathlib import Path
+
 from zbx import call
 
 NOME = "Topologia NOC SENAI - Fibra x Rádio"
 HOST = "R-FILIAL"
-VERDE, VERMELHO, LARANJA, AMARELO, CINZA = "2E7D32", "D32F2F", "F57C00", "F9A825", "607D8B"
+PASTA = Path(__file__).parent / "mapa"
+VERDE, VERMELHO, LARANJA, AMARELO, CINZA = "3FB58A", "E5484D", "F2A33A", "E6C229", "9AA5B1"
+ICONE = 96  # lado dos ícones em px; posição no Zabbix = canto superior esquerdo
 
-img = {i["name"]: i["imageid"] for i in call("image.get", {"output": ["name"], "filter": {"imagetype": 1}})}
+
+def enviar_imagem(nome, tipo):
+    """Cria ou atualiza a imagem no Zabbix (tipo 1 = ícone, 2 = fundo) e devolve o imageid."""
+    dados = base64.b64encode((PASTA / f"{nome}.png").read_bytes()).decode()
+    existente = call("image.get", {"filter": {"name": [nome]}, "output": ["imageid"]})
+    if existente:
+        call("image.update", {"imageid": existente[0]["imageid"], "image": dados})
+        return existente[0]["imageid"]
+    return call("image.create", {"name": nome, "imagetype": tipo, "image": dados})["imageids"][0]
+
+
+fundo = enviar_imagem("NOC_fundo_topologia", 2)
+img = {f"{t}{s}": enviar_imagem(f"NOC_{t}{s}", 1)
+       for t in ("roteador", "switch", "antena", "servidor", "pcs") for s in ("", "_alerta")}
+
 hostid = call("host.get", {"filter": {"host": [HOST]}, "output": ["hostid"]})[0]["hostid"]
 trg = {t["description"]: t["triggerid"] for t in call("trigger.get", {"hostids": hostid, "inherited": False,
                                                                       "output": ["description"]})}
@@ -23,61 +45,54 @@ FIBRA_INSTAVEL, RADIO_LAT, RADIO_PREV = t("Link FIBRA instável"), t("Latência 
 RADIO_NORMAL, RADIO_PERDA = t("RÁDIO acima do normal"), t("RÁDIO com perda")
 
 
-def imagem(sid, nome_img, x, y, rotulo):
-    return {"selementid": sid, "elementtype": 4, "iconid_off": img[nome_img], "x": x, "y": y, "label": rotulo,
-            "label_location": 0}
+def pos(cx, cy):
+    return {"x": cx - ICONE // 2, "y": cy - ICONE // 2}
 
 
-def gatilhos(sid, nome_img, x, y, rotulo, ids):
-    return {"selementid": sid, "elementtype": 2, "elements": [{"triggerid": i} for i in ids],
-            "iconid_off": img[nome_img], "x": x, "y": y, "label": rotulo, "label_location": 0}
+def imagem(sid, icone, cx, cy, rotulo):
+    return {"selementid": sid, "elementtype": 4, "iconid_off": img[icone], "label": rotulo,
+            "label_location": 0, **pos(cx, cy)}
 
 
-def ligacao(a, b, rotulo, gat):
-    return {"selementid1": a, "selementid2": b, "drawtype": 2, "color": VERDE, "label": rotulo,
-            "linktriggers": [{"triggerid": i, "drawtype": 2, "color": cor} for i, cor in gat]}
+def com_estado(sid, tipo, elementos, icone, cx, cy, rotulo):
+    """Elemento ligado a host (0) ou triggers (2): troca para o ícone vermelho quando há problema."""
+    return {"selementid": sid, "elementtype": tipo, "elements": elementos, "iconid_off": img[icone],
+            "iconid_on": img[f"{icone}_alerta"], "label": rotulo, "label_location": 0, **pos(cx, cy)}
 
 
-LAT = "{{?last(/R-FILIAL/icmppingsec[%s,3,,,500])*1000}.fmtnum(1)} ms"
+def ligacao(a, b, gatilhos=(), rotulo="", tracejado=False):
+    return {"selementid1": a, "selementid2": b, "drawtype": 4 if tracejado else 2, "color": VERDE, "label": rotulo,
+            "linktriggers": [{"triggerid": i, "drawtype": 4 if tracejado else 2, "color": cor} for i, cor in gatilhos]}
+
+
+ANTENAS = [{"triggerid": i} for i in (RADIO_CAIU, RADIO_PERDA, RADIO_PREV)]
 selements = [
-    imagem("zbx", "Zabbix_server_2D_(64)", 70, 120, "Zabbix NOC + Analista IA\n192.168.10.50"),
-    imagem("swm", "Switch_(64)", 70, 330, "SW-MATRIZ\n192.168.10.0/24"),
-    imagem("rm", "Router_(96)", 330, 300, "R-MATRIZ\n192.168.10.1"),
-    {"selementid": "rf", "elementtype": 0, "elements": [{"hostid": hostid}], "iconid_off": img["Router_(96)"],
-     "x": 790, "y": 300, "label": "R-FILIAL\n192.168.20.1", "label_location": 0},
-    imagem("swf", "Switch_(64)", 1060, 330, "SW-FILIAL\n192.168.20.0/24"),
-    gatilhos("am", "Satellite_antenna_(64)", 450, 500, "RADIO-P2P-MATRIZ\n10.0.2.3",
-             [RADIO_CAIU, RADIO_PERDA, RADIO_PREV]),
-    gatilhos("af", "Satellite_antenna_(64)", 700, 500, "RADIO-P2P-FILIAL\n10.0.2.4",
-             [RADIO_CAIU, RADIO_PERDA, RADIO_PREV]),
+    # Matriz (zona azul, x 30-520)
+    imagem("pcm", "pcs", 170, 215, "PCs da Matriz"),
+    imagem("swm", "switch", 170, 330, "SW-MATRIZ"),
+    imagem("zbx", "servidor", 170, 520, "Zabbix NOC + IA\n192.168.10.50"),
+    imagem("rm", "roteador", 400, 330, "R-MATRIZ\n192.168.10.1"),
+    com_estado("am", 2, ANTENAS, "antena", 400, 555, "Rádio Matriz\n10.0.2.3"),
+    # Filial (zona verde, x 880-1370)
+    com_estado("rf", 0, [{"hostid": hostid}], "roteador", 1000, 330, "R-FILIAL\n192.168.20.1"),
+    com_estado("af", 2, ANTENAS, "antena", 1000, 555, "Rádio Filial\n10.0.2.4"),
+    imagem("swf", "switch", 1230, 330, "SW-FILIAL"),
+    imagem("pcf", "pcs", 1230, 215, "PCs da Filial"),
 ]
+LAT = "{{?last(/R-FILIAL/icmppingsec[%s,3,,,500])*1000}.fmtnum(1)} ms"
 radio = [(RADIO_CAIU, VERMELHO), (ISOLADA, VERMELHO), (RADIO_PERDA, LARANJA), (RADIO_LAT, LARANJA),
          (RADIO_PREV, AMARELO), (RADIO_NORMAL, AMARELO)]
 links = [
-    ligacao("zbx", "swm", "", []),
-    ligacao("swm", "rm", "LAN", []),
-    ligacao("rm", "rf", "FIBRA (principal, OSPF 10) 10.0.1.0/30\n" + LAT % "10.0.1.2",
-            [(FIBRA_CAIU, VERMELHO), (ISOLADA, VERMELHO), (FIBRA_INSTAVEL, LARANJA)]),
-    ligacao("rm", "am", "", radio),
-    ligacao("am", "af", "RÁDIO (backup, OSPF 100) 10.0.2.0/29\n" + LAT % "10.0.2.2", radio),
-    ligacao("af", "rf", "", radio),
-    ligacao("rf", "swf", "LAN", []),
-]
-shapes = [
-    {"type": 0, "x": 20, "y": 10, "width": 1170, "height": 40, "text": "REDE SENAI — MATRIZ x FILIAL (tempo real)",
-     "font_size": 16, "font_color": "FFFFFF", "background_color": "37474F", "border_type": 0},
-    {"type": 0, "x": 20, "y": 70, "width": 450, "height": 400, "text": "MATRIZ", "text_valign": 2,
-     "font_size": 12, "font_color": CINZA, "border_type": 2, "border_color": CINZA, "border_width": 1},
-    {"type": 0, "x": 690, "y": 70, "width": 500, "height": 400, "text": "FILIAL", "text_valign": 2,
-     "font_size": 12, "font_color": CINZA, "border_type": 2, "border_color": CINZA, "border_width": 1},
-    {"type": 0, "x": 20, "y": 590, "width": 1170, "height": 30, "font_size": 10, "font_color": CINZA,
-     "border_type": 0, "text": "Enlaces: verde = normal | vermelho = caído | laranja = perda de pacotes ou "
-                               "instável | amarelo = previsão de degradação"},
+    ligacao("pcm", "swm"), ligacao("zbx", "swm"), ligacao("swm", "rm"),
+    ligacao("rm", "rf", [(FIBRA_CAIU, VERMELHO), (ISOLADA, VERMELHO), (FIBRA_INSTAVEL, LARANJA)],
+            LAT % "10.0.1.2"),
+    ligacao("rm", "am", radio), ligacao("am", "af", radio, LAT % "10.0.2.2", tracejado=True), ligacao("af", "rf", radio),
+    ligacao("rf", "swf"), ligacao("swf", "pcf"),
 ]
 
 for antigo in call("map.get", {"filter": {"name": [NOME]}, "output": ["sysmapid"]}):
     call("map.delete", [antigo["sysmapid"]])
-mapa = call("map.create", {"name": NOME, "width": 1210, "height": 640, "highlight": 1, "expandproblem": 1,
-                           "markelements": 1, "show_unack": 0, "label_type": 0, "label_location": 0,
-                           "selements": selements, "links": links, "shapes": shapes})["sysmapids"][0]
+mapa = call("map.create", {"name": NOME, "width": 1400, "height": 790, "backgroundid": fundo,
+                           "highlight": 0, "expandproblem": 0, "markelements": 0, "label_type": 0,
+                           "label_location": 0, "selements": selements, "links": links})["sysmapids"][0]
 print(f"[ok] mapa criado (id {mapa})")
