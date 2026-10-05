@@ -7,9 +7,10 @@
 """
 import secrets
 
+import config
 from zbx import TOKEN_ANALISTA, call
 
-GRUPO = "Rede SENAI - Equipamentos"
+GRUPO = config.GRUPO
 GRUPO_USUARIOS = "NOC Automação"
 USUARIO = "noc-analista"
 MIDIA_WEBHOOK = "Analista IA"

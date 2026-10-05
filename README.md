@@ -26,29 +26,24 @@ Projeto de TCC (SENAI 2026): rede Matriz/Filial com dois enlaces (fibra principa
 - **E-mail** via Gmail: alerta, análise da IA e normalização.
 - **Analista IA:** Google Gemini (camada gratuita) com 6 ferramentas somente leitura; Claude opcional.
 
-## Instalação resumida (na VM, como root)
+## Instalação num servidor novo (Debian 12, como root)
+
+Um comando monta tudo: Zabbix 7.0, banco, Apache, HTTPS com CA própria, Grafana, Analista IA, e-mail, dashboards, mapa, página de status, backup diário e tarefas agendadas.
 
 ```bash
-# 1. Python para a IA e os scripts
-apt install -y python3-venv snmp
-python3 -m venv /opt/noc-analista && /opt/noc-analista/bin/pip install anthropic google-genai
-
-# 2. Copiar noc/ para /root/noc e gravar as credenciais (nunca no código)
-echo "TOKEN_API_ZABBIX" > /root/.zabbix_token && chmod 600 /root/.zabbix_token
-echo "CHAVE_GEMINI"     > /root/.gemini_key   && chmod 600 /root/.gemini_key
-
-# 3. Configurar o Zabbix (todos os scripts podem ser rodados de novo sem duplicar nada)
-cd /root/noc
-/opt/noc-analista/bin/python fix_redundancia.py
-/opt/noc-analista/bin/python setup_zabbix_analista.py
-/opt/noc-analista/bin/python mapa_topologia.py
-/opt/noc-analista/bin/python dash_noc.py
-/opt/noc-analista/bin/python setup_grafana.py   # requer Grafana + plugin alexanderzobnin-zabbix-app
-
-# 4. Serviço e tarefas agendadas
-cp ../sistema/noc-analista.service /etc/systemd/system/ && systemctl enable --now noc-analista
-cp ../sistema/cron.d/* /etc/cron.d/
+git clone https://github.com/MathZiraA/noc-senai-tcc.git && cd noc-senai-tcc
+bash instalar_noc.sh            # 1ª vez: cria /etc/noc/noc.conf e para
+nano /etc/noc/noc.conf          # ajuste SERVIDOR_IP e os IPs da rede
+bash instalar_noc.sh            # instala e configura tudo
 ```
+
+Na segunda execução o instalador **pergunta** (sem mostrar na tela):
+
+1. o **token da API do Zabbix**: ele explica como entrar com a senha padrão, trocá-la e criar o token;
+2. a **senha de app do Gmail** da conta que envia os alertas;
+3. a **chave do Google Gemini** (opcional; sem ela, tudo funciona menos o Analista IA).
+
+No fim ele gera o bloco RouterOS já com o IP do servidor, para colar no R-FILIAL. O instalador pode ser rodado de novo a qualquer momento: cada etapa pula o que já está pronto. Endereços e nomes ficam em `/etc/noc/noc.conf` (modelo: [`noc.conf.exemplo`](noc.conf.exemplo)); nenhum script tem IP fixo.
 
 Detalhes, testes e solução de problemas estão em [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md).
 

@@ -11,12 +11,13 @@ import pwd
 import secrets
 from pathlib import Path
 
+import config
 from zbx import call
 
-GRUPO = "Rede SENAI - Equipamentos"
+GRUPO = config.GRUPO
 GRUPO_USUARIOS = "NOC Automação"
 USUARIO = "grafana-leitura"
-HOST = "R-FILIAL"  # o plugin filtra pelo nome visível ("R-FILIAL (RouterOS ...)"), por isso vira regex
+HOST = config.HOST  # o plugin filtra pelo nome visível ("R-FILIAL (RouterOS ...)"), por isso vira regex
 DS ={"type": "alexanderzobnin-zabbix-datasource", "uid": "zabbix-noc"}
 PROV = Path("/etc/grafana/provisioning")
 DIR_DASH = Path("/var/lib/grafana/dashboards")

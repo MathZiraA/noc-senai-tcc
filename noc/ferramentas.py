@@ -7,9 +7,10 @@ from typing import Literal
 
 from anthropic import beta_tool
 
+import config
 from zbx import call
 
-MIKROTIK_IP = "192.168.20.1"
+MIKROTIK_IP = config.LAN_FILIAL
 MIKROTIK_USER = "zabbix-ia"
 MIKROTIK_KEY = Path("/root/.ssh/id_ed25519_mikrotik")
 SEVERIDADES = ["Não classificada", "Informação", "Aviso", "Média", "Alta", "Desastre"]
@@ -179,7 +180,7 @@ def failovers(host, horas=24):
     """Lista de trocas da fibra (queda e retorno) com o tempo que a LAN da Filial ficou sem resposta.
     Cada item: {"evento": "queda"|"retorno", "inicio": ts, "segundos": int|None, "voltou": bool}."""
     h = _host(host)
-    fibra, lan = _item(h["hostid"], "icmpping[10.0.1.2,3,,,500]"), _item(h["hostid"], "icmpping[192.168.20.1,1,,,300]")
+    fibra, lan = _item(h["hostid"], config.K_FIBRA), _item(h["hostid"], config.K_LAN)
     desde = int(time.time()) - horas * 3600
     estados = _historico(fibra["itemid"], fibra["value_type"], desde)
     trocas = [(t, "queda" if v == "0" else "retorno") for (t, v), (_, ant) in zip(estados[1:], estados) if v != ant]

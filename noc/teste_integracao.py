@@ -4,6 +4,7 @@ webhook -> analista -> comentário -> e-mail. Remove o host no final. Requer /ro
 import subprocess
 import time
 
+import config
 from zbx import ZbxError, call
 
 HOST = "NOC-TESTE"
@@ -31,7 +32,7 @@ def empurrar(valor):
         return False
 
 
-grupo = call("hostgroup.get", {"filter": {"name": ["Rede SENAI - Equipamentos"]}, "output": ["groupid"]})[0]["groupid"]
+grupo = call("hostgroup.get", {"filter": {"name": [config.GRUPO]}, "output": ["groupid"]})[0]["groupid"]
 for antigo in call("host.get", {"filter": {"host": [HOST]}, "output": ["hostid"]}):
     call("host.delete", [antigo["hostid"]])
 hostid = call("host.create", {"host": HOST, "name": "NOC-TESTE (temporário)", "groups": [{"groupid": grupo}]})["hostids"][0]

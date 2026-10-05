@@ -1,14 +1,24 @@
-"""Correção do monitoramento de redundância do R-FILIAL (idempotente)."""
+"""Monitoramento de redundância do R-FILIAL: grupo, host, itens, triggers e manutenção (idempotente).
+Os endereços vêm de /etc/noc/noc.conf (config.py)."""
 import time
+
+import config
+from config import (HOST, K_CAMINHO, K_FAILOVER, K_FIBRA, K_LAN, K_LAT_FIBRA, K_LAT_RADIO, K_PERDA_FIBRA,
+                    K_PERDA_RADIO, K_RADIO)
 from zbx import call
 
-HOST = "R-FILIAL"
-LAN_IP = "192.168.20.1"
-FIBRA_IP, RADIO_IP = "10.0.1.2", "10.0.2.2"
-K_FIBRA = f"icmpping[{FIBRA_IP},3,,,500]"
-K_RADIO = f"icmpping[{RADIO_IP},3,,,500]"
-K_LAT_FIBRA = f"icmppingsec[{FIBRA_IP},3,,,500]"
-K_LAT_RADIO = f"icmppingsec[{RADIO_IP},3,,,500]"
+LAN_IP = config.LAN_FILIAL
+
+# 0. Grupo e host (num servidor novo ainda não existem)
+g = call("hostgroup.get", {"filter": {"name": [config.GRUPO]}, "output": ["groupid"]})
+grupo_id = g[0]["groupid"] if g else call("hostgroup.create", {"name": config.GRUPO})["groupids"][0]
+if not call("host.get", {"filter": {"host": [HOST]}, "output": ["hostid"]}):
+    call("host.create", {
+        "host": HOST, "name": config.C["NOME_FILIAL"], "groups": [{"groupid": grupo_id}],
+        "interfaces": [{"type": 2, "main": 1, "useip": 1, "ip": LAN_IP, "dns": "", "port": "161",
+                        "details": {"version": 2, "bulk": 1, "community": "{$SNMP_COMMUNITY}"}}],
+        "macros": [{"macro": "{$SNMP_COMMUNITY}", "value": config.C["SNMP_COMMUNITY"]}]})
+print(f"[ok] grupo '{config.GRUPO}' e host '{HOST}'")
 
 h = call("host.get", {"filter": {"host": [HOST]}, "selectInterfaces": ["interfaceid", "ip"],
                       "selectParentTemplates": ["templateid", "host"], "selectGroups": ["groupid"]})[0]
@@ -59,7 +69,6 @@ for key, name, vtype, units, vmap, enlace in items:
 print("[ok] itens de estado/latência dos enlaces (coleta a cada 10s)")
 
 # 4b. Caminho ativo calculado: fibra*2 + rádio -> 3/2 = FIBRA, 1 = RÁDIO, 0 = ISOLADA
-K_CAMINHO = "noc.caminho_ativo"
 if K_CAMINHO not in existing:
     vm = call("valuemap.get", {"hostids": hid, "filter": {"name": ["Caminho Ativo"]}, "output": ["valuemapid"]})
     vm_caminho = vm[0]["valuemapid"] if vm else call("valuemap.create", {
@@ -75,9 +84,6 @@ print("[ok] item calculado 'Caminho ativo Matriz-Filial'")
 
 # 4c. Alcance da LAN da Filial a cada 1 s: a falha contínua durante uma troca de enlace = tempo de failover
 #     Perda de pacotes por enlace: base da previsão de degradação do rádio
-K_LAN = "icmpping[192.168.20.1,1,,,300]"
-K_PERDA_FIBRA = "icmppingloss[10.0.1.2,3,,,500]"
-K_PERDA_RADIO = "icmppingloss[10.0.2.2,3,,,500]"
 extras = [
     (K_LAN, "Alcance LAN Filial (1s)", 3, "", vmid, "1s", "30d", "lan"),
     (K_PERDA_FIBRA, "Enlace FIBRA - perda de pacotes", 0, "%", "0", "10s", "90d", "fibra"),
@@ -93,8 +99,8 @@ for key, name, vtype, units, vmap, delay, hist, enlace in extras:
 print("[ok] alcance da LAN a cada 1s e perda de pacotes por enlace")
 
 # 4d. Último tempo de failover medido (preenchido por failover_registro.py via history.push)
-if "noc.failover.segundos" not in existing:
-    call("item.create", {"hostid": hid, "type": 2, "key_": "noc.failover.segundos",
+if K_FAILOVER not in existing:
+    call("item.create", {"hostid": hid, "type": 2, "key_": K_FAILOVER,
                          "name": "Tempo de failover medido", "value_type": 3, "units": "s",
                          "history": "365d", "trends": "365d",
                          "description": "Segundos que a LAN da Filial ficou sem resposta em cada queda da fibra",
@@ -129,7 +135,7 @@ triggers = [
     ("RÁDIO com perda de pacotes (>5% por 5min)", f"{r_up} and min(/{HOST}/{K_PERDA_RADIO},5m)>5", 3,
      "O rádio responde, mas perde pacotes: sinal fraco ou interferência. Costuma anteceder a queda."),
     ("Filial sem comunicação há mais de 10s (failover lento ou queda)", f"max(/{HOST}/{K_LAN},10s)=0", 3,
-     "A LAN da Filial (192.168.20.1) não responde há 10 s. Num failover saudável o OSPF troca de "
+     f"A LAN da Filial ({LAN_IP}) não responde há 10 s. Num failover saudável o OSPF troca de "
      "enlace antes disso."),
 ]
 current = {t["description"] for t in call("trigger.get", {"hostids": hid, "output": ["description"]})}

@@ -1,12 +1,18 @@
 """Gera o visual do mapa da topologia: fundo (1400x790) e ícones arredondados em tons pastel,
 cada um com uma versão vermelha usada quando o equipamento tem problema.
-Roda no notebook (precisa de Pillow e das fontes Segoe UI); grava os PNGs em noc/mapa/."""
+Precisa de Pillow. Usa Segoe UI no Windows e DejaVu no Debian (pacote fonts-dejavu-core); grava em noc/mapa/.
+As sub-redes escritas no fundo vêm de /etc/noc/noc.conf (config.py)."""
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+import config
+
 SAIDA = Path(__file__).parent / "mapa"
-FONTES = Path("C:/Windows/Fonts")
+FONTES_WINDOWS = Path("C:/Windows/Fonts")
+FONTES_LINUX = {"segoeui.ttf": "DejaVuSans.ttf", "seguisb.ttf": "DejaVuSans-Bold.ttf",
+                "segoeuib.ttf": "DejaVuSans-Bold.ttf"}
+DIR_DEJAVU = Path("/usr/share/fonts/truetype/dejavu")
 X = 4  # desenha em 4x e reduz: bordas suaves
 
 LARGURA, ALTURA = 1400, 790
@@ -20,7 +26,10 @@ ALERTA = "#E5484D"
 
 
 def fonte(nome, tamanho):
-    return ImageFont.truetype(str(FONTES / nome), tamanho * X)
+    caminho = FONTES_WINDOWS / nome
+    if not caminho.exists():
+        caminho = DIR_DEJAVU / FONTES_LINUX[nome]
+    return ImageFont.truetype(str(caminho), tamanho * X)
 
 
 def caixa(d, x0, y0, x1, y1, raio, preenchimento, borda=None, largura=1):
@@ -49,7 +58,8 @@ def fundo():
     texto(d, LARGURA - 56, 53, "redundância Fibra + Rádio · tempo real", fonte("segoeui.ttf", 17), SUAVE, "rm")
     # zonas
     for (x0, x1), (cor, borda, tinta), nome, rede in (
-            ((30, 520), MATRIZ, "MATRIZ", "192.168.10.0/24"), ((880, 1370), FILIAL, "FILIAL", "192.168.20.0/24")):
+            ((30, 520), MATRIZ, "MATRIZ", config.C["REDE_MATRIZ"]),
+            ((880, 1370), FILIAL, "FILIAL", config.C["REDE_FILIAL"])):
         caixa(d, x0, 110, x1, 660, 28, cor, borda, 2)
         texto(d, x0 + 26, 140, nome, fonte("segoeuib.ttf", 20), tinta, "lm")
         texto(d, x0 + 26 + d.textlength(nome, font=fonte("segoeuib.ttf", 20)) / X + 12, 141, rede,

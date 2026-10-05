@@ -1,13 +1,14 @@
 """Gera a página de status para os usuários da Filial (cron a cada minuto).
-Publicada pelo Apache em /status: http://192.168.10.50/status (rede da empresa) e http://192.168.137.50/status."""
+Publicada pelo Apache em https://<servidor>/status."""
 import html
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import config
 from zbx import call
 
-HOST = "R-FILIAL"
+HOST = config.HOST
 SAIDA = Path("/var/www/html/status/index.html")
 DIAS = 7
 # Só ocorrências que o usuário sente, em linguagem simples

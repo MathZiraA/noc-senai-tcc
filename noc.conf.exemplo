@@ -1,0 +1,36 @@
+# ====================================================================
+# Configuração do NOC SENAI — copie para /etc/noc/noc.conf e ajuste
+# Formato CHAVE=VALOR (valores com espaço entre aspas). Lido pelo bash e pelo Python.
+# NÃO coloque senhas aqui: o instalador pergunta e guarda em arquivos protegidos.
+# ====================================================================
+
+# --- Servidor do NOC ---
+# IP do servidor na LAN da Matriz (os roteadores liberam SNMP/SSH só para ele)
+SERVIDOR_IP=192.168.10.50
+# Outros IPs pelos quais o servidor é acessado, separados por vírgula (vão no certificado HTTPS)
+SERVIDOR_IPS_EXTRAS=
+SERVIDOR_NOME=noc.senai.local
+FUSO=America/Sao_Paulo
+
+# --- Rede monitorada ---
+GRUPO="Rede SENAI - Equipamentos"
+HOST_FILIAL=R-FILIAL
+NOME_FILIAL="R-FILIAL (RouterOS Filial SENAI)"
+REDE_MATRIZ=192.168.10.0/24
+GW_MATRIZ=192.168.10.1
+REDE_FILIAL=192.168.20.0/24
+LAN_FILIAL=192.168.20.1
+REDE_FIBRA=10.0.1.0/30
+FIBRA_MATRIZ=10.0.1.1
+FIBRA_FILIAL=10.0.1.2
+REDE_RADIO=10.0.2.0/29
+RADIO_MATRIZ=10.0.2.1
+RADIO_FILIAL=10.0.2.2
+ANTENA_MATRIZ=10.0.2.3
+ANTENA_FILIAL=10.0.2.4
+SNMP_COMMUNITY=public_senai
+
+# --- E-mail dos alertas (conta Google com senha de app) ---
+EMAIL=matheus.ziravello@aluno.senai.br
+SMTP_SERVIDOR=smtp.gmail.com
+SMTP_PORTA=587

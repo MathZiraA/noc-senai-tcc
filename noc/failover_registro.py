@@ -5,9 +5,10 @@ import time
 from pathlib import Path
 
 import ferramentas
+import config
 from zbx import call
 
-HOST = "R-FILIAL"
+HOST = config.HOST
 ESTADO = Path("/var/lib/noc-analista/failover_registrado.json")
 
 ultimo = json.loads(ESTADO.read_text())["ultimo"] if ESTADO.exists() else 0

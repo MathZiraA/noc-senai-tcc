@@ -20,7 +20,9 @@ from pathlib import Path
 
 import anthropic
 
+import config
 import ferramentas
+from config import C
 import provedor_gemini
 import provedor_teste
 from zbx import TOKEN_ANALISTA, call
@@ -41,17 +43,19 @@ abre um incidente, você investiga com as ferramentas disponíveis e escreve um 
 para o técnico que vai ler o e-mail.
 
 TOPOLOGIA
-- R-MATRIZ (MikroTik RouterOS v7, router-id 1.1.1.1): LAN 192.168.10.0/24, gateway 192.168.10.1.
-- R-FILIAL (MikroTik RouterOS v7, router-id 2.2.2.2): LAN 192.168.20.0/24, gateway 192.168.20.1. É o host monitorado.
-- Enlace PRINCIPAL Fibra óptica: 10.0.1.0/30 (Matriz .1, Filial .2), portas ether2-WAN-FIBRA, OSPF custo 10.
-- Enlace BACKUP Rádio P2P: 10.0.2.0/29 (Matriz .1, Filial .2; antenas em bridge L2 com IPs .3 e .4), \
-portas ether3-WAN-RADIO, OSPF custo 100.
+""" + f"""- R-MATRIZ (MikroTik RouterOS v7, router-id 1.1.1.1): LAN {C['REDE_MATRIZ']}, gateway {C['GW_MATRIZ']}.
+- {config.HOST} (MikroTik RouterOS v7, router-id 2.2.2.2): LAN {C['REDE_FILIAL']}, gateway {C['LAN_FILIAL']}. \
+É o host monitorado.
+- Enlace PRINCIPAL Fibra óptica: {C['REDE_FIBRA']} (Matriz {C['FIBRA_MATRIZ']}, Filial {C['FIBRA_FILIAL']}), \
+portas ether2-WAN-FIBRA, OSPF custo 10.
+- Enlace BACKUP Rádio P2P: {C['REDE_RADIO']} (Matriz {C['RADIO_MATRIZ']}, Filial {C['RADIO_FILIAL']}; antenas em \
+bridge L2 com IPs {C['ANTENA_MATRIZ']} e {C['ANTENA_FILIAL']}), portas ether3-WAN-RADIO, OSPF custo 100.
 - OSPF área 0 entre os roteadores; se a fibra cai, o OSPF converge e o tráfego passa pelo rádio.
 - MTU 2000 em todas as interfaces dos roteadores.
 - A rede não tem saída para a internet: o impacto de uma queda é a comunicação Matriz <-> Filial.
-- O Zabbix fica NA MATRIZ (192.168.10.50). Ele mede cada enlace pingando o IP da Filial daquele enlace \
-(10.0.1.2 e 10.0.2.2) a cada 10s e coleta o R-FILIAL por SNMP no IP da LAN 192.168.20.1.
-
+- O Zabbix fica NA MATRIZ ({config.SERVIDOR_IP}). Ele mede cada enlace pingando o IP da Filial daquele enlace \
+({C['FIBRA_FILIAL']} e {C['RADIO_FILIAL']}) a cada 10s e coleta o {config.HOST} por SNMP no IP da LAN {C['LAN_FILIAL']}.
+""" + """
 COMO INTERPRETAR OS DADOS
 - Latência 0 ms com o enlace DOWN significa "sem resposta", não um enlace rápido.
 - Se os dois enlaces estão DOWN, o Zabbix perde toda a visibilidade da Filial: não dá para saber se \
@@ -256,13 +260,13 @@ def servir():
 
 
 def simular(publicar_resultado):
-    """Analisa agora o problema ativo mais grave do R-FILIAL, sem passar pelo webhook."""
-    problemas = call("problem.get", {"hostids": ferramentas._host("R-FILIAL")["hostid"],
+    """Analisa agora o problema ativo mais grave do host da Filial, sem passar pelo webhook."""
+    problemas = call("problem.get", {"hostids": ferramentas._host(config.HOST)["hostid"],
                                      "output": ["eventid", "name", "severity", "clock"],
                                      "sortfield": ["eventid"], "sortorder": "DESC"})
     if not problemas:
         raise SystemExit("Nenhum problema ativo no R-FILIAL para simular.")
-    eventos = [{"eventid": p["eventid"], "host": "R-FILIAL", "nome": p["name"], "status": "PROBLEM",
+    eventos = [{"eventid": p["eventid"], "host": config.HOST, "nome": p["name"], "status": "PROBLEM",
                 "severidade": ferramentas.SEVERIDADES[int(p["severity"])], "severidade_num": p["severity"],
                 "horario": ferramentas._hora(p["clock"])} for p in problemas]
     relatorio, meta = analisar(eventos)

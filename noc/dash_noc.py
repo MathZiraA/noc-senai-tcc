@@ -5,11 +5,12 @@ problemas ativos e as análises enviadas pela IA.
 Página 2 - Saúde do R-FILIAL: CPU, memória, temperatura e interfaces (preenchidos quando o SNMP responder).
 Gráficos por padrão de nome (ex.: "*ether2*Bits*") passam a mostrar dados sozinhos depois da descoberta SNMP.
 """
+import config
 from zbx import call
 
 DASH = "NOC - Monitoramento de Redundância (OFICIAL)"
-HOST = "R-FILIAL"
-GRUPO = "Rede SENAI - Equipamentos"
+HOST = config.HOST
+GRUPO = config.GRUPO
 ACAO_IA = "Analista IA - Investigação de incidentes"
 MIDIA_EMAIL = "Gmail Alertas SENAI"
 AZUL, LARANJA, VERDE, VERMELHO, AMARELO = "1E88E5", "FB8C00", "43A047", "E53935", "FDD835"
@@ -43,8 +44,8 @@ acao = call("action.get", {"filter": {"name": [ACAO_IA]}, "output": ["actionid"]
 email = call("mediatype.get", {"filter": {"name": [MIDIA_EMAIL]}, "output": ["mediatypeid"]})[0]["mediatypeid"]
 itens = {i["key_"]: i["itemid"] for i in call("item.get", {"hostids": hostid, "search": {"key_": "icmpping"},
                                                              "output": ["key_"]})}
-FIBRA, RADIO = itens["icmpping[10.0.1.2,3,,,500]"], itens["icmpping[10.0.2.2,3,,,500]"]
-LAT_FIBRA, LAT_RADIO = itens["icmppingsec[10.0.1.2,3,,,500]"], itens["icmppingsec[10.0.2.2,3,,,500]"]
+FIBRA, RADIO = itens[config.K_FIBRA], itens[config.K_RADIO]
+LAT_FIBRA, LAT_RADIO = itens[config.K_LAT_FIBRA], itens[config.K_LAT_RADIO]
 CAMINHO = call("item.get", {"hostids": hostid, "filter": {"key_": "noc.caminho_ativo"}, "output": ["itemid"]})[0]["itemid"]
 UP_DOWN = [(VERMELHO, "0"), (VERDE, "1")]
 LATENCIA = [(VERDE, "0"), (AMARELO, "0.02"), (VERMELHO, "0.05")]
@@ -90,7 +91,8 @@ mapa = call("map.get", {"filter": {"name": ["Topologia NOC SENAI - Fibra x Rádi
 topologia = [{"type": "map", "name": "TOPOLOGIA — enlaces mudam de cor em tempo real", "x": 0, "y": 0, "width": 72,
               "height": 14, "fields": [campo(8, "sysmapid.0", mapa[0]["sysmapid"])]}] if mapa else []
 
-d = call("dashboard.get", {"filter": {"name": [DASH]}, "output": ["dashboardid"]})[0]
+existente = call("dashboard.get", {"filter": {"name": [DASH]}, "output": ["dashboardid"]})
+d = existente[0] if existente else {"dashboardid": call("dashboard.create", {"name": DASH, "pages": [{"widgets": []}]})["dashboardids"][0]}
 call("dashboard.update", {"dashboardid": d["dashboardid"], "display_period": 30, "auto_start": 1, "pages": [
     {"name": "Redundância Fibra x Rádio", "widgets": redundancia},
     {"name": "Saúde do R-FILIAL", "widgets": saude},

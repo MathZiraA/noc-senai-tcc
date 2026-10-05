@@ -5,9 +5,21 @@ set -euo pipefail
 
 CA_DIR=/root/noc-ca
 CERT_DIR=/etc/ssl/noc
-IPS="IP:192.168.137.50,IP:192.168.10.50,IP:127.0.0.1,DNS:localhost,DNS:noc.senai.local"
+
+# Endereços do certificado: /etc/noc/noc.conf (padrões = protótipo)
+[ -f /etc/noc/noc.conf ] && . /etc/noc/noc.conf
+SERVIDOR_IP=${SERVIDOR_IP:-192.168.10.50}
+SERVIDOR_IPS_EXTRAS=${SERVIDOR_IPS_EXTRAS-192.168.137.50}
+SERVIDOR_NOME=${SERVIDOR_NOME:-noc.senai.local}
+IPS="IP:$SERVIDOR_IP,IP:127.0.0.1,DNS:localhost,DNS:$SERVIDOR_NOME"
+for ip in ${SERVIDOR_IPS_EXTRAS//,/ }; do IPS="$IPS,IP:$ip"; done
 
 mkdir -p "$CA_DIR" "$CERT_DIR"
+# Certificado antigo sem o IP atual do servidor: gera outro
+if [ -f "$CERT_DIR/noc.crt" ] && ! openssl x509 -in "$CERT_DIR/noc.crt" -noout -ext subjectAltName | grep -q "IP Address:$SERVIDOR_IP\b"; then
+    echo "[!] IP do servidor mudou: gerando certificado novo"
+    rm -f "$CERT_DIR/noc.crt" "$CERT_DIR/noc.key" "$CERT_DIR/noc-cadeia.crt"
+fi
 chmod 700 "$CA_DIR"
 
 # 1. Autoridade certificadora do NOC (10 anos). O .crt é público: é ele que se instala no Windows.

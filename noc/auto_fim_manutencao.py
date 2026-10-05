@@ -2,6 +2,7 @@
 Roda via cron a cada minuto; depois de encerrar, não faz mais nada."""
 import sys
 import time
+import config
 from zbx import call
 
 MAINT = "Montagem da bancada - TCC"
@@ -12,7 +13,7 @@ now = int(time.time())
 if not m or int(m[0]["active_till"]) <= now:
     sys.exit(0)
 
-links = call("item.get", {"host": "R-FILIAL", "search": {"name": "estado"}, "output": ["name", "lastvalue"]})
+links = call("item.get", {"host": config.HOST, "search": {"name": "estado"}, "output": ["name", "lastvalue"]})
 up = [i["name"] for i in links if i["lastvalue"] == "1"]
 print(f"links UP: {up or 'nenhum'}")
 if up and not dry:

@@ -1,9 +1,10 @@
 """Roda cada ferramenta uma vez contra o Zabbix real e mostra a saída (não chama a IA)."""
 import json
 
+import config
 import ferramentas as f
 
-HOST = "R-FILIAL"
+HOST = config.HOST
 print(f.estado_atual(HOST), "\n====")
 print(f.historico_item(HOST, "Enlace FIBRA", 30), "\n====")
 print(f.historico_item(HOST, "latência", 30), "\n====")

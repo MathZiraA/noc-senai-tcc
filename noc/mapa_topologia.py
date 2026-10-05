@@ -9,10 +9,12 @@ fica no dashboard e no Grafana.)
 import base64
 from pathlib import Path
 
+import config
+from config import C
 from zbx import call
 
 NOME = "Topologia NOC SENAI - Fibra x Rádio"
-HOST = "R-FILIAL"
+HOST = config.HOST
 PASTA = Path(__file__).parent / "mapa"
 VERDE, VERMELHO, LARANJA, AMARELO, CINZA = "3FB58A", "E5484D", "F2A33A", "E6C229", "9AA5B1"
 ICONE = 96  # lado dos ícones em px; posição no Zabbix = canto superior esquerdo
@@ -72,12 +74,12 @@ selements = [
     # Matriz (zona azul, x 30-520). Antenas sem estado próprio: o estado do rádio está na cor da linha
     imagem("pcm", "pcs", 170, 215, "PCs da Matriz", lado=2),
     imagem("swm", "switch", 170, 330, "SW-MATRIZ"),
-    imagem("zbx", "servidor", 170, 520, "Zabbix NOC + IA\n192.168.10.50"),
-    imagem("rm", "roteador", 400, 330, "R-MATRIZ\n192.168.10.1"),
-    imagem("am", "antena", 400, 555, "Rádio Matriz\n10.0.2.3"),
+    imagem("zbx", "servidor", 170, 520, f"Zabbix NOC + IA\n{config.SERVIDOR_IP}"),
+    imagem("rm", "roteador", 400, 330, f"R-MATRIZ\n{C['GW_MATRIZ']}"),
+    imagem("am", "antena", 400, 555, f"Rádio Matriz\n{C['ANTENA_MATRIZ']}"),
     # Filial (zona verde, x 880-1370)
-    com_estado("rf", 0, [{"hostid": hostid}], "roteador", 1000, 330, "R-FILIAL\n192.168.20.1"),
-    imagem("af", "antena", 1000, 555, "Rádio Filial\n10.0.2.4"),
+    com_estado("rf", 0, [{"hostid": hostid}], "roteador", 1000, 330, f"{HOST}\n{C['LAN_FILIAL']}"),
+    imagem("af", "antena", 1000, 555, f"Rádio Filial\n{C['ANTENA_FILIAL']}"),
     imagem("swf", "switch", 1230, 330, "SW-FILIAL"),
     imagem("pcf", "pcs", 1230, 215, "PCs da Filial", lado=1),
 ]
@@ -90,12 +92,12 @@ links = [
     ligacao("rf", "swf"), ligacao("swf", "pcf"),
 ]
 
-config = {"name": NOME, "width": 1400, "height": 790, "backgroundid": fundo, "highlight": 0, "expandproblem": 0,
+dados_mapa = {"name": NOME, "width": 1400, "height": 790, "backgroundid": fundo, "highlight": 0, "expandproblem": 0,
           "markelements": 0, "label_type": 0, "label_location": 0, "selements": selements, "links": links}
 existente = call("map.get", {"filter": {"name": [NOME]}, "output": ["sysmapid"]})
 if existente:  # atualiza no lugar: o id (e o endereço do mapa) não muda
     mapa = existente[0]["sysmapid"]
-    call("map.update", {"sysmapid": mapa, **config})
+    call("map.update", {"sysmapid": mapa, **dados_mapa})
 else:
-    mapa = call("map.create", config)["sysmapids"][0]
-print(f"[ok] mapa pronto: http://192.168.137.50/zabbix/zabbix.php?action=map.view&sysmapid={mapa}")
+    mapa = call("map.create", dados_mapa)["sysmapids"][0]
+print("[ok] mapa pronto: " + config.url(f"/zabbix/zabbix.php?action=map.view&sysmapid={mapa}"))
