@@ -106,10 +106,17 @@ try:
     empurrar([(K_FIBRA, 1, volta), (K_LAT_F, 0.0022, volta), (K_FIBRA, 1, volta + 1)])
     esperar("problema resolvido (fibra de volta)",
             lambda: not call("problem.get", {"hostids": hostid, "output": ["eventid"]}), limite=90)
+    # O e-mail de recuperação fica ligado ao evento de RECUPERAÇÃO, não ao do problema
+    def alertas_recuperacao():
+        r = call("event.get", {"eventids": evento["eventid"], "output": ["r_eventid"]})[0]["r_eventid"]
+        return [] if r == "0" else call("alert.get", {"eventids": r, "selectMediatypes": ["name"],
+                                                       "output": ["status", "error", "subject"]})
+
     esperar("e-mail de normalização enviado",
-            lambda: [a for a in alertas() if a["subject"].startswith("✅") and a["status"] in ("1", "2")], limite=120)
+            lambda: [a for a in alertas_recuperacao() if a["subject"].startswith("✅") and a["status"] in ("1", "2")],
+            limite=120)
     print("\nE-mails deste teste:")
-    for a in alertas():
+    for a in alertas() + alertas_recuperacao():
         erro = f" — {a['error']}" if a["error"] else ""
         print(f"  - {a['mediatypes'][0]['name']}: {STATUS[a['status']]} | {a['subject'][:80]}{erro}")
 finally:
