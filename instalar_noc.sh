@@ -178,7 +178,7 @@ ok "analista, Grafana, página de status, backup diário, failover e fim de manu
 # --------------------------------------------------------------------
 passo "10/10 Bloco para colar no $HOST_FILIAL"
 RSC="$NOC/routeros-${HOST_FILIAL,,}-noc.rsc"
-sed -e "s/^:local ZABBIX .*/:local ZABBIX \"$SERVIDOR_IP\"/" \
+sed -e "s/192\.168\.10\.50/$SERVIDOR_IP/g" \
     -e "s/name=public_senai/name=$SNMP_COMMUNITY/" "$REPO/routeros/routeros-r-filial-noc.rsc" > "$RSC"
 ok "gerado $RSC (troque a senha TROQUE_POR_UMA_SENHA_FORTE antes de colar)"
 

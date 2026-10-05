@@ -1,6 +1,8 @@
 # ====================================================================
 # TEMPLATE PADRONIZADO PARA FUTURAS UNIDADES (NOVA FILIAL)
 # Transcrito do documento da topologia. Senha substituída por placeholder.
+# Este arquivo usa variáveis :local: aplique como script (/import arquivo.rsc), nunca colando linha a
+# linha no terminal (cada linha colada perde as variáveis da anterior).
 # ====================================================================
 
 :local NOMEUNIDADE "R-FILIAL-02"

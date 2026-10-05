@@ -6,3 +6,4 @@ noc.conf.exemplo text eol=lf
 sistema/cron.d/* text eol=lf
 *.png binary
 *.crt text eol=lf
+bancada/*.ps1 text eol=crlf
