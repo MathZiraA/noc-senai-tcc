@@ -3,6 +3,7 @@ import logging
 import time
 from pathlib import Path
 
+import httpx
 from google import genai
 from google.genai import errors, types
 
@@ -33,6 +34,11 @@ def analisar(system, pedido, funcoes):
                 ultimo_erro = e
                 log.warning("Gemini %s indisponível (%s), tentativa %d", modelo, e.code, tentativa + 1)
                 time.sleep(10)
+            except (httpx.TransportError, OSError) as e:
+                # Rede ou DNS fora por instantes (ex.: VM recém-ligada): espera mais antes de tentar de novo
+                ultimo_erro = e
+                log.warning("sem conexão com o Gemini (%s), tentativa %d", e, tentativa + 1)
+                time.sleep(30)
     raise RuntimeError(f"todos os modelos Gemini indisponíveis no momento: {ultimo_erro}")
 
 
