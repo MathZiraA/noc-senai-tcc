@@ -4,16 +4,20 @@ import json
 import urllib.error
 import urllib.request
 
+import ssl
+
+URL = "https://localhost:3000"
+TLS = ssl.create_default_context(cafile="/root/noc-ca/ca.crt")
 SENHA = open("/etc/grafana/admin_password").read().strip()
 AUTH = "Basic " + base64.b64encode(f"admin:{SENHA}".encode()).decode()
 
 
 def api(caminho, corpo=None):
-    req = urllib.request.Request("http://localhost:3000" + caminho,
+    req = urllib.request.Request(URL + caminho,
                                  data=json.dumps(corpo).encode() if corpo else None,
                                  headers={"Authorization": AUTH, "Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=30) as r:
+        with urllib.request.urlopen(req, timeout=30, context=TLS) as r:
             return r.status, json.loads(r.read())
     except urllib.error.HTTPError as e:
         return e.code, e.read().decode()[:300]

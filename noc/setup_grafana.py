@@ -187,6 +187,10 @@ linhas += [f"GF_SECURITY_ADMIN_PASSWORD__FILE={SENHA_ADMIN}",
            f"GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH={ARQ_DASH}",
            "GF_USERS_DEFAULT_LANGUAGE=pt-BR",
            "GF_ANALYTICS_REPORTING_ENABLED=false",
+           # HTTPS com o certificado do NOC (gerado por setup_https.sh)
+           "GF_SERVER_PROTOCOL=https",
+           "GF_SERVER_CERT_FILE=/etc/ssl/noc/noc-cadeia.crt",
+           "GF_SERVER_CERT_KEY=/etc/ssl/noc/noc.key",
            "GF_NEWS_NEWS_FEED_ENABLED=false"]
 ambiente.write_text("\n".join(linhas) + "\n")
 print("[ok] servidor: visitante só leitura, página inicial NOC, senha admin em /root/.grafana_admin")
