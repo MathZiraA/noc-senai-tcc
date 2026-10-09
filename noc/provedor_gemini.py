@@ -22,7 +22,8 @@ def disponivel():
 
 def analisar(system, pedido, funcoes):
     """Tenta cada modelo da lista até um responder. Retorna (relatorio, metadados)."""
-    cliente = genai.Client(api_key=CHAVE.read_text().strip())
+    # Sem tempo limite, uma resposta que nunca chega travava a fila inteira do analista
+    cliente = genai.Client(api_key=CHAVE.read_text().strip(), http_options=types.HttpOptions(timeout=90_000))
     ultimo_erro = None
     for modelo in MODELOS:
         for tentativa in range(TENTATIVAS_POR_MODELO):

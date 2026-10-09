@@ -194,7 +194,9 @@ def trabalhador(fila):
     while True:
         lote = fila.get()
         agora = time.time()
-        lote = [e for e in lote if agora - por_problema.get((e["host"], e["nome"]), 0) > COOLDOWN_TRIGGER]
+        # Simulações de demonstração (simular_queda.py) podem ser repetidas: ficam fora do intervalo
+        lote = [e for e in lote if e["host"].startswith("SIMULACAO")
+                or agora - por_problema.get((e["host"], e["nome"]), 0) > COOLDOWN_TRIGGER]
         if not lote:
             log.info("lote ignorado: problemas já analisados nos últimos %d min", COOLDOWN_TRIGGER // 60)
             continue
