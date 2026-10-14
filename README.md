@@ -26,6 +26,18 @@ Projeto de TCC (SENAI 2026): rede Matriz/Filial com dois enlaces (fibra principa
 - **E-mail** via Gmail: alerta, análise da IA e normalização.
 - **Analista IA:** Google Gemini (camada gratuita) com 6 ferramentas somente leitura; Claude opcional.
 
+## Revisão CTI (10/2026)
+
+Pedidos da reunião com a CTI, já implementados (detalhes na seção 14 da documentação):
+
+- **Portas:** ether1 = rádio, ether2 = fibra, ether3/4/5 = rede local em `bridge-LAN`.
+- **Loopback /32** em cada roteador (`10.255.255.1` / `10.255.255.2`): router-id do OSPF e endereço de monitoramento, alcançável pela fibra ou pelo rádio.
+- **Fibra degradada:** alertas de latência, perda, piora em relação ao normal e previsão, mesmo sem a fibra cair.
+- **Troca por qualidade:** netwatch no MikroTik (RouterOS 7.4+) sobe o custo OSPF da fibra para 200 quando ela degrada, e o tráfego vai para o rádio.
+- **Chamados:** queda que passa de 1 h gera o chamado `NOC-<n>` com e-mail formal ao cliente e registro num livro encadeado por SHA-256 (`noc/chamados.py --verificar`).
+- **Antenas** monitoradas como hosts próprios.
+- **Testes:** `simular_queda.py --cenario queda|degradacao|chamado`.
+
 ## Instalação num servidor novo (Debian 12, como root)
 
 Um comando monta tudo: Zabbix 7.0, banco, Apache, HTTPS com CA própria, Grafana, Analista IA, e-mail, dashboards, mapa, página de status, backup diário e tarefas agendadas.
