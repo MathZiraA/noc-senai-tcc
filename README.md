@@ -30,7 +30,7 @@ Projeto de TCC (SENAI 2026): rede Matriz/Filial com dois enlaces (fibra principa
 
 Pedidos da reunião com a CTI, já implementados (detalhes na seção 14 da documentação):
 
-- **Portas:** ether1 = rádio, ether2 = fibra, ether3/4/5 = rede local em `bridge-LAN`.
+- **Portas:** ether1 = rádio, sfp1 = fibra óptica (SFP), ether2 = reserva, ether3/4/5 = rede local em `bridge-LAN`.
 - **Loopback /32** em cada roteador (`10.255.255.1` / `10.255.255.2`): router-id do OSPF e endereço de monitoramento, alcançável pela fibra ou pelo rádio.
 - **Fibra degradada:** alertas de latência, perda, piora em relação ao normal e previsão, mesmo sem a fibra cair.
 - **Troca por qualidade:** netwatch no MikroTik (RouterOS 7.4+) sobe o custo OSPF da fibra para 200 quando ela degrada, e o tráfego vai para o rádio.

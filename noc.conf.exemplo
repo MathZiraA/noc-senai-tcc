@@ -35,7 +35,7 @@ SNMP_COMMUNITY=public_senai
 LOOPBACK_MATRIZ=10.255.255.1
 LOOPBACK_FILIAL=10.255.255.2
 # Portas: 1 = rádio, 2 = fibra, 3-5 = LAN em bridge
-PORTA_FIBRA=ether2-WAN-FIBRA
+PORTA_FIBRA=sfp1-WAN-FIBRA
 PORTA_RADIO=ether1-WAN-RADIO
 # Fibra "degradada" (alerta antes de cair) e sinal adequado do rádio (-60 a -50 dBm)
 FIBRA_LAT_MAX_MS=20

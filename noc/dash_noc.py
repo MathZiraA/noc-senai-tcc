@@ -3,7 +3,7 @@
 Página 1 - Redundância: estado e latência dos enlaces, linha do tempo UP/DOWN, tráfego fibra x rádio,
 problemas ativos e as análises enviadas pela IA.
 Página 2 - Saúde do R-FILIAL: CPU, memória, temperatura e interfaces (preenchidos quando o SNMP responder).
-Gráficos por padrão de nome (ex.: "*ether2*Bits*") passam a mostrar dados sozinhos depois da descoberta SNMP.
+Gráficos por padrão de nome (ex.: "*sfp1*Bits*") passam a mostrar dados sozinhos depois da descoberta SNMP.
 """
 import config
 from zbx import call

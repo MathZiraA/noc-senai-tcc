@@ -10,9 +10,13 @@
 /system identity set name="R-FILIAL"
 
 # 2. PORTAS
-#    ether1 = rádio (backup) | ether2 = fibra (principal) | ether3, ether4, ether5 = rede local (bridge)
+#    ether1 = rádio (backup) | sfp1 = fibra óptica (principal, módulo SFP) | ether3, ether4, ether5 = rede local (bridge)
+#    ether2 fica livre (reserva)
+# hEX S (RB760iGS): o MTU nao pode passar do L2MTU (1596 de fabrica). 2026 e o maximo do chip.
+/interface ethernet set [find where default-name~"ether"] l2mtu=2026
 /interface set [find default-name=ether1] name="ether1-WAN-RADIO" comment="PAP Backup Radio (/29)" mtu=2000
-/interface set [find default-name=ether2] name="ether2-WAN-FIBRA" comment="PAP Principal Fibra Optica (/30)" mtu=2000
+/interface set [find default-name=ether2] name="ether2-reserva" comment="Reserva (fibra no SFP)" mtu=2000
+/interface ethernet set [find default-name=sfp1] name="sfp1-WAN-FIBRA" comment="PAP Principal Fibra Optica (/30) - SFP" l2mtu=2026 mtu=2000
 /interface set [find default-name=ether3] name="ether3-LAN" comment="Rede Interna Filial" mtu=2000
 /interface set [find default-name=ether4] name="ether4-LAN" comment="Rede Interna Filial" mtu=2000
 /interface set [find default-name=ether5] name="ether5-LAN" comment="Rede Interna Filial" mtu=2000
@@ -27,8 +31,14 @@
 
 # 4. ENDEREÇAMENTO IP
 /ip address add address=192.168.20.1/24 interface=bridge-LAN comment="Gateway LAN Filial"
-/ip address add address=10.0.1.2/30 interface=ether2-WAN-FIBRA comment="PAP Fibra Filial"
+/ip address add address=10.0.1.2/30 interface=sfp1-WAN-FIBRA comment="PAP Fibra Filial"
 /ip address add address=10.0.2.2/29 interface=ether1-WAN-RADIO comment="PAP Radio Filial"
+
+# 4b. DHCP NA LAN: notebooks e PCs pegam IP sozinhos (.100 a .199). IPs fixos ficam fora da faixa:
+#     roteador .1, switch .2, PCs do projeto .10, servidor Zabbix .50
+/ip pool add name=pool-LAN ranges=192.168.20.100-192.168.20.199
+/ip dhcp-server add name=dhcp-LAN interface=bridge-LAN address-pool=pool-LAN lease-time=1h disabled=no
+/ip dhcp-server network add address=192.168.20.0/24 gateway=192.168.20.1 comment="LAN Filial"
 
 # 5. USUÁRIOS
 /user add name="admin_senai" group=full password="<SENHA_ADMIN_FILIAL>" comment="Usuario Administrativo"
@@ -48,7 +58,7 @@
 /interface list add name="LAN_MGMT"
 /interface list add name="WAN_PUBLIC"
 /interface list member add interface=bridge-LAN list=LAN_MGMT
-/interface list member add interface=ether2-WAN-FIBRA list=WAN_PUBLIC
+/interface list member add interface=sfp1-WAN-FIBRA list=WAN_PUBLIC
 /interface list member add interface=ether1-WAN-RADIO list=WAN_PUBLIC
 /ip neighbor discovery-settings set discover-interface-list=LAN_MGMT
 /tool mac-server set allowed-interface-list=LAN_MGMT
@@ -57,10 +67,10 @@
 # 8. OSPF v7: fibra custo 10 (preferida), rádio custo 100 (backup), LAN e loopback anunciadas
 /routing ospf instance add name="ospf-filial" router-id=10.255.255.2
 /routing ospf area add name="area-0" instance=ospf-filial area-id=0.0.0.0
-/routing ospf interface-template add area=area-0 interfaces=ether2-WAN-FIBRA cost=10 type=ptp comment="PAP Fibra - Custo 10 (Prioritario)"
+/routing ospf interface-template add area=area-0 interfaces=sfp1-WAN-FIBRA cost=10 type=ptp comment="PAP Fibra - Custo 10 (Prioritario)"
 /routing ospf interface-template add area=area-0 interfaces=ether1-WAN-RADIO cost=100 type=ptp comment="PAP Radio - Custo 100 (Backup)"
-/routing ospf interface-template add area=area-0 interfaces=bridge-LAN passive=yes comment="Anunciar LAN Filial sem enviar pacotes OSPF"
-/routing ospf interface-template add area=area-0 interfaces=loopback passive=yes comment="Anunciar loopback /32"
+/routing ospf interface-template add area=area-0 interfaces=bridge-LAN passive comment="Anunciar LAN Filial sem enviar pacotes OSPF"
+/routing ospf interface-template add area=area-0 interfaces=loopback passive comment="Anunciar loopback /32"
 
 # 9. FIREWALL STATEFUL
 /ip firewall filter

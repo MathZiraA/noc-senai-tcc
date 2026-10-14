@@ -1,6 +1,6 @@
 # ====================================================================
 # TEMPLATE PADRONIZADO PARA FUTURAS UNIDADES (NOVA FILIAL)
-# Mesmo padrão da R-FILIAL (revisão 14/10/2026): porta 1 = rádio, 2 = fibra, 3-5 = LAN em bridge,
+# Mesmo padrão da R-FILIAL (revisão 14/10/2026): porta 1 = rádio, sfp1 = fibra, 3-5 = LAN em bridge,
 # loopback /32 como router-id. Senha substituída por placeholder.
 # Este arquivo usa variáveis :local: aplique como script (/import arquivo.rsc), nunca colando linha a
 # linha no terminal (cada linha colada perde as variáveis da anterior).
@@ -15,8 +15,11 @@
 
 /system identity set name=$NOMEUNIDADE
 
+# hEX S (RB760iGS): o MTU nao pode passar do L2MTU (1596 de fabrica). 2026 e o maximo do chip.
+/interface ethernet set [find where default-name~"ether"] l2mtu=2026
 /interface set [find default-name=ether1] name="ether1-WAN-RADIO" comment="PAP Radio" mtu=2000
-/interface set [find default-name=ether2] name="ether2-WAN-FIBRA" comment="PAP Fibra" mtu=2000
+/interface set [find default-name=ether2] name="ether2-reserva" comment="Reserva" mtu=2000
+/interface ethernet set [find default-name=sfp1] name="sfp1-WAN-FIBRA" comment="PAP Fibra (SFP)" l2mtu=2026 mtu=2000
 /interface set [find default-name=ether3] name="ether3-LAN" mtu=2000
 /interface set [find default-name=ether4] name="ether4-LAN" mtu=2000
 /interface set [find default-name=ether5] name="ether5-LAN" mtu=2000
@@ -27,7 +30,7 @@
 /interface bridge add name="loopback" comment="Loopback /32"
 
 /ip address add address=$IPLAN interface=bridge-LAN
-/ip address add address=$IPWANFIBRA interface=ether2-WAN-FIBRA
+/ip address add address=$IPWANFIBRA interface=sfp1-WAN-FIBRA
 /ip address add address=$IPWANRADIO interface=ether1-WAN-RADIO
 /ip address add address=($LOOPBACK . "/32") interface=loopback
 
@@ -45,10 +48,10 @@
 
 /routing ospf instance add name="ospf-inst" router-id=$LOOPBACK
 /routing ospf area add name="area-0" instance=ospf-inst area-id=0.0.0.0
-/routing ospf interface-template add area=area-0 interfaces=ether2-WAN-FIBRA cost=10 type=ptp comment="PAP Fibra"
+/routing ospf interface-template add area=area-0 interfaces=sfp1-WAN-FIBRA cost=10 type=ptp comment="PAP Fibra"
 /routing ospf interface-template add area=area-0 interfaces=ether1-WAN-RADIO cost=100 type=ptp comment="PAP Radio"
-/routing ospf interface-template add area=area-0 interfaces=bridge-LAN passive=yes
-/routing ospf interface-template add area=area-0 interfaces=loopback passive=yes
+/routing ospf interface-template add area=area-0 interfaces=bridge-LAN passive
+/routing ospf interface-template add area=area-0 interfaces=loopback passive
 
 /ip firewall filter
 add chain=input action=accept connection-state=established,related

@@ -79,7 +79,7 @@ prazo_original = None
 try:
     tags = lambda e: [{"tag": "component", "value": "enlace"}, {"tag": "enlace", "value": e}]
     for chave, nome, tipo_valor, unid, enl in [
-            (K_FIBRA, "Enlace FIBRA - estado (simulação ether2)", 3, "", "fibra"),
+            (K_FIBRA, "Enlace FIBRA - estado (simulação sfp1)", 3, "", "fibra"),
             (K_RADIO, "Enlace RÁDIO - estado (simulação ether1)", 3, "", "radio"),
             (K_LAT_F, "Enlace FIBRA - latência", 0, "s", "fibra"),
             (K_LAT_R, "Enlace RÁDIO - latência", 0, "s", "radio"),

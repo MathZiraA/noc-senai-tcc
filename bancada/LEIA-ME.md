@@ -1,5 +1,11 @@
 # Montagem automática da bancada
 
+> **Bancada já configurada?** Para remontar (os roteadores guardam a configuração), siga
+> [PASSO-A-PASSO.md](PASSO-A-PASSO.md). Este arquivo é a configuração do zero.
+>
+> Ferramentas auxiliares: `atualizar_v7.ps1` (RouterOS 6 → 7), `testar.ps1` (testa o arquivo sem aplicar) e
+> `conferir.ps1` (lê a configuração e testa a fibra e o rádio de dentro do roteador).
+
 Tudo roda no notebook, na pasta do repositório. Cabos ligados conforme o mapa de portas da documentação (seção 9).
 
 ## 1. Gerar os arquivos (uma vez)
@@ -57,7 +63,7 @@ Na VM do Zabbix:
 cd /root/noc && /opt/noc-analista/bin/python validar_bancada.py
 ```
 
-Testa 16 pontos (rede, enlaces, antenas, Filial, SNMP, SSH de leitura, OSPF, rota pela fibra, MTU 2000 e o que o Zabbix está vendo) e dá uma dica para cada falha. Com tudo OK, faça o teste de failover: no R-FILIAL, `/interface disable ether2-WAN-FIBRA`.
+Testa 16 pontos (rede, enlaces, antenas, Filial, SNMP, SSH de leitura, OSPF, rota pela fibra, MTU 2000 e o que o Zabbix está vendo) e dá uma dica para cada falha. Com tudo OK, faça o teste de failover: no R-FILIAL, `/interface disable sfp1-WAN-FIBRA`.
 
 ## 7. Limpeza
 

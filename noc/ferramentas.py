@@ -75,7 +75,7 @@ def historico_item(host: str, nome_item: str, minutos: int = 60) -> str:
 
     Args:
         host: Nome técnico do host, ex.: R-FILIAL.
-        nome_item: Trecho do nome do item, ex.: "Enlace FIBRA", "latência", "perda", "ether2", "CPU".
+        nome_item: Trecho do nome do item, ex.: "Enlace FIBRA", "latência", "perda", "sfp1", "CPU".
         minutos: Janela de tempo para trás, em minutos (1 a 1440).
     """
     minutos = max(1, min(int(minutos), 1440))

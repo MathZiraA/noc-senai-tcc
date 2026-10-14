@@ -20,11 +20,17 @@ $saida = Join-Path $PSScriptRoot 'saida'
 $arquivo = Join-Path $saida "$Equipamento.rsc"
 if (-not (Test-Path $arquivo)) { Write-Host "Falta $arquivo. Rode antes: python bancada\gerar_configs.py" -ForegroundColor Red; exit 1 }
 
-$enviar = @($arquivo)
+$nome = Split-Path $arquivo -Leaf
+# O comando de reset vai num arquivo: o PowerShell 5.1 tira as aspas internas de argumentos passados ao ssh.
+# Rodado por /import (script), o RouterOS não pede confirmação do reset.
+$aplicar = Join-Path $saida 'noc-aplicar.rsc'
+Set-Content -Path $aplicar -Encoding ascii -Value "/system reset-configuration no-defaults=yes skip-backup=yes run-after-reset=$nome"
+
+$enviar = @($arquivo, $aplicar)
 if ($Equipamento -eq 'R-FILIAL') { $enviar += (Join-Path $saida 'noc-analista.pub') }
 
 # Os dois roteadores de fábrica respondem no mesmo IP: não guardar a "impressão digital" de nenhum
-$opcoes = @('-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=NUL', '-o', 'ConnectTimeout=8')
+$opcoes = @('-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=NUL', '-o', 'ConnectTimeout=8', '-o', 'LogLevel=ERROR')
 
 Write-Host "Testando $IP..."
 if (-not (Test-Connection $IP -Count 2 -Quiet)) {
@@ -39,10 +45,16 @@ if ($LASTEXITCODE -ne 0) { Write-Host 'Falha ao copiar. Senha certa? SSH habilit
 
 Write-Host "`n2/2 Mandando o $Equipamento se reconfigurar (digite a senha de novo)"
 Write-Host '    A conexão vai cair: é o MikroTik reiniciando. Isso é esperado.' -ForegroundColor Yellow
-# Dentro de um script o RouterOS não pede confirmação do reset
-$nome = Split-Path $arquivo -Leaf
-$comando = "/system script add name=noc-aplicar source=`"/system reset-configuration no-defaults=yes skip-backup=yes run-after-reset=$nome`"; /system script run noc-aplicar"
-& ssh @opcoes "${Usuario}@${IP}" $comando
+# Sem 2>&1: no PowerShell 5.1 qualquer linha do ssh no stderr vira erro e mata o comando no meio.
+# A resposta do RouterOS vem pelo stdout; erros de login o próprio ssh mostra na tela.
+$ErrorActionPreference = 'Continue'
+$resposta = @(& ssh @opcoes "${Usuario}@${IP}" "/import file-name=noc-aplicar.rsc")
+$resposta | ForEach-Object { Write-Host "    $_" }
+# (a conexão cair sem resposta é o sucesso: o MikroTik reiniciou para se reconfigurar)
+if (($resposta -join ' ') -match 'error|failure') {
+    Write-Host "O MikroTik recusou o comando acima: nada foi alterado. Mande o print para análise." -ForegroundColor Red
+    exit 1
+}
 
 Write-Host "`nPronto. Aguarde ~1 minuto e entre de novo pelo Winbox com admin_senai e a senha que você definiu." -ForegroundColor Green
 switch ($Equipamento) {

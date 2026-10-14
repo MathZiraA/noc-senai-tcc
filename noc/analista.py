@@ -48,10 +48,10 @@ TOPOLOGIA
 - {config.HOST} (MikroTik RouterOS v7, router-id 2.2.2.2): LAN {C['REDE_FILIAL']}, gateway {C['LAN_FILIAL']}. \
 É o host monitorado.
 - Enlace PRINCIPAL Fibra óptica: {C['REDE_FIBRA']} (Matriz {C['FIBRA_MATRIZ']}, Filial {C['FIBRA_FILIAL']}), \
-porta ether2-WAN-FIBRA, OSPF custo 10.
+porta sfp1-WAN-FIBRA (módulo SFP), OSPF custo 10.
 - Enlace BACKUP Rádio P2P: {C['REDE_RADIO']} (Matriz {C['RADIO_MATRIZ']}, Filial {C['RADIO_FILIAL']}; antenas em \
 bridge L2 com IPs {C['ANTENA_MATRIZ']} e {C['ANTENA_FILIAL']}), porta ether1-WAN-RADIO, OSPF custo 100.
-- Portas dos roteadores: ether1 = rádio, ether2 = fibra, ether3/4/5 = LAN em bridge (bridge-LAN).
+- Portas dos roteadores: ether1 = rádio, sfp1 = fibra (SFP), ether2 = reserva, ether3/4/5 = LAN em bridge (bridge-LAN).
 - Loopback /32 em cada roteador (R-MATRIZ {C['LOOPBACK_MATRIZ']}, {config.HOST} {C['LOOPBACK_FILIAL']}), anunciada no OSPF e usada como router-id. O Zabbix coleta o {config.HOST} pela loopback: ela responde enquanto houver fibra OU rádio.
 - Troca por QUALIDADE: um netwatch em cada roteador testa a fibra a cada 10 s; se a média passar de 30 ms ou a perda de 10%, o custo OSPF da fibra sobe para 200 e o tráfego vai para o rádio mesmo com a fibra UP. Use consultar_mikrotik('netwatch') e ('ospf_custos') para confirmar.
 - Queda que dura mais que o prazo do chamado (padrão 1 h) gera chamado NOC-<eventid> com e-mail formal ao cliente.

@@ -31,7 +31,7 @@ PADRAO = {
     # Revisão CTI (14/10/2026): loopback /32 de cada roteador e mapa de portas
     "LOOPBACK_MATRIZ": "10.255.255.1",
     "LOOPBACK_FILIAL": "10.255.255.2",       # o Zabbix monitora o R-FILIAL por aqui (alcançável pela fibra OU pelo rádio)
-    "PORTA_FIBRA": "ether2-WAN-FIBRA",
+    "PORTA_FIBRA": "sfp1-WAN-FIBRA",
     "PORTA_RADIO": "ether1-WAN-RADIO",
     # Qualidade: limites para "fibra degradada" e sinal adequado do rádio
     "FIBRA_LAT_MAX_MS": "20",
@@ -79,7 +79,7 @@ K_LAN = f"icmpping[{LAN_FILIAL},1,,,300]"
 LOOPBACK_FILIAL = C["LOOPBACK_FILIAL"]
 K_LOOPBACK = f"icmpping[{LOOPBACK_FILIAL},3,,,500]"
 PORTA_FIBRA, PORTA_RADIO = C["PORTA_FIBRA"], C["PORTA_RADIO"]
-PORTA_FIBRA_CURTA, PORTA_RADIO_CURTA = PORTA_FIBRA.split("-")[0], PORTA_RADIO.split("-")[0]  # ether2 / ether1
+PORTA_FIBRA_CURTA, PORTA_RADIO_CURTA = PORTA_FIBRA.split("-")[0], PORTA_RADIO.split("-")[0]  # sfp1 / ether1
 CLIENTE_EMAIL = C["CLIENTE_EMAIL"] or C["EMAIL"]
 K_CAMINHO = "noc.caminho_ativo"
 K_FAILOVER = "noc.failover.segundos"

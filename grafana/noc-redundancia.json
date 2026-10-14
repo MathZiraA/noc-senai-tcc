@@ -762,7 +762,7 @@
   {
    "id": 8,
    "type": "timeseries",
-   "title": "Tráfego: no failover ele sai da Fibra (ether2) e vai para o Rádio (ether3)",
+   "title": "Tráfego: no failover ele sai da Fibra (sfp1) e vai para o Rádio (ether1)",
    "datasource": {
     "type": "alexanderzobnin-zabbix-datasource",
     "uid": "zabbix-noc"
@@ -791,7 +791,7 @@
       "filter": ""
      },
      "item": {
-      "filter": "/ether2.*Bits/"
+      "filter": "/sfp1.*Bits/"
      },
      "functions": [],
      "options": {

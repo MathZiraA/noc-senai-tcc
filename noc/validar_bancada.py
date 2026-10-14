@@ -41,7 +41,7 @@ mostrar(ping(C["GW_MATRIZ"]), f"R-MATRIZ responde ({C['GW_MATRIZ']})",
 
 print("\n2. Enlaces até a Filial")
 fibra, radio = ping(C["FIBRA_FILIAL"]), ping(C["RADIO_FILIAL"])
-mostrar(fibra, f"fibra: R-FILIAL responde em {C['FIBRA_FILIAL']}", dica="cabo/conversores da fibra nas ether2 dos dois roteadores")
+mostrar(fibra, f"fibra: R-FILIAL responde em {C['FIBRA_FILIAL']}", dica="fibra/módulos SFP nas portas sfp1 dos dois roteadores")
 mostrar(radio, f"rádio: R-FILIAL responde em {C['RADIO_FILIAL']}", dica="rádios associados? ether1 dos roteadores nos PoE?")
 mostrar(ping(C["ANTENA_MATRIZ"]), f"antena da Matriz ({C['ANTENA_MATRIZ']})", dica="IP/gateway da antena (bancada/saida/RADIOS.txt)")
 mostrar(ping(C["ANTENA_FILIAL"]), f"antena da Filial ({C['ANTENA_FILIAL']})", dica="o enlace de rádio está associado?")
@@ -49,7 +49,7 @@ mostrar(ping(C["ANTENA_FILIAL"]), f"antena da Filial ({C['ANTENA_FILIAL']})", di
 print("\n3. Filial")
 mostrar(ping(C["LAN_FILIAL"]), f"LAN da Filial ({C['LAN_FILIAL']})", dica="OSPF não está trocando rotas (veja item 5)")
 mostrar(ping(C["LOOPBACK_FILIAL"]), f"loopback do R-FILIAL ({C['LOOPBACK_FILIAL']}): monitoramento pelos dois links",
-        dica="interface 'loopback' com o /32 e o interface-template passive=yes no OSPF do R-FILIAL")
+        dica="interface 'loopback' com o /32 e o interface-template passive no OSPF do R-FILIAL")
 mostrar(ping("192.168.20.10"), "PC-FILIAL (192.168.20.10)", dica="rode bancada/saida/pc-filial.ps1 no PC (como administrador)")
 
 print("\n4. Acesso do NOC ao R-FILIAL")
@@ -104,4 +104,4 @@ total = resultado["ok"] + resultado["falha"]
 cor = VERDE if not resultado["falha"] else AMARELO
 print(f"\n{cor}{resultado['ok']} de {total} verificações OK.{FIM}")
 if not resultado["falha"]:
-    print("Bancada pronta. Teste de failover: no R-FILIAL, /interface disable ether2-WAN-FIBRA")
+    print("Bancada pronta. Teste de failover: no R-FILIAL, /interface disable sfp1-WAN-FIBRA")
