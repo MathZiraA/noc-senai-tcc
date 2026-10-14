@@ -1,7 +1,7 @@
 # ====================================================================
 # PROJETO SENAI REDE-CONECTIVIDADE - SCRIPT FILIAL
 # EQUIPAMENTO: MikroTik RouterOS v7.4 ou superior (R-FILIAL)
-# Revisão 14/10/2026 (reunião com a CTI): porta 1 = rádio, porta 2 = fibra, portas 3-5 = LAN em bridge,
+# Revisão 14/10/2026 (reunião com a CTI + montagem real): porta 1 = rádio, sfp1 = fibra, portas 3-5 = LAN em bridge,
 # loopback /32 e troca automática para o rádio quando a fibra DEGRADA (não só quando cai).
 # Senha substituída por <SENHA_ADMIN_FILIAL>. Depois, colar também routeros-r-filial-noc.rsc (integração com o NOC).
 # ====================================================================
