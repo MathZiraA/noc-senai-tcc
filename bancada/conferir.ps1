@@ -16,7 +16,12 @@ $cmd = '/system identity print; /system resource print; /interface print; /inter
        '/tool netwatch print; /ip firewall filter print; /ip service print; /user print; /system scheduler print; ' +
        ":put PING-FIBRA-$lado; /ping $fibra count=3; :put PING-RADIO-$lado; /ping $radio count=3; " +
        ":put PING-LOOPBACK-$lado; /ping $lo count=3; :put PING-LAN-$lado; /ping $lan src-address=$src count=3; " +
-       ":put TRACEROUTE; /tool traceroute $lan src-address=$src count=1"
+       ":put TRACEROUTE; /tool traceroute $lan src-address=$src count=1; " +
+       # Rádio isolado da fibra: link físico da ether1, ping forçado a sair por ela e quem responde do outro lado
+       ':put RADIO-LINK; /interface ethernet monitor ether1-WAN-RADIO once; ' +
+       ":put PING-SO-PELO-RADIO; /ping $radio interface=ether1-WAN-RADIO count=5; " +
+       ':put PING-ANTENAS; /ping 10.0.2.3 count=2; /ping 10.0.2.4 count=2; ' +
+       ':put ARP-RADIO; /ip arp print where interface=ether1-WAN-RADIO'
 $r = ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o LogLevel=ERROR "admin_senai@$IP" $cmd
 $saida = Join-Path $PSScriptRoot 'saida'
 New-Item -ItemType Directory -Force $saida | Out-Null
