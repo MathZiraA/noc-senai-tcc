@@ -30,6 +30,23 @@ ANTENA_MATRIZ=10.0.2.3
 ANTENA_FILIAL=10.0.2.4
 SNMP_COMMUNITY=public_senai
 
+# --- Revisão CTI (14/10/2026) ---
+# Loopback /32 de cada roteador: o Zabbix monitora o R-FILIAL pela loopback (alcançável pela fibra OU pelo rádio)
+LOOPBACK_MATRIZ=10.255.255.1
+LOOPBACK_FILIAL=10.255.255.2
+# Portas: 1 = rádio, 2 = fibra, 3-5 = LAN em bridge
+PORTA_FIBRA=ether2-WAN-FIBRA
+PORTA_RADIO=ether1-WAN-RADIO
+# Fibra "degradada" (alerta antes de cair) e sinal adequado do rádio (-60 a -50 dBm)
+FIBRA_LAT_MAX_MS=20
+FIBRA_PERDA_MAX=5
+RADIO_SINAL_MIN_DBM=-60
+# Chamado + e-mail formal ao cliente quando um enlace fica fora por mais deste tempo
+CHAMADO_APOS=1h
+CLIENTE_NOME="Cliente CTI"
+# E-mail do cliente (vazio = usa o EMAIL abaixo, para testes)
+CLIENTE_EMAIL=
+
 # --- E-mail dos alertas (conta Google com senha de app) ---
 EMAIL=matheus.ziravello@aluno.senai.br
 SMTP_SERVIDOR=smtp.gmail.com

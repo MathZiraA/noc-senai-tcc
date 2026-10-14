@@ -20,6 +20,7 @@ from pathlib import Path
 
 import anthropic
 
+import chamados
 import config
 import ferramentas
 from config import C
@@ -47,9 +48,13 @@ TOPOLOGIA
 - {config.HOST} (MikroTik RouterOS v7, router-id 2.2.2.2): LAN {C['REDE_FILIAL']}, gateway {C['LAN_FILIAL']}. \
 É o host monitorado.
 - Enlace PRINCIPAL Fibra óptica: {C['REDE_FIBRA']} (Matriz {C['FIBRA_MATRIZ']}, Filial {C['FIBRA_FILIAL']}), \
-portas ether2-WAN-FIBRA, OSPF custo 10.
+porta ether2-WAN-FIBRA, OSPF custo 10.
 - Enlace BACKUP Rádio P2P: {C['REDE_RADIO']} (Matriz {C['RADIO_MATRIZ']}, Filial {C['RADIO_FILIAL']}; antenas em \
-bridge L2 com IPs {C['ANTENA_MATRIZ']} e {C['ANTENA_FILIAL']}), portas ether3-WAN-RADIO, OSPF custo 100.
+bridge L2 com IPs {C['ANTENA_MATRIZ']} e {C['ANTENA_FILIAL']}), porta ether1-WAN-RADIO, OSPF custo 100.
+- Portas dos roteadores: ether1 = rádio, ether2 = fibra, ether3/4/5 = LAN em bridge (bridge-LAN).
+- Loopback /32 em cada roteador (R-MATRIZ {C['LOOPBACK_MATRIZ']}, {config.HOST} {C['LOOPBACK_FILIAL']}), anunciada no OSPF e usada como router-id. O Zabbix coleta o {config.HOST} pela loopback: ela responde enquanto houver fibra OU rádio.
+- Troca por QUALIDADE: um netwatch em cada roteador testa a fibra a cada 10 s; se a média passar de 30 ms ou a perda de 10%, o custo OSPF da fibra sobe para 200 e o tráfego vai para o rádio mesmo com a fibra UP. Use consultar_mikrotik('netwatch') e ('ospf_custos') para confirmar.
+- Queda que dura mais que o prazo do chamado (padrão 1 h) gera chamado NOC-<eventid> com e-mail formal ao cliente.
 - OSPF área 0 entre os roteadores; se a fibra cai, o OSPF converge e o tráfego passa pelo rádio.
 - MTU 2000 em todas as interfaces dos roteadores.
 - A rede não tem saída para a internet: o impacto de uma queda é a comunicação Matriz <-> Filial.
@@ -237,6 +242,8 @@ def servir():
                 self._responder(404, {"erro": "rota inexistente"})
 
         def do_POST(self):
+            if self.path == "/chamado":
+                return self._chamado()
             if self.path != "/evento":
                 return self._responder(404, {"erro": "rota inexistente"})
             try:
@@ -252,6 +259,31 @@ def servir():
                 log.info("evento %s recebido: %s / %s", evento["eventid"], evento["host"], evento["nome"])
                 return self._responder(202, {"aceito": True})
             return self._responder(202, {"aceito": False, "motivo": "não é abertura de problema"})
+
+        def _chamado(self):
+            """Webhook 'Chamado NOC': registra abertura/encerramento no livro encadeado por SHA-256."""
+            try:
+                dados = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))))
+                eventid = dados["eventid"]
+            except (ValueError, KeyError, json.JSONDecodeError):
+                return self._responder(400, {"erro": "JSON inválido ou sem eventid"})
+            if dados.get("status") == "RESOLVED":
+                if not chamados.aberto(eventid):  # queda resolvida antes do prazo: não houve chamado
+                    return self._responder(202, {"registrado": False})
+                r = chamados.registrar("encerramento", dados)
+            else:
+                if chamados.aberto(eventid):
+                    return self._responder(202, {"registrado": False, "motivo": "chamado já aberto"})
+                r = chamados.registrar("abertura", dados)
+                # Comentário no evento com o token do Admin: o Zabbix não notifica o autor, então não gera e-mail
+                try:
+                    call("event.acknowledge", {"eventids": [eventid], "action": 4, "message":
+                         f"CHAMADO {r['chamado']} aberto em {r['registrado_em']}: enlace fora há {dados.get('duracao')}. "
+                         f"Cliente notificado por e-mail. Registro {r['seq']} do livro, hash {r['hash'][:16]}..."})
+                except Exception:
+                    log.exception("chamado registrado, mas falhou ao comentar o evento %s", eventid)
+            log.info("chamado %s: %s registrado (hash %s)", r["chamado"], r["acao"], r["hash"][:16])
+            return self._responder(202, {"registrado": True, "chamado": r["chamado"], "hash": r["hash"]})
 
         def log_message(self, formato, *args):
             log.debug(formato, *args)

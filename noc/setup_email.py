@@ -66,7 +66,7 @@ if not call("action.get", {"filter": {"name": [ACAO]}, "output": ["actionid"]}):
                         "opmessage": {"default_msg": 0, "mediatypeid": midia_id, "subject": ALERTA_ASSUNTO,
                                       "message": ALERTA_CORPO}}],
         "recovery_operations": [{"operationtype": 11,
-                                 "opmessage": {"default_msg": 0, "mediatypeid": midia_id, "subject": NORMAL_ASSUNTO,
+                                 "opmessage": {"default_msg": 0, "subject": NORMAL_ASSUNTO,
                                                "message": NORMAL_CORPO}}],
     })
 print(f"[ok] ação '{ACAO}'")

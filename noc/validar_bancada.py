@@ -30,7 +30,7 @@ def ping(ip, tamanho=None):
 
 def ssh_mikrotik(comando):
     r = subprocess.run(["ssh", "-i", "/root/.ssh/id_ed25519_mikrotik", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6",
-                        "-o", "StrictHostKeyChecking=accept-new", f"zabbix-ia@{C['LAN_FILIAL']}", comando],
+                        "-o", "StrictHostKeyChecking=accept-new", f"zabbix-ia@{C['LOOPBACK_FILIAL']}", comando],
                        capture_output=True, text=True, timeout=25)
     return r.returncode, (r.stdout + r.stderr).strip()
 
@@ -42,12 +42,14 @@ mostrar(ping(C["GW_MATRIZ"]), f"R-MATRIZ responde ({C['GW_MATRIZ']})",
 print("\n2. Enlaces até a Filial")
 fibra, radio = ping(C["FIBRA_FILIAL"]), ping(C["RADIO_FILIAL"])
 mostrar(fibra, f"fibra: R-FILIAL responde em {C['FIBRA_FILIAL']}", dica="cabo/conversores da fibra nas ether2 dos dois roteadores")
-mostrar(radio, f"rádio: R-FILIAL responde em {C['RADIO_FILIAL']}", dica="rádios associados? ether3 dos roteadores nos PoE?")
+mostrar(radio, f"rádio: R-FILIAL responde em {C['RADIO_FILIAL']}", dica="rádios associados? ether1 dos roteadores nos PoE?")
 mostrar(ping(C["ANTENA_MATRIZ"]), f"antena da Matriz ({C['ANTENA_MATRIZ']})", dica="IP/gateway da antena (bancada/saida/RADIOS.txt)")
 mostrar(ping(C["ANTENA_FILIAL"]), f"antena da Filial ({C['ANTENA_FILIAL']})", dica="o enlace de rádio está associado?")
 
 print("\n3. Filial")
 mostrar(ping(C["LAN_FILIAL"]), f"LAN da Filial ({C['LAN_FILIAL']})", dica="OSPF não está trocando rotas (veja item 5)")
+mostrar(ping(C["LOOPBACK_FILIAL"]), f"loopback do R-FILIAL ({C['LOOPBACK_FILIAL']}): monitoramento pelos dois links",
+        dica="interface 'loopback' com o /32 e o interface-template passive=yes no OSPF do R-FILIAL")
 mostrar(ping("192.168.20.10"), "PC-FILIAL (192.168.20.10)", dica="rode bancada/saida/pc-filial.ps1 no PC (como administrador)")
 
 print("\n4. Acesso do NOC ao R-FILIAL")
@@ -73,7 +75,16 @@ if codigo == 0:
     # MTU 2000 entre os roteadores (o caminho que importa; a placa do servidor pode ficar em 1500)
     _, mtu = ssh_mikrotik(f"/ping {C['GW_MATRIZ']} size=2000 do-not-fragment count=3")
     mostrar("packet-loss=0%" in mtu.replace(" ", ""), "MTU 2000 sem fragmentar entre R-FILIAL e R-MATRIZ",
-            dica="mtu=2000 nas ether1/2/3 dos dois roteadores (e no rádio, se o tráfego estiver nele)")
+            dica="mtu=2000 nas ether1-5 e na bridge-LAN dos dois roteadores (e no rádio, se o tráfego estiver nele)")
+    # Troca por qualidade: netwatch da fibra precisa estar "up" e o custo da fibra em 10
+    _, nw = ssh_mikrotik('/tool netwatch print terse where comment~"qualidade"')
+    mostrar("status=up" in nw, "netwatch de qualidade da fibra ativo e OK",
+            "fibra degradada: tráfego desviado ao rádio" if "status=down" in nw else "",
+            dica="RouterOS 7.4+? bloco 11 do script do roteador aplicado? (/tool netwatch print)")
+    _, custos = ssh_mikrotik('/routing ospf interface-template print terse where comment~"PAP Fibra"')
+    mostrar("cost=10" in custos.replace(" ", ""), "custo OSPF da fibra = 10 (fibra preferida)",
+            "custo 200: fibra desviada por qualidade" if "cost=200" in custos.replace(" ", "") else "",
+            dica="se a fibra está boa e o custo continua 200, rode o up-script do netwatch ou reaplique o custo 10")
 else:
     mostrar(False, "OSPF não verificado", "sem SSH no R-FILIAL", dica="resolva o item 4 primeiro")
 

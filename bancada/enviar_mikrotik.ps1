@@ -1,7 +1,7 @@
 ﻿<#
 Envia a configuração gerada para um MikroTik e manda ele se reconfigurar sozinho.
 
-Uso (no notebook, com o cabo na porta ether1 do MikroTik que vai ser configurado):
+Uso (no notebook, com o cabo na porta ether3, 4 ou 5 do MikroTik que vai ser configurado):
   powershell -ExecutionPolicy Bypass -File bancada\enviar_mikrotik.ps1 -Equipamento R-MATRIZ
   powershell -ExecutionPolicy Bypass -File bancada\enviar_mikrotik.ps1 -Equipamento R-FILIAL
 
@@ -28,7 +28,7 @@ $opcoes = @('-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=NUL', '-
 
 Write-Host "Testando $IP..."
 if (-not (Test-Connection $IP -Count 2 -Quiet)) {
-    Write-Host "O MikroTik não responde em $IP. Confira o cabo na ether1 e se o notebook pegou IP 192.168.88.x." -ForegroundColor Red
+    Write-Host "O MikroTik não responde em $IP. Confira o cabo numa porta de LAN (ether3-5) e se o notebook pegou IP 192.168.88.x." -ForegroundColor Red
     Write-Host 'Equipamento já configurado antes? Use -IP com o IP atual dele (ex.: -IP 192.168.10.1 -Usuario admin_senai).'
     exit 1
 }
@@ -46,7 +46,7 @@ $comando = "/system script add name=noc-aplicar source=`"/system reset-configura
 
 Write-Host "`nPronto. Aguarde ~1 minuto e entre de novo pelo Winbox com admin_senai e a senha que você definiu." -ForegroundColor Green
 switch ($Equipamento) {
-    'R-MATRIZ'  { Write-Host 'O R-MATRIZ agora responde em 192.168.10.1 (ligue o notebook no SW-MATRIZ ou na ether1).' }
+    'R-MATRIZ'  { Write-Host 'O R-MATRIZ agora responde em 192.168.10.1 (ligue o notebook no SW-MATRIZ ou nas portas 3, 4 ou 5).' }
     'R-FILIAL'  { Write-Host 'O R-FILIAL agora responde em 192.168.20.1 (gerência só pela LAN da Filial).' }
     'SW-MATRIZ' { Write-Host 'O SW-MATRIZ agora responde em 192.168.10.2.' }
     'SW-FILIAL' { Write-Host 'O SW-FILIAL agora responde em 192.168.20.2.' }

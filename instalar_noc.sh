@@ -154,6 +154,7 @@ call('user.update', {'userid': a['userid'], 'lang': 'pt_BR'})" && ok "interface 
 "$PY" fix_redundancia.py
 zabbix_server -R config_cache_reload >/dev/null 2>&1 || true
 "$PY" setup_email.py
+"$PY" setup_chamados.py
 "$PY" setup_zabbix_analista.py
 "$PY" setup_backup.py
 # Fundo do mapa traz as sub-redes escritas: só redesenha se forem diferentes das do protótipo

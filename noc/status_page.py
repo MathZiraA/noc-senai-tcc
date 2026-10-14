@@ -5,6 +5,7 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import chamados
 import config
 from zbx import call
 
@@ -102,6 +103,23 @@ implantacao = ('<div class="faixa">Ambiente em implantação: a rede da Filial a
                'então os dados abaixo não refletem a operação real.</div>' if host["maintenance_status"] == "1" else "")
 fmt = lambda p: "—" if p is None else f"{p:.2f}%".replace(".", ",")
 
+# Chamados (quedas acima do prazo), do livro encadeado por SHA-256; simulações de teste ficam de fora
+limite_chamados = (datetime.now() - timedelta(days=DIAS)).astimezone().isoformat()
+lista_chamados = [c for c in reversed(chamados.listar()) if not c["host"].startswith("SIMULA")
+                  and c.get("aberto_em", "") >= limite_chamados]
+livro_ok, _ = chamados.verificar()
+linhas_chamados = "".join(
+    f'<li class="{"info" if c.get("encerrado_em") else "critico"}"><div><strong>{html.escape(c["chamado"])} · '
+    f'{html.escape(c["nome"])}</strong><small>aberto em {c["aberto_em"][:16].replace("T", " ")}</small></div>'
+    f'<span class="{"resolvido" if c.get("encerrado_em") else "andamento"}">'
+    f'{"Encerrado: " + c["duracao_total"] if c.get("encerrado_em") else "Em aberto"}</span></li>'
+    for c in lista_chamados)
+secao_chamados = (f'<section><h3>Chamados dos últimos {DIAS} dias</h3>'
+                  + (f"<ul>{linhas_chamados}</ul>" if linhas_chamados else '<p class="vazia">Nenhum chamado aberto no período.</p>')
+                  + f'<p class="nota">Chamado é aberto quando uma queda dura mais que {config.C["CHAMADO_APOS"]}. '
+                  + ("Registro íntegro (SHA-256)." if livro_ok else "ATENÇÃO: o livro de chamados não passou na verificação de integridade.")
+                  + "</p></section>")
+
 pagina = f"""<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -160,6 +178,7 @@ footer {{ color:var(--suave); font-size:13px; text-align:center; }}
 <section><h3>Ocorrências dos últimos {DIAS} dias</h3>
 {"<ul>" + "".join(linhas) + "</ul>" if linhas else '<p class="vazia">Nenhuma ocorrência no período.</p>'}
 </section>
+{secao_chamados}
 <footer>Atualizado em {datetime.fromtimestamp(agora):%d/%m/%Y às %H:%M:%S} · Monitoramento NOC SENAI</footer>
 </main>
 </body>

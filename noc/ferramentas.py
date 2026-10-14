@@ -10,7 +10,7 @@ from anthropic import beta_tool
 import config
 from zbx import call
 
-MIKROTIK_IP = config.LAN_FILIAL
+MIKROTIK_IP = config.LOOPBACK_FILIAL  # loopback: alcançável pela fibra ou pelo rádio
 MIKROTIK_USER = "zabbix-ia"
 MIKROTIK_KEY = Path("/root/.ssh/id_ed25519_mikrotik")
 SEVERIDADES = ["Não classificada", "Informação", "Aviso", "Média", "Alta", "Desastre"]
@@ -22,6 +22,8 @@ CONSULTAS_MIKROTIK = {
     "rotas": "/ip route print without-paging",
     "log_recente": "/log print without-paging",
     "recursos": "/system resource print",
+    "netwatch": "/tool netwatch print detail without-paging",
+    "ospf_custos": "/routing ospf interface-template print detail without-paging",
 }
 
 
@@ -73,7 +75,7 @@ def historico_item(host: str, nome_item: str, minutos: int = 60) -> str:
 
     Args:
         host: Nome técnico do host, ex.: R-FILIAL.
-        nome_item: Trecho do nome do item, ex.: "Enlace FIBRA", "latência", "ether2", "CPU".
+        nome_item: Trecho do nome do item, ex.: "Enlace FIBRA", "latência", "perda", "ether2", "CPU".
         minutos: Janela de tempo para trás, em minutos (1 a 1440).
     """
     minutos = max(1, min(int(minutos), 1440))
@@ -230,14 +232,15 @@ def medir_failover(host: str, horas: int = 24) -> str:
 
 
 def consultar_mikrotik(consulta: Literal["interfaces", "erros_ethernet", "vizinhos_ospf", "rotas",
-                                        "log_recente", "recursos"]) -> str:
+                                        "log_recente", "recursos", "netwatch", "ospf_custos"]) -> str:
     """Executa uma consulta de LEITURA no RouterOS do R-FILIAL via SSH (usuário sem permissão de escrita).
     Só funciona se algum enlace estiver de pé.
 
     Args:
         consulta: interfaces (estado/link), erros_ethernet (CRC/FCS por porta), vizinhos_ospf (adjacências),
             rotas (tabela de rotas e por onde a Matriz é alcançada), log_recente (últimas linhas do log),
-            recursos (CPU, memória, uptime).
+            recursos (CPU, memória, uptime), netwatch (teste de qualidade da fibra: up/down e latência),
+            ospf_custos (custo atual de cada enlace: fibra 200 = desviada para o rádio por qualidade).
     """
     if not MIKROTIK_KEY.exists():
         return "Acesso SSH ao MikroTik ainda não configurado (chave ausente). Baseie-se nos dados do Zabbix."

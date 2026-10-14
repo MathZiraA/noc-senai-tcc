@@ -66,8 +66,8 @@ redundancia = [
     grafico("LATÊNCIA FIBRA x RÁDIO", 36, 4, 36, 6,
             [("Enlace FIBRA - latência", AZUL, 0), ("Enlace RÁDIO - latência", LARANJA, 0)]),
     # Linha 3: o failover visto no tráfego (aparece após a descoberta SNMP das interfaces)
-    grafico("TRÁFEGO: FIBRA (ether2) x RÁDIO (ether3) — no failover o tráfego muda de caminho", 0, 10, 72, 6,
-            [("*ether2*Bits*", AZUL, 0), ("*ether3*Bits*", LARANJA, 0)]),
+    grafico(f"TRÁFEGO: FIBRA ({config.PORTA_FIBRA_CURTA}) x RÁDIO ({config.PORTA_RADIO_CURTA}) — no failover o tráfego muda de caminho", 0, 10, 72, 6,
+            [(f"*{config.PORTA_FIBRA_CURTA}*Bits*", AZUL, 0), (f"*{config.PORTA_RADIO_CURTA}*Bits*", LARANJA, 0)]),
     # Linha 4: o que está acontecendo e o que a IA disse
     {"type": "problems", "name": "PROBLEMAS ATIVOS", "x": 0, "y": 16, "width": 40, "height": 7,
      "fields": [campo(2, "groupids.0", grupo), campo(0, "show_lines", 15), campo(0, "show_timeline", 1)]},

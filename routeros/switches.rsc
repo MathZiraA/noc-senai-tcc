@@ -6,7 +6,7 @@
 # ---------------- SW-MATRIZ ----------------
 /system identity set name="SW-MATRIZ"
 /interface bridge add name="bridge1" mtu=2000
-/interface bridge port add bridge=bridge1 interface=ether1 comment="Conexão com R-MATRIZ"
+/interface bridge port add bridge=bridge1 interface=ether1 comment="Conexão com R-MATRIZ (porta 3, 4 ou 5 do roteador)"
 /interface bridge port add bridge=bridge1 interface=ether2 comment="Estação de Trabalho PC-MATRIZ-01"
 /interface bridge port add bridge=bridge1 interface=ether3 comment="Estação de Trabalho PC-MATRIZ-02"
 /ip address add address=192.168.10.2/24 interface=bridge1 comment="IP Gerência SW-MATRIZ"
@@ -18,7 +18,7 @@
 # ---------------- SW-FILIAL ----------------
 /system identity set name="SW-FILIAL"
 /interface bridge add name="bridge1" mtu=2000
-/interface bridge port add bridge=bridge1 interface=ether1 comment="Conexão com R-FILIAL"
+/interface bridge port add bridge=bridge1 interface=ether1 comment="Conexão com R-FILIAL (porta 3, 4 ou 5 do roteador)"
 /interface bridge port add bridge=bridge1 interface=ether2 comment="Estação de Trabalho PC-FILIAL-01"
 /interface bridge port add bridge=bridge1 interface=ether3 comment="Estação de Trabalho PC-FILIAL-02"
 /ip address add address=192.168.20.2/24 interface=bridge1 comment="IP Gerência SW-FILIAL"

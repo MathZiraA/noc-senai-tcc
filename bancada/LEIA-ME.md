@@ -12,7 +12,7 @@ Pergunta o IP do Zabbix, a comunidade SNMP e as senhas do `admin_senai` (sem mos
 
 ## 2. Roteadores (um de cada vez)
 
-Ligue o cabo do notebook na **ether1** do MikroTik, com o MikroTik **de fábrica** (o notebook pega IP 192.168.88.x sozinho). Para um equipamento já usado, faça antes o reset pelo botão ou pelo Winbox.
+Ligue o cabo do notebook numa porta de **LAN** do MikroTik (**ether3, 4 ou 5**), com o MikroTik **de fábrica** (o notebook pega IP 192.168.88.x sozinho). Para um equipamento já usado, faça antes o reset pelo botão ou pelo Winbox.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File bancada\enviar_mikrotik.ps1 -Equipamento R-MATRIZ
@@ -57,7 +57,7 @@ Na VM do Zabbix:
 cd /root/noc && /opt/noc-analista/bin/python validar_bancada.py
 ```
 
-Testa 14 pontos (rede, enlaces, antenas, Filial, SNMP, SSH de leitura, OSPF, rota pela fibra, MTU 2000 e o que o Zabbix está vendo) e dá uma dica para cada falha. Com tudo OK, faça o teste de failover: no R-FILIAL, `/interface disable ether2-WAN-FIBRA`.
+Testa 16 pontos (rede, enlaces, antenas, Filial, SNMP, SSH de leitura, OSPF, rota pela fibra, MTU 2000 e o que o Zabbix está vendo) e dá uma dica para cada falha. Com tudo OK, faça o teste de failover: no R-FILIAL, `/interface disable ether2-WAN-FIBRA`.
 
 ## 7. Limpeza
 

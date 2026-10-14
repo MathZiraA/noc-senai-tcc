@@ -1,6 +1,7 @@
 # ====================================================================
 # TEMPLATE PADRONIZADO PARA FUTURAS UNIDADES (NOVA FILIAL)
-# Transcrito do documento da topologia. Senha substituída por placeholder.
+# Mesmo padrão da R-FILIAL (revisão 14/10/2026): porta 1 = rádio, 2 = fibra, 3-5 = LAN em bridge,
+# loopback /32 como router-id. Senha substituída por placeholder.
 # Este arquivo usa variáveis :local: aplique como script (/import arquivo.rsc), nunca colando linha a
 # linha no terminal (cada linha colada perde as variáveis da anterior).
 # ====================================================================
@@ -9,18 +10,26 @@
 :local IPLAN "192.168.30.1/24"
 :local IPWANFIBRA "10.0.1.6/30"
 :local IPWANRADIO "10.0.2.6/29"
-:local ROUTERID "3.3.3.3"
+:local LOOPBACK "10.255.255.3"
 :local SENHAADMIN "<SENHA_ADMIN_UNIDADE>"
 
 /system identity set name=$NOMEUNIDADE
 
-/interface set [find default-name=ether1] name="ether1-LAN" comment="LAN Interna" mtu=2000
+/interface set [find default-name=ether1] name="ether1-WAN-RADIO" comment="PAP Radio" mtu=2000
 /interface set [find default-name=ether2] name="ether2-WAN-FIBRA" comment="PAP Fibra" mtu=2000
-/interface set [find default-name=ether3] name="ether3-WAN-RADIO" comment="PAP Radio" mtu=2000
+/interface set [find default-name=ether3] name="ether3-LAN" mtu=2000
+/interface set [find default-name=ether4] name="ether4-LAN" mtu=2000
+/interface set [find default-name=ether5] name="ether5-LAN" mtu=2000
+/interface bridge add name="bridge-LAN" mtu=2000 comment="LAN Interna - portas 3, 4 e 5"
+/interface bridge port add bridge=bridge-LAN interface=ether3-LAN
+/interface bridge port add bridge=bridge-LAN interface=ether4-LAN
+/interface bridge port add bridge=bridge-LAN interface=ether5-LAN
+/interface bridge add name="loopback" comment="Loopback /32"
 
-/ip address add address=$IPLAN interface=ether1-LAN
+/ip address add address=$IPLAN interface=bridge-LAN
 /ip address add address=$IPWANFIBRA interface=ether2-WAN-FIBRA
-/ip address add address=$IPWANRADIO interface=ether3-WAN-RADIO
+/ip address add address=$IPWANRADIO interface=ether1-WAN-RADIO
+/ip address add address=($LOOPBACK . "/32") interface=loopback
 
 /user add name="admin_senai" group=full password=$SENHAADMIN
 /user disable admin
@@ -29,16 +38,17 @@
 /ip service set ssh,winbox address=192.168.0.0/16 disabled=no
 
 /interface list add name="LAN_MGMT"
-/interface list member add interface=ether1-LAN list=LAN_MGMT
+/interface list member add interface=bridge-LAN list=LAN_MGMT
 /ip neighbor discovery-settings set discover-interface-list=LAN_MGMT
 /tool mac-server set allowed-interface-list=LAN_MGMT
 /tool mac-server mac-winbox set allowed-interface-list=LAN_MGMT
 
-/routing ospf instance add name="ospf-inst" router-id=$ROUTERID
+/routing ospf instance add name="ospf-inst" router-id=$LOOPBACK
 /routing ospf area add name="area-0" instance=ospf-inst area-id=0.0.0.0
-/routing ospf interface-template add area=area-0 interfaces=ether2-WAN-FIBRA cost=10 type=ptp
-/routing ospf interface-template add area=area-0 interfaces=ether3-WAN-RADIO cost=100 type=ptp
-/routing ospf interface-template add area=area-0 interfaces=ether1-LAN passive=yes
+/routing ospf interface-template add area=area-0 interfaces=ether2-WAN-FIBRA cost=10 type=ptp comment="PAP Fibra"
+/routing ospf interface-template add area=area-0 interfaces=ether1-WAN-RADIO cost=100 type=ptp comment="PAP Radio"
+/routing ospf interface-template add area=area-0 interfaces=bridge-LAN passive=yes
+/routing ospf interface-template add area=area-0 interfaces=loopback passive=yes
 
 /ip firewall filter
 add chain=input action=accept connection-state=established,related
