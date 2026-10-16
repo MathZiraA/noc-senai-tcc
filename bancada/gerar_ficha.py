@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "16/10/2026 16:45"
+ATUALIZADO = "16/10/2026 16:55"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -60,7 +60,9 @@ OUTROS = [
      [("RADIO-P2P-MATRIZ", "Ponto de acesso, WDS, 10.0.2.3/29, gateway 10.0.2.1, MAC 80:2A:A8:2A:9B:E6, ether1 do R-MATRIZ"),
       ("RADIO-P2P-FILIAL", "Estação, WDS, 10.0.2.4/29, gateway 10.0.2.2, MAC 44:D9:E7:B4:63:A9, ether1 do R-FILIAL"),
       ("Rede sem fio", "SSID SENAI_LINK_P2P_BACKUP, WPA2-AES PSK (chave definida pelo aluno), Brasil, canal automático 40 MHz"),
-      ("Potência", "-4 dBm (bancada, antenas a ~1 m)"), ("MTU", "2000 (o airOS aceita até 2024)"),
+      ("Sinal medido (16/10 16:55)", "Filial recebe -53 dBm (H -64 / V -52), Matriz recebe -52 dBm: dentro da faixa da CTI (-50 a -60). Ruído -104 dBm, CCQ 99,1%, 300/300 Mbps, airMAX 96%/91%, 5505 MHz (DFS) 40 MHz"),
+      ("Ajuste pendente", "Diferença de 12 dB entre as polarizações H e V na Filial: girar uma antena no próprio eixo até igualar (ideal até ~5 dB)"),
+      ("Potência", "-4 dBm (bancada, antenas a poucos metros)"), ("MTU", "2000 (o airOS aceita até 2024)"),
       ("Gestão", "páginas web em https://10.0.2.3 e https://10.0.2.4; SNMP ativo (comunidade definida pelo aluno), contato NOC SENAI TCC"),
       ("Fonte PoE", "Ubiquiti GP-A240-050, 24 V passivo: porta POE na antena, porta LAN na ether1 do roteador")]),
     ("Notebook de testes", "ok", "Pega IP pelo DHCP do roteador em que estiver ligado",
@@ -76,6 +78,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("16/10/2026 16:55", "Rádio", "Sinal medido nas duas antenas: -53 dBm (Filial) e -52 dBm (Matriz), dentro da faixa pedida pela CTI. Atalho temporário de acesso às antenas criado no R-FILIAL."),
     ("16/10/2026 16:40", "Rádio", "Teste à distância, R-FILIAL do outro lado da sala e sem fibra: 289 pings em 60 s, 0% de perda, 6,4 ms de média (5 a 11 ms). Ping nos dois sentidos entre os notebooks (no da Filial foi liberado o ping no firewall do Windows)."),
     ("16/10/2026 16:17", "Failover", "Teste: com a fibra desligada no R-FILIAL a rede ficou 3,9 s sem resposta (8 de 729 pings) e passou para o rádio; na volta da fibra, nenhuma perda. Latência entre notebooks: 4,4 ms pela fibra, 5,5 ms pelo rádio."),
     ("16/10/2026 16:16", "R-FILIAL", "Removidos os itens temporários das antenas (NAT, IP 192.168.1.1 e descoberta em todas as portas)."),
