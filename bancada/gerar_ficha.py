@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "16/10/2026 14:55"
+ATUALIZADO = "16/10/2026 15:05"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -54,7 +54,7 @@ PORTAS = [  # (porta, nome no roteador, papel, classe)
 ]
 
 OUTROS = [
-    ("Antenas do rádio P2P", "falha", "Equipamento sem funcionar no teste de 14/10 (porta 1 sem link)",
+    ("Antenas do rádio P2P", "pendente", "Ligadas na porta 1 com link de 100 Mbps, mas ainda sem configuração: não respondem nos IPs previstos",
      [("RADIO-P2P-MATRIZ", "Access Point PtP, bridge, 10.0.2.3/29, gateway 10.0.2.1, liga na ether1 do R-MATRIZ"),
       ("RADIO-P2P-FILIAL", "Station PtP, bridge, 10.0.2.4/29, gateway 10.0.2.2, liga na ether1 do R-FILIAL"),
       ("Rede sem fio", "SSID SENAI_LINK_P2P_BACKUP, WPA2-PSK (AES), mesma chave nas duas"),
@@ -72,6 +72,8 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("16/10/2026 15:05", "Rádio", "Porta 1 do R-FILIAL com link (100 Mbps), mas as antenas não respondem em 10.0.2.3/10.0.2.4 e o rádio não passa tráfego: falta configurar as antenas."),
+    ("16/10/2026 15:05", "Fibra", "Fibra ligada na sfp1 dos dois roteadores: OSPF fechado, 0% de perda, ~0,6 ms; a Filial chega na Matriz com TTL 63."),
     ("16/10/2026 14:54", "R-FILIAL", "Equipamento novo configurado do zero: RouterOS 6.47.3 → 7.24.5, arquivo testado sem erros e aplicado."),
     ("16/10/2026 14:40", "R-MATRIZ", "Equipamento novo configurado do zero: RouterOS 6.48.2 → 7.24.5, arquivo testado sem erros e aplicado."),
     ("16/10/2026", "Bancada", "A escola trocou os equipamentos. Toda a configuração está sendo refeita com os modelos corrigidos."),
