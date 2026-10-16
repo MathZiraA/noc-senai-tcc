@@ -8,7 +8,9 @@ Projeto de TCC (SENAI 2026): rede Matriz/Filial com dois enlaces (fibra principa
 
 | Pasta | Conteúdo |
 | --- | --- |
-| [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md) | Documentação técnica completa (topologia, servidor, monitoramento, dashboards, e-mail, IA, segurança, dia da montagem, operação) |
+| [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md) | Documentação técnica completa (topologia, servidor, monitoramento, dashboards, e-mail, IA, segurança, dia da montagem, operação, testes na bancada real) |
+| [`docs/equipamentos.html`](docs/equipamentos.html) | Ficha da bancada: o que está configurado em cada equipamento e o histórico de mudanças (gerada por `bancada/gerar_ficha.py`) |
+| [`bancada/`](bancada) | Configuração automática dos MikroTik (gerar, testar, aplicar, conferir) e o [passo a passo](bancada/PASSO-A-PASSO.md) para remontar |
 | [`noc/`](noc) | Scripts Python que configuram o Zabbix pela API e o serviço do Analista IA. Na VM ficam em `/root/noc` |
 | [`routeros/`](routeros) | Scripts dos MikroTiks (R-MATRIZ, R-FILIAL, switches, nova filial) e o bloco de integração com o NOC |
 | [`grafana/`](grafana) | Dashboard do Grafana e arquivos de provisionamento (o da fonte de dados é só exemplo) |
@@ -37,6 +39,14 @@ Pedidos da reunião com a CTI, já implementados (detalhes na seção 14 da docu
 - **Chamados:** queda que passa de 1 h gera o chamado `NOC-<n>` com e-mail formal ao cliente e registro num livro encadeado por SHA-256 (`noc/chamados.py --verificar`).
 - **Antenas** monitoradas como hosts próprios.
 - **Testes:** `simular_queda.py --cenario queda|degradacao|chamado`.
+
+## Bancada real (16/10/2026)
+
+Os dois MikroTik hEX S (RouterOS 7.24.5) e as duas antenas Ubiquiti PowerBeam M5 estão configurados e testados:
+
+- **Fibra** (sfp1): OSPF fechado, ~0,6 ms. **Rádio** (ether1): sinal de -53/-52 dBm, 0% de perda à distância, 6,4 ms.
+- **Failover:** queda da fibra resolvida em 3,9 s pelo rádio; volta para a fibra sem perda.
+- Detalhes nas seções 19 a 21 da documentação e na ficha `docs/equipamentos.html`.
 
 ## Instalação num servidor novo (Debian 12, como root)
 

@@ -1179,3 +1179,116 @@ A troca por fibra degradada (sem cair) acontece quando a média do ping na fibra
 6. Conferir (18.4).
 
 A pasta `bancada\saida` guarda as senhas escolhidas: ela nunca vai para o GitHub e deve ser apagada quando o TCC terminar.
+
+## 19. Bancada nova (16/10/2026)
+
+A escola trocou os equipamentos e a bancada foi refeita do zero no mesmo dia: os dois roteadores e as duas antenas estão configurados e a rede funciona pela fibra e pelo rádio. A configuração completa de cada equipamento está na [Ficha da Bancada NOC](https://claude.ai/artifact/3JGpGASvmM2Sr8NneByJyq), atualizada a cada mudança (cópia em `docs/equipamentos.html`, gerada por `bancada/gerar_ficha.py` a partir dos scripts reais).
+
+### Equipamentos
+
+| Equipamento | Modelo | Veio com | Ficou com | Endereço |
+| --- | --- | --- | --- | --- |
+| R-MATRIZ | MikroTik hEX S (RB760iGS) | RouterOS 6.48.2, sem configuração | RouterOS 7.24.5 | 192.168.10.1, loopback 10.255.255.1 |
+| R-FILIAL | MikroTik hEX S (RB760iGS) | RouterOS 6.47.3, sem configuração | RouterOS 7.24.5 | 192.168.20.1, loopback 10.255.255.2 |
+| RADIO-P2P-MATRIZ | Ubiquiti PowerBeam M5 300 (sem o prato) | airOS 6.1.7, fábrica (192.168.1.20) | Ponto de acesso WDS | 10.0.2.3/29 |
+| RADIO-P2P-FILIAL | Ubiquiti PowerBeam M5 300 (sem o prato) | airOS 6.1.7, fábrica (192.168.1.20) | Estação WDS | 10.0.2.4/29 |
+
+As antenas são alimentadas pela fonte Ubiquiti GP-A240-050 (PoE passivo de 24 V): a porta POE vai na antena e a porta LAN na ether1 do roteador.
+
+### Roteadores
+
+Com os scripts já corrigidos em 14/10, cada roteador levou cerca de 10 minutos:
+
+1. Reset para a configuração de fábrica pelo WinBox (pelo MAC), para o notebook pegar IP em 192.168.88.x.
+2. `bancada/atualizar_v7.ps1`: envia o pacote `routeros-7.24.5-mmips.npk` e reinicia.
+3. `bancada/gerar_configs.py`: gera os arquivos com as senhas digitadas pelo aluno.
+4. `bancada/testar.ps1`: testa o arquivo no roteador sem aplicar ("No syntax errors found").
+5. `bancada/enviar_mikrotik.ps1`: o roteador apaga a configuração e se configura sozinho.
+6. `bancada/conferir.ps1`: lê a configuração e testa fibra, rádio, antenas e o log de erros.
+
+### Antenas
+
+As antenas foram encontradas pelo próprio R-FILIAL: `/tool ip-scan` não achou nada (antena com IP fixo não fala sozinha), mas a descoberta de vizinhos com CDP mostrou o modelo, a versão e o IP 192.168.1.20. Para abrir a página delas sem mudar o IP do notebook, o R-FILIAL recebeu um atalho temporário (IP 192.168.1.1 na ether1 e NAT da porta 8443). As duas foram configuradas uma de cada vez pela mesma fonte PoE, porque saem de fábrica com o mesmo IP.
+
+| Aba do airOS | RADIO-P2P-MATRIZ | RADIO-P2P-FILIAL |
+| --- | --- | --- |
+| Sem fios | Ponto de acesso, WDS ativado | Estação, WDS ativado |
+| SSID e segurança | SENAI\_LINK\_P2P\_BACKUP, WPA2-AES PSK (chave do aluno) | igual |
+| País e potência | Brasil, -4 dBm (bancada) | igual |
+| Rede | Bridge, 10.0.2.3/29, gateway 10.0.2.1, MTU 2000 | Bridge, 10.0.2.4/29, gateway 10.0.2.2, MTU 2000 |
+| Serviços | SNMP ativo (comunidade do aluno), Rack Matriz | SNMP ativo, Rack Filial |
+
+O WDS é obrigatório: sem ele a antena estação só repassa o próprio MAC e o OSPF não fecha pelo rádio. Os itens temporários do R-FILIAL foram removidos no fim do dia.
+
+### Problemas encontrados e correções
+
+| Problema | Causa | Correção |
+| --- | --- | --- |
+| Chave SSH do usuário zabbix-ia não cadastrada | O `/user ssh-keys import` do arquivo falhou logo após o reset (arquivo não encontrado), parando na última linha | Chave colada à mão; `gerar_configs.py` agora usa `/user ssh-keys add key=...` na própria linha |
+| Erro passou despercebido | Nada lia o log após a aplicação | `conferir.ps1` agora mostra os erros críticos do log |
+| Primeiro "Aplicar" da antena se desfez | Clique em "Teste", que aplica por alguns minutos e reverte | Configuração refeita e aplicada pelo botão Aplicar |
+| Antena da Matriz não respondia ping | A resposta voltava pelo R-MATRIZ, cujo firewall descarta tráfego que não começou por ele (roteamento assimétrico) | Normal com o firewall atual; para acessar, NAT temporário com masquerade no R-FILIAL |
+| Notebook da Matriz não pingava o da Filial | O Firewall do Windows bloqueia ping vindo de outra rede | Regra "Ping NOC TCC" liberada no notebook da Filial (`netsh advfirewall`) |
+
+## 20. Testes de 16/10/2026
+
+A queda da fibra deixou a rede 3,9 segundos sem resposta antes de o tráfego seguir pelo rádio, e a volta para a fibra não perdeu nenhum pacote. O rádio sozinho, com o R-FILIAL do outro lado da sala, passou 289 pings sem perda.
+
+| Teste | Como | Resultado |
+| --- | --- | --- |
+| Fibra | `conferir.ps1` no R-FILIAL | OSPF fechado pela sfp1, 0% de perda, \~0,6 ms |
+| Rádio isolado da fibra | ping forçado a sair pela ether1 (`/ping ... interface=ether1-WAN-RADIO`) | 0% de perda, \~2,3 ms; segundo vizinho OSPF pela ether1 |
+| Notebook a notebook | notebook da Filial (192.168.20.199) até o da Matriz (192.168.10.199) | 1 ms, TTL 126 (atravessou os dois roteadores) |
+| Failover na queda da fibra | ping a cada 200 ms entre os notebooks; `/interface disable sfp1-WAN-FIBRA` no R-FILIAL | 3,9 s sem resposta (8 de 729 pings); rota passou para 10.0.2.1%ether1-WAN-RADIO |
+| Volta da fibra | `/interface enable sfp1-WAN-FIBRA` | nenhuma perda; rota voltou para 10.0.1.1%sfp1-WAN-FIBRA |
+| Latência entre notebooks | mesmo registro | 4,4 ms pela fibra, 5,5 ms pelo rádio |
+| Rádio à distância, sem fibra | R-FILIAL e antena do outro lado da sala; 60 s de ping | 289 pings, 0% de perda, 6,4 ms de média (5 a 11 ms) |
+| Loopback pelo rádio | ping em 10.255.255.1 sem fibra | 0% de perda, \~3 ms |
+| Ping nos dois sentidos | Matriz → Filial e Filial → Matriz | funcionando (após liberar o ping no Windows da Filial) |
+
+O registro completo do failover, com a hora de cada ping, está em `bancada/saida/failover-ping.csv` (fora do GitHub, junto com os arquivos de senha) e pode virar o gráfico do TCC.
+
+### Sinal do rádio
+
+O sinal ficou no meio da faixa pedida pela CTI (-50 a -60 dBm) nos dois lados, lido na página das antenas:
+
+| Medição | RADIO-P2P-FILIAL | RADIO-P2P-MATRIZ |
+| --- | --- | --- |
+| Sinal recebido | -53 dBm | -52 dBm |
+| Polarização horizontal / vertical | -64 / -52 dBm | — |
+| Ruído de fundo | -103 dBm | -104 dBm |
+| CCQ | 99,1% | 99,1% |
+| Velocidade do enlace | 300 / 300 Mbps | 300 / 300 Mbps |
+| Qualidade / capacidade airMAX | 96% / 91% | 96% / 91% |
+| Frequência | 5505 MHz, canal de 40 MHz (DFS) | igual |
+
+A diferença de 12 dB entre as polarizações na Filial indica uma antena girada no próprio eixo em relação à outra; na montagem definitiva, girar até os dois valores ficarem próximos (até \~5 dB).
+
+## 21. Situação dos pedidos da CTI (16/10/2026)
+
+Dos pedidos que não dependem do Zabbix, seis estão feitos e testados no equipamento real; falta testar a troca por fibra degradada e esclarecer o "60 e 62".
+
+| Pedido | Situação | Evidência |
+| --- | --- | --- |
+| Porta 1 = rádio | Feito e testado | ether1-WAN-RADIO nos dois roteadores; rádio passa tráfego sozinho |
+| Portas 3, 4 e 5 = LAN em bridge | Feito e testado | bridge-LAN com DHCP; notebooks se pingam nos dois sentidos |
+| Loopback /32 para monitorar os dois enlaces | Feito e testado | 10.255.255.1 alcançada pela fibra e só pelo rádio |
+| Trocar para o rádio quando a fibra cai | Feito e testado | 3,9 s sem resposta; volta sem perda |
+| Sinal do rádio entre -60 e -50 dBm | Feito e medido | -53 dBm (Filial) e -52 dBm (Matriz) |
+| Testes e check-up | Feito | `conferir.ps1`, failover cronometrado, rádio à distância |
+| Pesquisa sobre IA | Feito | seção 15 |
+| Trocar para o rádio quando a fibra degrada | Configurado, falta testar | netwatch nos dois roteadores (30 ms ou 10% de perda); precisa da fibra ligada para simular |
+| Prioridade "60 e 62" | Falta esclarecer | perguntar ao Jaison; palpite: custo OSPF (hoje fibra 10, rádio 100) |
+| Detectar fibra degradada, monitorar latência, chamado após 1 h e e-mail ao cliente | Pronto no Zabbix, falta o servidor | testado por simulação (seções 14 e 15) |
+
+A fibra ficou na porta sfp1 (módulo óptico) e não na porta 2, por causa da montagem física da bancada; a porta 2 ficou de reserva. Vale avisar o Jaison.
+
+### Próximos passos
+
+- [ ] Religar a fibra (sfp1 com sfp1) e testar a troca por fibra degradada
+- [ ] Perguntar ao Jaison o que significa "60 e 62"
+- [ ] Trocar a senha ubnt das duas antenas
+- [ ] Alinhar a polarização da antena da Filial (diferença de 12 dB entre H e V)
+- [ ] Instalar o Zabbix no servidor e ligar o monitoramento (incluindo o sinal das antenas por SNMP)
+- [ ] Remover a regra "Ping NOC TCC" do notebook da Filial quando não for mais necessária
+- [ ] Apagar a pasta `bancada\saida` (senhas) ao final do TCC
