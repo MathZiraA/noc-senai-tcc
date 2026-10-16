@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "16/10/2026 16:55"
+ATUALIZADO = "16/10/2026 17:00"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -78,6 +78,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("16/10/2026 17:00", "R-FILIAL", "Removidos os atalhos temporários de acesso às antenas (NAT TEMP: sinal antena). Nenhum item temporário restante."),
     ("16/10/2026 16:55", "Rádio", "Sinal medido nas duas antenas: -53 dBm (Filial) e -52 dBm (Matriz), dentro da faixa pedida pela CTI. Atalho temporário de acesso às antenas criado no R-FILIAL."),
     ("16/10/2026 16:40", "Rádio", "Teste à distância, R-FILIAL do outro lado da sala e sem fibra: 289 pings em 60 s, 0% de perda, 6,4 ms de média (5 a 11 ms). Ping nos dois sentidos entre os notebooks (no da Filial foi liberado o ping no firewall do Windows)."),
     ("16/10/2026 16:17", "Failover", "Teste: com a fibra desligada no R-FILIAL a rede ficou 3,9 s sem resposta (8 de 729 pings) e passou para o rádio; na volta da fibra, nenhuma perda. Latência entre notebooks: 4,4 ms pela fibra, 5,5 ms pelo rádio."),
