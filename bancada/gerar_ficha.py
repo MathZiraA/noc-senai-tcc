@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "16/10/2026 17:00"
+ATUALIZADO = "16/10/2026 17:20"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -78,6 +78,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("16/10/2026 17:20", "Ambos", "Pedido do Piffer (CTI): só os serviços necessários. Desligados o reverse-proxy e o btest; a regra de gerência do firewall passou a aceitar só SSH (22) e WinBox (8291). Comandos para colar nos dois roteadores; scripts atualizados."),
     ("16/10/2026 17:00", "R-FILIAL", "Removidos os atalhos temporários de acesso às antenas (NAT TEMP: sinal antena). Nenhum item temporário restante."),
     ("16/10/2026 16:55", "Rádio", "Sinal medido nas duas antenas: -53 dBm (Filial) e -52 dBm (Matriz), dentro da faixa pedida pela CTI. Atalho temporário de acesso às antenas criado no R-FILIAL."),
     ("16/10/2026 16:40", "Rádio", "Teste à distância, R-FILIAL do outro lado da sala e sem fibra: 289 pings em 60 s, 0% de perda, 6,4 ms de média (5 a 11 ms). Ping nos dois sentidos entre os notebooks (no da Filial foi liberado o ping no firewall do Windows)."),
@@ -141,10 +142,10 @@ def roteador(r):
                               "sobe o custo da fibra para 200 e o tráfego vai para o rádio"),
     ])
     seg = tabela([
-        ("Serviços desligados", "telnet, ftp, www, www-ssl, api, api-ssl"),
+        ("Serviços desligados", "telnet, ftp, www, www-ssl, api, api-ssl, reverse-proxy e o servidor de teste de banda (btest)"),
         ("SSH e WinBox", "só a partir de 192.168.10.0/24 e 192.168.20.0/24"),
         ("Descoberta de vizinhos e MAC-WinBox", "só na rede local (LAN_MGMT)"),
-        ("Firewall de entrada", "aceita estabelecidas, ICMP, OSPF e gerência vinda das LANs; bloqueia o resto"),
+        ("Firewall de entrada", "aceita estabelecidas, ICMP, OSPF e, vindo das LANs, só SSH (22) e WinBox (8291); bloqueia o resto"),
         ("Firewall de passagem", "libera Matriz ↔ Filial; bloqueia o que entra pelas WAN sem ter sido pedido"),
         ("Backup", f"diário às 00:00, arquivo <code>{e(r['backup'])}</code>"),
     ])

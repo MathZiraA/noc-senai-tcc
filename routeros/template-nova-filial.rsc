@@ -39,6 +39,8 @@
 
 /ip service set telnet,ftp,www,api,api-ssl,www-ssl disabled=yes
 /ip service set ssh,winbox address=192.168.0.0/16 disabled=no
+/ip service set reverse-proxy disabled=yes
+/tool bandwidth-server set enabled=no
 
 /interface list add name="LAN_MGMT"
 /interface list member add interface=bridge-LAN list=LAN_MGMT
@@ -57,5 +59,5 @@
 add chain=input action=accept connection-state=established,related
 add chain=input action=accept protocol=icmp
 add chain=input action=accept protocol=ospf
-add chain=input action=accept in-interface-list=LAN_MGMT
+add chain=input action=accept protocol=tcp dst-port=22,8291 in-interface-list=LAN_MGMT comment="Acesso Gerencia (SSH e WinBox)"
 add chain=input action=drop

@@ -731,6 +731,9 @@ Antes de colar: troque os campos `<SENHA_...>` e `TROQUE_POR_UMA_SENHA_FORTE` (o
 /ip service set www-ssl disabled=yes
 /ip service set ssh port=22 address=192.168.10.0/24,192.168.20.0/24 disabled=no
 /ip service set winbox address=192.168.10.0/24,192.168.20.0/24 disabled=no
+# Serviços que vêm ligados no RouterOS 7 e não são usados (pedido da CTI: só o necessário)
+/ip service set reverse-proxy disabled=yes
+/tool bandwidth-server set enabled=no
 
 # 7. DESCOBERTA DE VIZINHOS SÓ NA LAN
 /interface list add name="LAN_MGMT"
@@ -756,7 +759,7 @@ add chain=input action=accept connection-state=established,related comment="1. A
 add chain=input action=drop connection-state=invalid comment="2. Bloquear conexoes invalidas"
 add chain=input action=accept protocol=icmp comment="3. Permitir ICMP (Ping)"
 add chain=input action=accept protocol=ospf comment="4. Permitir OSPF (Protocolo 89)"
-add chain=input action=accept src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment="5. Acesso Gerencia"
+add chain=input action=accept protocol=tcp dst-port=22,8291 src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment="5. Acesso Gerencia (SSH e WinBox)"
 add chain=input action=drop comment="6. Bloquear restante"
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.10.0/24
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.20.0/24
@@ -839,6 +842,9 @@ add chain=forward action=drop in-interface-list=WAN_PUBLIC
 /ip service set www-ssl disabled=yes
 /ip service set ssh port=22 address=192.168.10.0/24,192.168.20.0/24 disabled=no
 /ip service set winbox address=192.168.10.0/24,192.168.20.0/24 disabled=no
+# Serviços que vêm ligados no RouterOS 7 e não são usados (pedido da CTI: só o necessário)
+/ip service set reverse-proxy disabled=yes
+/tool bandwidth-server set enabled=no
 
 # 7. DESCOBERTA DE VIZINHOS SÓ NA LAN
 /interface list add name="LAN_MGMT"
@@ -864,7 +870,7 @@ add chain=input action=accept connection-state=established,related comment="1. A
 add chain=input action=drop connection-state=invalid comment="2. Bloquear conexoes invalidas"
 add chain=input action=accept protocol=icmp comment="3. Permitir ICMP (Ping)"
 add chain=input action=accept protocol=ospf comment="4. Permitir OSPF (Protocolo 89)"
-add chain=input action=accept src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment="5. Acesso Gerencia"
+add chain=input action=accept protocol=tcp dst-port=22,8291 src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment="5. Acesso Gerencia (SSH e WinBox)"
 add chain=input action=drop comment="6. Bloquear restante"
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.10.0/24
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.20.0/24
@@ -1002,6 +1008,8 @@ Modelo para uma futura filial no mesmo padrão. Usa variáveis `:local`, então 
 
 /ip service set telnet,ftp,www,api,api-ssl,www-ssl disabled=yes
 /ip service set ssh,winbox address=192.168.0.0/16 disabled=no
+/ip service set reverse-proxy disabled=yes
+/tool bandwidth-server set enabled=no
 
 /interface list add name="LAN_MGMT"
 /interface list member add interface=bridge-LAN list=LAN_MGMT
@@ -1020,7 +1028,7 @@ Modelo para uma futura filial no mesmo padrão. Usa variáveis `:local`, então 
 add chain=input action=accept connection-state=established,related
 add chain=input action=accept protocol=icmp
 add chain=input action=accept protocol=ospf
-add chain=input action=accept in-interface-list=LAN_MGMT
+add chain=input action=accept protocol=tcp dst-port=22,8291 in-interface-list=LAN_MGMT comment="Acesso Gerencia (SSH e WinBox)"
 add chain=input action=drop
 ```
 
@@ -1282,6 +1290,18 @@ Dos pedidos que não dependem do Zabbix, seis estão feitos e testados no equipa
 | Detectar fibra degradada, monitorar latência, chamado após 1 h e e-mail ao cliente | Pronto no Zabbix, falta o servidor | testado por simulação (seções 14 e 15) |
 
 A fibra ficou na porta sfp1 (módulo óptico) e não na porta 2, por causa da montagem física da bancada; a porta 2 ficou de reserva. Vale avisar o Jaison.
+
+### Serviços dos roteadores (pedido do Piffer, 16/10)
+
+O pedido era bloquear Telnet, FTP e API e manter só os serviços necessários, protegidos pelo firewall. Telnet, FTP, API, API-SSL, WWW e WWW-SSL já estavam desligados, e SSH e WinBox só aceitam as redes 192.168.10.0/24 e 192.168.20.0/24. A conferência achou três brechas, fechadas nos scripts e nos dois roteadores:
+
+| Brecha | Correção |
+| --- | --- |
+| `reverse-proxy` (porta 443) ligado de fábrica no RouterOS 7 | `/ip service set reverse-proxy disabled=yes` |
+| Servidor de teste de banda `btest` (porta 2000) ligado de fábrica | `/tool bandwidth-server set enabled=no` |
+| Regra 5 do firewall liberava qualquer porta para as redes locais | `protocol=tcp dst-port=22,8291`: só SSH e WinBox |
+
+Ping, OSPF, DHCP e, no R-FILIAL, o SNMP e o SSH do Zabbix têm regras próprias e continuam funcionando; o WinBox pelo MAC não passa pelo firewall de IP.
 
 ### Próximos passos
 

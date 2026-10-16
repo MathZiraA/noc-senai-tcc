@@ -53,6 +53,9 @@
 /ip service set www-ssl disabled=yes
 /ip service set ssh port=22 address=192.168.10.0/24,192.168.20.0/24 disabled=no
 /ip service set winbox address=192.168.10.0/24,192.168.20.0/24 disabled=no
+# Serviços que vêm ligados no RouterOS 7 e não são usados (pedido da CTI: só o necessário)
+/ip service set reverse-proxy disabled=yes
+/tool bandwidth-server set enabled=no
 
 # 7. DESCOBERTA DE VIZINHOS SÓ NA LAN
 /interface list add name="LAN_MGMT"
@@ -78,7 +81,7 @@ add chain=input action=accept connection-state=established,related comment="1. A
 add chain=input action=drop connection-state=invalid comment="2. Bloquear conexoes invalidas"
 add chain=input action=accept protocol=icmp comment="3. Permitir ICMP (Ping)"
 add chain=input action=accept protocol=ospf comment="4. Permitir OSPF (Protocolo 89)"
-add chain=input action=accept src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment="5. Acesso Gerencia"
+add chain=input action=accept protocol=tcp dst-port=22,8291 src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment="5. Acesso Gerencia (SSH e WinBox)"
 add chain=input action=drop comment="6. Bloquear restante"
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.10.0/24
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.20.0/24
