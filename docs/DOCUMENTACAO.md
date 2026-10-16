@@ -1274,7 +1274,7 @@ A diferença de 12 dB entre as polarizações na Filial indica uma antena girada
 
 ## 21. Situação dos pedidos da CTI (16/10/2026)
 
-Dos pedidos que não dependem do Zabbix, seis estão feitos e testados no equipamento real; falta testar a troca por fibra degradada e esclarecer o "60 e 62".
+Dos pedidos que não dependem do Zabbix, oito estão feitos e testados no equipamento real; falta testar a troca por fibra degradada e esclarecer o "60 e 62".
 
 | Pedido | Situação | Evidência |
 | --- | --- | --- |
@@ -1284,6 +1284,7 @@ Dos pedidos que não dependem do Zabbix, seis estão feitos e testados no equipa
 | Trocar para o rádio quando a fibra cai | Feito e testado | 3,9 s sem resposta; volta sem perda |
 | Sinal do rádio entre -60 e -50 dBm | Feito e medido | -53 dBm (Filial) e -52 dBm (Matriz) |
 | Testes e check-up | Feito | `conferir.ps1`, failover cronometrado, rádio à distância |
+| Bloquear Telnet, FTP e API; só SSH e WinBox atrás do firewall (Piffer) | Feito e verificado | portas testadas nos dois roteadores em 16/10 17:30 |
 | Pesquisa sobre IA | Feito | seção 15 |
 | Trocar para o rádio quando a fibra degrada | Configurado, falta testar | netwatch nos dois roteadores (30 ms ou 10% de perda); precisa da fibra ligada para simular |
 | Prioridade "60 e 62" | Falta esclarecer | perguntar ao Jaison; palpite: custo OSPF (hoje fibra 10, rádio 100) |
@@ -1302,6 +1303,21 @@ O pedido era bloquear Telnet, FTP e API e manter só os serviços necessários, 
 | Regra 5 do firewall liberava qualquer porta para as redes locais | `protocol=tcp dst-port=22,8291`: só SSH e WinBox |
 
 Ping, OSPF, DHCP e, no R-FILIAL, o SNMP e o SSH do Zabbix têm regras próprias e continuam funcionando; o WinBox pelo MAC não passa pelo firewall de IP.
+
+Os comandos foram aplicados nos dois roteadores às 17:30 e verificados com uma conexão TCP em cada porta, a partir do notebook na rede da Filial (192.168.20.199):
+
+| Porta | Serviço | R-FILIAL | R-MATRIZ |
+| --- | --- | --- | --- |
+| 22 | SSH | aberta | fechada |
+| 8291 | WinBox | aberta | fechada |
+| 443 | reverse-proxy | fechada | fechada |
+| 2000 | btest | fechada | fechada |
+| 80 | web | fechada | fechada |
+| 21 | FTP | fechada | fechada |
+| 23 | Telnet | fechada | fechada |
+| 8728 | API | fechada | fechada |
+
+No R-MATRIZ até o SSH e o WinBox aparecem fechados porque o teste veio da Filial: a regra de gerência só aceita quem está na rede local do próprio roteador (portas 3, 4 e 5), e quem chega pela fibra ou pelo rádio é bloqueado. Cada roteador é gerenciado só de dentro da sua unidade; do notebook da Matriz, o SSH e o WinBox do R-MATRIZ funcionam normalmente.
 
 ### Próximos passos
 
