@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "16/10/2026 16:20"
+ATUALIZADO = "16/10/2026 16:25"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -41,7 +41,7 @@ EQUIPAMENTOS = [
                   "O gerador junta os dois scripts num só arquivo, com a chave SSH do Analista IA na própria linha (ssh-keys add key=...).",
                   "Chave do zabbix-ia colada à mão em 16/10 (a linha de import do arquivo tinha falhado).",
                   "Testes de 16/10 16:15: 2 vizinhos OSPF (fibra e rádio), ping só pelo rádio 0% de perda (~2,3 ms), fibra ~0,6 ms.",
-                  "Temporário para configurar as antenas: IP 192.168.1.1/24 na ether1, NAT TEMP (porta 8443/8080) e descoberta de vizinhos em todas as portas. Remover depois.",
+                  "Teste de failover em 16/10 16:15: fibra desligada → 3,9 s sem resposta e o tráfego seguiu pelo rádio (5,5 ms); fibra religada → volta sem nenhuma perda.",
                   "SNMP v2c com a comunidade public_senai, respondendo só ao Zabbix (192.168.10.50)."],
     },
 ]
@@ -76,6 +76,8 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("16/10/2026 16:17", "Failover", "Teste: com a fibra desligada no R-FILIAL a rede ficou 3,9 s sem resposta (8 de 729 pings) e passou para o rádio; na volta da fibra, nenhuma perda. Latência entre notebooks: 4,4 ms pela fibra, 5,5 ms pelo rádio."),
+    ("16/10/2026 16:16", "R-FILIAL", "Removidos os itens temporários das antenas (NAT, IP 192.168.1.1 e descoberta em todas as portas)."),
     ("16/10/2026 16:15", "Rádio", "Antenas Ubiquiti PowerBeam M5 configuradas (Matriz = ponto de acesso 10.0.2.3, Filial = estação 10.0.2.4, WDS). Rádio passando tráfego: segundo vizinho OSPF e ping só pelo rádio com 0% de perda."),
     ("16/10/2026 16:14", "Notebooks", "Notebook da Filial alcança o notebook da Matriz (192.168.10.199), TTL 126."),
     ("16/10/2026 15:15", "R-FILIAL", "Log mostrou erro na última linha do arquivo (import da chave SSH do zabbix-ia). Gerador corrigido para cadastrar a chave direto na linha; o resto da configuração foi aplicado."),
