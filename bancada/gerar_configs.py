@@ -84,8 +84,9 @@ def main():
     noc = (noc.replace("192.168.10.50", zabbix)
               .replace("name=public_senai", f"name={comunidade}")
               .replace("TROQUE_POR_UMA_SENHA_FORTE", secrets.token_urlsafe(18)))  # nunca usada: login por chave
-    linhas = [l for l in noc.splitlines() if not l.startswith("/user ssh-keys add")]
-    linhas.append("/user ssh-keys import public-key-file=noc-analista.pub user=zabbix-ia")
+    # A chave vai na própria linha (/user ssh-keys add key=..., RouterOS 7.24): o "import public-key-file" falhava
+    # no run-after-reset (arquivo não encontrado logo após o reset), parando o script na última linha.
+    linhas = noc.splitlines()
     gravar("R-FILIAL.rsc", INICIO.format(arquivo="R-FILIAL.rsc") + base + "\n" + "\n".join(linhas) + "\n"
            + FIM.format(arquivo="R-FILIAL.rsc"))
     gravar("noc-analista.pub", CHAVE_ANALISTA + "\n")

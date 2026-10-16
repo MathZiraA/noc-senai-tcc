@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "16/10/2026 15:05"
+ATUALIZADO = "16/10/2026 15:15"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -38,8 +38,9 @@ EQUIPAMENTOS = [
         "scripts": [("r-filial.rsc", "Configuração completa"),
                     ("routeros-r-filial-noc.rsc", "Integração com o NOC (SNMP, firewall e usuário de leitura)")],
         "notas": ["Verificado: o notebook recebe 192.168.20.199 pelo DHCP e alcança 192.168.20.1 e a loopback 10.255.255.2.",
-                  "O gerador junta os dois scripts num só arquivo e troca a linha da chave SSH por "
-                  "/user ssh-keys import public-key-file=noc-analista.pub user=zabbix-ia.",
+                  "O gerador junta os dois scripts num só arquivo, com a chave SSH do Analista IA na própria linha (ssh-keys add key=...).",
+                  "Pendente: a chave do zabbix-ia não entrou na aplicação de 16/10 (a linha de import falhou). Colar no terminal: "
+                  "/user ssh-keys add user=zabbix-ia key=\"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ6p8g/oAtn3KK0x8Tze43LoZ5JZ6vePhG3ihVcCquum noc-analista@zabbix\"",
                   "SNMP v2c com a comunidade public_senai, respondendo só ao Zabbix (192.168.10.50)."],
     },
 ]
@@ -72,6 +73,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("16/10/2026 15:15", "R-FILIAL", "Log mostrou erro na última linha do arquivo (import da chave SSH do zabbix-ia). Gerador corrigido para cadastrar a chave direto na linha; o resto da configuração foi aplicado."),
     ("16/10/2026 15:05", "Rádio", "Porta 1 do R-FILIAL com link (100 Mbps), mas as antenas não respondem em 10.0.2.3/10.0.2.4 e o rádio não passa tráfego: falta configurar as antenas."),
     ("16/10/2026 15:05", "Fibra", "Fibra ligada na sfp1 dos dois roteadores: OSPF fechado, 0% de perda, ~0,6 ms; a Filial chega na Matriz com TTL 63."),
     ("16/10/2026 14:54", "R-FILIAL", "Equipamento novo configurado do zero: RouterOS 6.47.3 → 7.24.5, arquivo testado sem erros e aplicado."),

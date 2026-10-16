@@ -21,7 +21,9 @@ $cmd = '/system identity print; /system resource print; /interface print; /inter
        ':put RADIO-LINK; /interface ethernet monitor ether1-WAN-RADIO once; ' +
        ":put PING-SO-PELO-RADIO; /ping $radio interface=ether1-WAN-RADIO count=5; " +
        ':put PING-ANTENAS; /ping 10.0.2.3 count=2; /ping 10.0.2.4 count=2; ' +
-       ':put ARP-RADIO; /ip arp print where interface=ether1-WAN-RADIO'
+       ':put ARP-RADIO; /ip arp print where interface=ether1-WAN-RADIO; ' +
+       # Erros da aplicação do arquivo (run-after-reset) e a marca de fim
+       ':put LOG-ERROS; /log print where topics~critical; :put LOG-NOC; /log print where message~SENAI'
 $r = ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o LogLevel=ERROR "admin_senai@$IP" $cmd
 $saida = Join-Path $PSScriptRoot 'saida'
 New-Item -ItemType Directory -Force $saida | Out-Null
