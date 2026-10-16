@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "16/10/2026 17:20"
+ATUALIZADO = "16/10/2026 17:30"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -78,6 +78,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("16/10/2026 17:30", "Ambos", "Comandos de serviços aplicados nos dois roteadores. Verificado da rede da Filial: R-FILIAL responde só nas portas 22 e 8291; 443, 2000, 80, 21, 23 e 8728 fechadas. R-MATRIZ não aceita gerência vinda de fora da sua rede local."),
     ("16/10/2026 17:20", "Ambos", "Pedido do Piffer (CTI): só os serviços necessários. Desligados o reverse-proxy e o btest; a regra de gerência do firewall passou a aceitar só SSH (22) e WinBox (8291). Comandos para colar nos dois roteadores; scripts atualizados."),
     ("16/10/2026 17:00", "R-FILIAL", "Removidos os atalhos temporários de acesso às antenas (NAT TEMP: sinal antena). Nenhum item temporário restante."),
     ("16/10/2026 16:55", "Rádio", "Sinal medido nas duas antenas: -53 dBm (Filial) e -52 dBm (Matriz), dentro da faixa pedida pela CTI. Atalho temporário de acesso às antenas criado no R-FILIAL."),
@@ -143,7 +144,7 @@ def roteador(r):
     ])
     seg = tabela([
         ("Serviços desligados", "telnet, ftp, www, www-ssl, api, api-ssl, reverse-proxy e o servidor de teste de banda (btest)"),
-        ("SSH e WinBox", "só a partir de 192.168.10.0/24 e 192.168.20.0/24"),
+        ("SSH e WinBox", "só a partir da rede local do próprio roteador (portas 3, 4 e 5); quem chega pela fibra ou pelo rádio é bloqueado"),
         ("Descoberta de vizinhos e MAC-WinBox", "só na rede local (LAN_MGMT)"),
         ("Firewall de entrada", "aceita estabelecidas, ICMP, OSPF e, vindo das LANs, só SSH (22) e WinBox (8291); bloqueia o resto"),
         ("Firewall de passagem", "libera Matriz ↔ Filial; bloqueia o que entra pelas WAN sem ter sido pedido"),
