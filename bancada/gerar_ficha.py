@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "16/10/2026 14:40"
+ATUALIZADO = "16/10/2026 14:55"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -26,10 +26,10 @@ EQUIPAMENTOS = [
         "notas": ["Verificado: o notebook recebe 192.168.10.199 pelo DHCP e alcança 192.168.10.1 e a loopback 10.255.255.1."],
     },
     {
-        "id": "r-filial", "nome": "R-FILIAL", "papel": "Roteador da Filial", "estado": "pendente",
-        "estado_txt": "Aguardando: equipamento novo ainda não configurado",
-        "dados": [("Modelo", "MikroTik hEX S (RB760iGS), a confirmar no equipamento novo"),
-                  ("RouterOS", "7.24.5 depois da atualização"), ("Usuário", "admin_senai (o admin fica desativado)"),
+        "id": "r-filial", "nome": "R-FILIAL", "papel": "Roteador da Filial", "estado": "ok",
+        "estado_txt": "Configurado em 16/10/2026 14:54",
+        "dados": [("Modelo", "MikroTik hEX S (RB760iGS)"), ("RouterOS", "7.24.5 (veio com 6.47.3)"),
+                  ("MAC da ether3", "C4:AD:34:FF:26:1F"), ("Usuário", "admin_senai (o admin fica desativado)"),
                   ("Usuário do NOC", "zabbix-ia, somente leitura, login por chave SSH"),
                   ("Senha", "definida pelo aluno no gerador; não fica registrada aqui")],
         "lan": "192.168.20.0/24", "gw": "192.168.20.1", "loopback": "10.255.255.2/32",
@@ -37,7 +37,8 @@ EQUIPAMENTOS = [
         "ospf": ("ospf-filial", "10.255.255.2"), "netwatch": "10.0.1.1", "backup": "backup_filial_<data>",
         "scripts": [("r-filial.rsc", "Configuração completa"),
                     ("routeros-r-filial-noc.rsc", "Integração com o NOC (SNMP, firewall e usuário de leitura)")],
-        "notas": ["O gerador junta os dois scripts num só arquivo e troca a linha da chave SSH por "
+        "notas": ["Verificado: o notebook recebe 192.168.20.199 pelo DHCP e alcança 192.168.20.1 e a loopback 10.255.255.2.",
+                  "O gerador junta os dois scripts num só arquivo e troca a linha da chave SSH por "
                   "/user ssh-keys import public-key-file=noc-analista.pub user=zabbix-ia.",
                   "SNMP v2c com a comunidade public_senai, respondendo só ao Zabbix (192.168.10.50)."],
     },
@@ -71,6 +72,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("16/10/2026 14:54", "R-FILIAL", "Equipamento novo configurado do zero: RouterOS 6.47.3 → 7.24.5, arquivo testado sem erros e aplicado."),
     ("16/10/2026 14:40", "R-MATRIZ", "Equipamento novo configurado do zero: RouterOS 6.48.2 → 7.24.5, arquivo testado sem erros e aplicado."),
     ("16/10/2026", "Bancada", "A escola trocou os equipamentos. Toda a configuração está sendo refeita com os modelos corrigidos."),
     ("14/10/2026", "R-FILIAL", "Teste do rádio: porta 1 sem link. A configuração está certa; o problema é o equipamento do rádio."),
