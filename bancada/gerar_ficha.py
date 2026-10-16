@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "16/10/2026 15:15"
+ATUALIZADO = "16/10/2026 16:20"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -39,8 +39,9 @@ EQUIPAMENTOS = [
                     ("routeros-r-filial-noc.rsc", "Integração com o NOC (SNMP, firewall e usuário de leitura)")],
         "notas": ["Verificado: o notebook recebe 192.168.20.199 pelo DHCP e alcança 192.168.20.1 e a loopback 10.255.255.2.",
                   "O gerador junta os dois scripts num só arquivo, com a chave SSH do Analista IA na própria linha (ssh-keys add key=...).",
-                  "Pendente: a chave do zabbix-ia não entrou na aplicação de 16/10 (a linha de import falhou). Colar no terminal: "
-                  "/user ssh-keys add user=zabbix-ia key=\"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ6p8g/oAtn3KK0x8Tze43LoZ5JZ6vePhG3ihVcCquum noc-analista@zabbix\"",
+                  "Chave do zabbix-ia colada à mão em 16/10 (a linha de import do arquivo tinha falhado).",
+                  "Testes de 16/10 16:15: 2 vizinhos OSPF (fibra e rádio), ping só pelo rádio 0% de perda (~2,3 ms), fibra ~0,6 ms.",
+                  "Temporário para configurar as antenas: IP 192.168.1.1/24 na ether1, NAT TEMP (porta 8443/8080) e descoberta de vizinhos em todas as portas. Remover depois.",
                   "SNMP v2c com a comunidade public_senai, respondendo só ao Zabbix (192.168.10.50)."],
     },
 ]
@@ -55,11 +56,13 @@ PORTAS = [  # (porta, nome no roteador, papel, classe)
 ]
 
 OUTROS = [
-    ("Antenas do rádio P2P", "pendente", "Ligadas na porta 1 com link de 100 Mbps, mas ainda sem configuração: não respondem nos IPs previstos",
-     [("RADIO-P2P-MATRIZ", "Access Point PtP, bridge, 10.0.2.3/29, gateway 10.0.2.1, liga na ether1 do R-MATRIZ"),
-      ("RADIO-P2P-FILIAL", "Station PtP, bridge, 10.0.2.4/29, gateway 10.0.2.2, liga na ether1 do R-FILIAL"),
-      ("Rede sem fio", "SSID SENAI_LINK_P2P_BACKUP, WPA2-PSK (AES), mesma chave nas duas"),
-      ("MTU", "2000, ou o máximo que o rádio aceitar")]),
+    ("Antenas do rádio P2P", "ok", "Ubiquiti PowerBeam M5 300 (airOS 6.1.7, sem os pratos). Enlace ativo desde 16/10/2026 16:11",
+     [("RADIO-P2P-MATRIZ", "Ponto de acesso, WDS, 10.0.2.3/29, gateway 10.0.2.1, MAC 80:2A:A8:2A:9B:E6, ether1 do R-MATRIZ"),
+      ("RADIO-P2P-FILIAL", "Estação, WDS, 10.0.2.4/29, gateway 10.0.2.2, MAC 44:D9:E7:B4:63:A9, ether1 do R-FILIAL"),
+      ("Rede sem fio", "SSID SENAI_LINK_P2P_BACKUP, WPA2-AES PSK (chave definida pelo aluno), Brasil, canal automático 40 MHz"),
+      ("Potência", "-4 dBm (bancada, antenas a ~1 m)"), ("MTU", "2000 (o airOS aceita até 2024)"),
+      ("Gestão", "páginas web em https://10.0.2.3 e https://10.0.2.4; SNMP ativo (comunidade definida pelo aluno), contato NOC SENAI TCC"),
+      ("Fonte PoE", "Ubiquiti GP-A240-050, 24 V passivo: porta POE na antena, porta LAN na ether1 do roteador")]),
     ("Notebook de testes", "ok", "Pega IP pelo DHCP do roteador em que estiver ligado",
      [("Ligação", "porta 3 de um dos roteadores"), ("Na Matriz", "192.168.10.100 a .199"),
       ("Na Filial", "192.168.20.100 a .199"),
@@ -73,6 +76,8 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("16/10/2026 16:15", "Rádio", "Antenas Ubiquiti PowerBeam M5 configuradas (Matriz = ponto de acesso 10.0.2.3, Filial = estação 10.0.2.4, WDS). Rádio passando tráfego: segundo vizinho OSPF e ping só pelo rádio com 0% de perda."),
+    ("16/10/2026 16:14", "Notebooks", "Notebook da Filial alcança o notebook da Matriz (192.168.10.199), TTL 126."),
     ("16/10/2026 15:15", "R-FILIAL", "Log mostrou erro na última linha do arquivo (import da chave SSH do zabbix-ia). Gerador corrigido para cadastrar a chave direto na linha; o resto da configuração foi aplicado."),
     ("16/10/2026 15:05", "Rádio", "Porta 1 do R-FILIAL com link (100 Mbps), mas as antenas não respondem em 10.0.2.3/10.0.2.4 e o rádio não passa tráfego: falta configurar as antenas."),
     ("16/10/2026 15:05", "Fibra", "Fibra ligada na sfp1 dos dois roteadores: OSPF fechado, 0% de perda, ~0,6 ms; a Filial chega na Matriz com TTL 63."),
