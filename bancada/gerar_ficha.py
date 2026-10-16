@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "16/10/2026 16:25"
+ATUALIZADO = "16/10/2026 16:45"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -76,6 +76,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("16/10/2026 16:40", "Rádio", "Teste à distância, R-FILIAL do outro lado da sala e sem fibra: 289 pings em 60 s, 0% de perda, 6,4 ms de média (5 a 11 ms). Ping nos dois sentidos entre os notebooks (no da Filial foi liberado o ping no firewall do Windows)."),
     ("16/10/2026 16:17", "Failover", "Teste: com a fibra desligada no R-FILIAL a rede ficou 3,9 s sem resposta (8 de 729 pings) e passou para o rádio; na volta da fibra, nenhuma perda. Latência entre notebooks: 4,4 ms pela fibra, 5,5 ms pelo rádio."),
     ("16/10/2026 16:16", "R-FILIAL", "Removidos os itens temporários das antenas (NAT, IP 192.168.1.1 e descoberta em todas as portas)."),
     ("16/10/2026 16:15", "Rádio", "Antenas Ubiquiti PowerBeam M5 configuradas (Matriz = ponto de acesso 10.0.2.3, Filial = estação 10.0.2.4, WDS). Rádio passando tráfego: segundo vizinho OSPF e ping só pelo rádio com 0% de perda."),
