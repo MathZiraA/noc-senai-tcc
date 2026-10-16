@@ -1,0 +1,361 @@
+<title>Ficha da Bancada NOC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: coluna única de leitura; cada roteador é uma ficha com o painel de portas do hEX S no topo */
+:root{
+  --bg:#f6f7f8; --surface:#ffffff; --fg:#17202a; --muted:#5b6672; --line:#d9dee3; --accent:#0b6b74;
+  --fibra:#c99700; --radio:#7a4fc2; --lan:#2d7d46; --livre:#8a939c;
+  --ok:#2d7d46; --pend:#a86400; --falha:#b3261e; --fora:#5b6672;
+  --code-bg:#eef1f3;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171c; --surface:#1a2128; --fg:#e4e9ee; --muted:#9aa6b1; --line:#2c353e; --accent:#4fb8c1;
+  --fibra:#e8c13a; --radio:#a98be6; --lan:#5fbf7c; --livre:#7c8792;
+  --ok:#5fbf7c; --pend:#e0a14a; --falha:#ef7268; --fora:#9aa6b1; --code-bg:#20282f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171c; --surface:#1a2128; --fg:#e4e9ee; --muted:#9aa6b1; --line:#2c353e; --accent:#4fb8c1;
+  --fibra:#e8c13a; --radio:#a98be6; --lan:#5fbf7c; --livre:#7c8792;
+  --ok:#5fbf7c; --pend:#e0a14a; --falha:#ef7268; --fora:#9aa6b1; --code-bg:#20282f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.pagina{max-width:960px;margin:0 auto;padding-inline:20px;padding-block:28px 64px;display:grid;gap:28px}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:1.9rem;font-weight:600;letter-spacing:-.01em}
+h2{font-size:1.5rem;font-weight:600}
+h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-top:8px}
+p{margin:0;max-width:68ch}
+a{color:var(--accent)}
+code,pre{font-family:var(--f-mono);font-size:.86em}
+td code,dd code{background:var(--code-bg);padding:1px 5px;border-radius:4px}
+.topo{display:grid;gap:10px}
+.topo .meta{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.indice{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:.92rem}
+.equip{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;display:grid;gap:14px;min-width:0}
+.equip-cab,.outro header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.papel{color:var(--muted);font-size:.85rem}
+.estado{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.estado::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.estado.ok{color:var(--ok)} .estado.pendente{color:var(--pend)} .estado.falha{color:var(--falha)} .estado.fora{color:var(--fora)}
+.estado-txt{color:var(--muted);font-size:.92rem}
+.dados{display:grid;grid-template-columns:minmax(120px,max-content) 1fr;gap:6px 18px;margin:0}
+.dados dt{color:var(--muted);font-size:.9rem}
+.dados dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.painel{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+.porta{display:grid;justify-items:center;gap:3px;padding:8px 4px;border-radius:6px;background:var(--surface);border:1px solid var(--line);text-align:center;min-width:0}
+.porta b{font-family:var(--f-mono);font-size:.82rem}
+.porta small{font-size:.7rem;color:var(--muted);line-height:1.2}
+.led{width:10px;height:10px;border-radius:2px;background:var(--livre)}
+.porta.fibra .led{background:var(--fibra)} .porta.radio .led{background:var(--radio)} .porta.lan .led{background:var(--lan)}
+.porta.fibra{border-color:var(--fibra)} .porta.radio{border-color:var(--radio)}
+.rolagem{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:.8rem;border-bottom:1px solid var(--line);padding:6px 10px 6px 0}
+td{border-bottom:1px solid var(--line);padding:7px 10px 7px 0;vertical-align:top;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.notas{margin:0;padding-left:18px;color:var(--muted);font-size:.9rem;display:grid;gap:4px}
+details{border:1px solid var(--line);border-radius:8px;min-width:0}
+summary{cursor:pointer;padding:10px 14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;font-weight:500}
+summary code{color:var(--muted);font-weight:400}
+summary:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.acoes{display:flex;justify-content:flex-end;padding:0 14px}
+button.copiar{font:inherit;font-size:.82rem;padding:4px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+button.copiar:hover{border-color:var(--accent);color:var(--accent)}
+pre{margin:8px 0 0;padding:14px;background:var(--code-bg);border-top:1px solid var(--line);overflow-x:auto;line-height:1.45;border-radius:0 0 8px 8px}
+.outros{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.outro{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:10px;align-content:start;min-width:0}
+.outro h3{text-transform:none;letter-spacing:0;color:var(--fg);font-size:1.05rem;margin:0}
+.secao{display:grid;gap:12px}
+.secao > h2{font-size:1.2rem}
+@media (max-width:560px){
+  .painel{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .dados{grid-template-columns:1fr} .dados dt{margin-top:6px}
+  .equip{padding:16px}
+}
+</style>
+<main class="pagina">
+  <header class="topo">
+    <p class="papel">TCC SENAI 2026 · Rede Matriz/Filial com fibra e rádio</p>
+    <h1>Ficha da Bancada NOC</h1>
+    <p>Tudo o que está configurado em cada equipamento: portas, endereços, roteamento, segurança e os scripts aplicados.
+       As senhas não aparecem aqui; nos scripts elas são marcadas como &lt;SENHA_...&gt;.</p>
+    <p class="meta">Atualizado em 16/10/2026 14:40</p>
+    <nav class="indice" aria-label="Equipamentos"><a href="#r-matriz">R-MATRIZ</a> <a href="#r-filial">R-FILIAL</a> <a href="#outros">Outros equipamentos</a> <a href="#mudancas">Histórico</a></nav>
+  </header>
+  <section class="secao"><h2>Resumo</h2><div class="rolagem"><table><thead><tr><th>Equipamento</th><th>Estado</th><th>IP na LAN</th><th>Loopback</th></tr></thead><tbody><tr><td><a href="#r-matriz">R-MATRIZ</a></td><td><span class="estado ok">Configurado</span></td><td><code>192.168.10.1</code></td><td><code>10.255.255.1</code></td></tr><tr><td><a href="#r-filial">R-FILIAL</a></td><td><span class="estado pendente">Pendente</span></td><td><code>192.168.20.1</code></td><td><code>10.255.255.2</code></td></tr></tbody></table></div></section>
+  
+<section class="equip" id="r-matriz">
+  <header class="equip-cab">
+    <div><p class="papel">Roteador da Matriz</p><h2>R-MATRIZ</h2></div>
+    <span class="estado ok">Configurado</span>
+  </header>
+  <p class="estado-txt">Configurado em 16/10/2026 14:40</p>
+  <dl class="dados"><dt>Modelo</dt><dd>MikroTik hEX S (RB760iGS)</dd><dt>RouterOS</dt><dd>7.24.5 (veio com 6.48.2)</dd><dt>MAC da ether3</dt><dd>74:4D:28:3C:11:DF</dd><dt>Usuário</dt><dd>admin_senai (o admin está desativado)</dd><dt>Senha</dt><dd>definida pelo aluno no gerador; não fica registrada aqui</dd></dl>
+  <div class="painel" aria-label="Painel frontal do hEX S"><div class="porta radio"><span class="led"></span><b>ether1</b><small>Rádio (backup)</small></div><div class="porta livre"><span class="led"></span><b>ether2</b><small>Reserva</small></div><div class="porta lan"><span class="led"></span><b>ether3</b><small>Rede local</small></div><div class="porta lan"><span class="led"></span><b>ether4</b><small>Rede local</small></div><div class="porta lan"><span class="led"></span><b>ether5</b><small>Rede local</small></div><div class="porta fibra"><span class="led"></span><b>sfp1</b><small>Fibra (principal)</small></div></div>
+  <h3>Portas</h3><div class="rolagem"><table><thead><tr><th>Porta</th><th>Nome</th><th>Uso</th><th>Endereço</th><th>MTU</th></tr></thead><tbody><tr><td><code>ether1</code></td><td><code>ether1-WAN-RADIO</code></td><td>Rádio (backup)</td><td><code>10.0.2.1/29</code></td><td>2000</td></tr><tr><td><code>ether2</code></td><td><code>ether2-reserva</code></td><td>Reserva</td><td>—</td><td>2000</td></tr><tr><td><code>ether3</code></td><td><code>ether3-LAN</code></td><td>Rede local</td><td>bridge-LAN</td><td>2000</td></tr><tr><td><code>ether4</code></td><td><code>ether4-LAN</code></td><td>Rede local</td><td>bridge-LAN</td><td>2000</td></tr><tr><td><code>ether5</code></td><td><code>ether5-LAN</code></td><td>Rede local</td><td>bridge-LAN</td><td>2000</td></tr><tr><td><code>sfp1</code></td><td><code>sfp1-WAN-FIBRA</code></td><td>Fibra (principal)</td><td><code>10.0.1.1/30</code></td><td>2000</td></tr></tbody></table></div>
+  <h3>Endereçamento</h3><div class="rolagem"><table><thead><tr><th>Item</th><th>Valor</th><th>Observação</th></tr></thead><tbody><tr><td>Rede local (bridge-LAN)</td><td><code>192.168.10.1/24</code></td><td>rede 192.168.10.0/24</td></tr><tr><td>Loopback</td><td><code>10.255.255.1/32</code></td><td>router-id do OSPF e endereço de monitoramento</td></tr><tr><td>Fibra (sfp1)</td><td><code>10.0.1.1/30</code></td><td>outra ponta: <code>10.0.1.2</code></td></tr><tr><td>Rádio (ether1)</td><td><code>10.0.2.1/29</code></td><td>outra ponta: <code>10.0.2.2</code></td></tr><tr><td>DHCP</td><td><code>192.168.10.100–192.168.10.199</code></td><td>pool-LAN, gateway 192.168.10.1, concessão de 1 h</td></tr></tbody></table></div>
+  <h3>Roteamento</h3><div class="rolagem"><table><tbody><tr><td>Instância</td><td><code>ospf-matriz</code>, router-id <code>10.255.255.1</code>, área 0.0.0.0</td></tr><tr><td>sfp1-WAN-FIBRA</td><td>ptp, custo <b>10</b> (preferida); vai a 200 quando a fibra degrada</td></tr><tr><td>ether1-WAN-RADIO</td><td>ptp, custo <b>100</b> (backup)</td></tr><tr><td>bridge-LAN e loopback</td><td>passive: anunciadas sem formar vizinhança</td></tr><tr><td>Netwatch da fibra</td><td>ICMP em <code>10.0.1.2</code> a cada 10 s, 20 pacotes; média &gt; 30 ms ou perda &gt; 10% sobe o custo da fibra para 200 e o tráfego vai para o rádio</td></tr></tbody></table></div>
+  <h3>Segurança e manutenção</h3><div class="rolagem"><table><tbody><tr><td>Serviços desligados</td><td>telnet, ftp, www, www-ssl, api, api-ssl</td></tr><tr><td>SSH e WinBox</td><td>só a partir de 192.168.10.0/24 e 192.168.20.0/24</td></tr><tr><td>Descoberta de vizinhos e MAC-WinBox</td><td>só na rede local (LAN_MGMT)</td></tr><tr><td>Firewall de entrada</td><td>aceita estabelecidas, ICMP, OSPF e gerência vinda das LANs; bloqueia o resto</td></tr><tr><td>Firewall de passagem</td><td>libera Matriz ↔ Filial; bloqueia o que entra pelas WAN sem ter sido pedido</td></tr><tr><td>Backup</td><td>diário às 00:00, arquivo <code>backup_matriz_&lt;data&gt;</code></td></tr></tbody></table></div>
+  <ul class="notas"><li>Verificado: o notebook recebe 192.168.10.199 pelo DHCP e alcança 192.168.10.1 e a loopback 10.255.255.1.</li></ul>
+  <h3>Scripts</h3><details><summary><span>Configuração completa</span><code>routeros/r-matriz.rsc</code></summary><div class="acoes"><button type="button" class="copiar" data-alvo="s-r-matriz-0">Copiar</button></div><pre id="s-r-matriz-0"><code># ====================================================================
+# PROJETO SENAI REDE-CONECTIVIDADE - SCRIPT MATRIZ
+# EQUIPAMENTO: MikroTik RouterOS v7.4 ou superior (R-MATRIZ)
+# Revisão 14/10/2026 (reunião com a CTI + montagem real): porta 1 = rádio, sfp1 = fibra, portas 3-5 = LAN em bridge,
+# loopback /32 e troca automática para o rádio quando a fibra DEGRADA (não só quando cai).
+# Senha substituída por &lt;SENHA_ADMIN_MATRIZ&gt;.
+# ====================================================================
+
+# 1. IDENTIFICAÇÃO
+/system identity set name=&quot;R-MATRIZ&quot;
+
+# 2. PORTAS
+#    ether1 = rádio (backup) | sfp1 = fibra óptica (principal, módulo SFP) | ether3, ether4, ether5 = rede local (bridge)
+#    ether2 fica livre (reserva)
+# hEX S (RB760iGS): o MTU nao pode passar do L2MTU (1596 de fabrica). 2026 e o maximo do chip.
+/interface ethernet set [find where default-name~&quot;ether&quot;] l2mtu=2026
+/interface set [find default-name=ether1] name=&quot;ether1-WAN-RADIO&quot; comment=&quot;PAP Backup Radio (/29)&quot; mtu=2000
+/interface set [find default-name=ether2] name=&quot;ether2-reserva&quot; comment=&quot;Reserva (fibra no SFP)&quot; mtu=2000
+/interface ethernet set [find default-name=sfp1] name=&quot;sfp1-WAN-FIBRA&quot; comment=&quot;PAP Principal Fibra Optica (/30) - SFP&quot; l2mtu=2026 mtu=2000
+/interface set [find default-name=ether3] name=&quot;ether3-LAN&quot; comment=&quot;Rede Interna Matriz&quot; mtu=2000
+/interface set [find default-name=ether4] name=&quot;ether4-LAN&quot; comment=&quot;Rede Interna Matriz&quot; mtu=2000
+/interface set [find default-name=ether5] name=&quot;ether5-LAN&quot; comment=&quot;Rede Interna Matriz&quot; mtu=2000
+/interface bridge add name=&quot;bridge-LAN&quot; mtu=2000 comment=&quot;Rede Interna Matriz (192.168.10.0/24) - portas 3, 4 e 5&quot;
+/interface bridge port add bridge=bridge-LAN interface=ether3-LAN
+/interface bridge port add bridge=bridge-LAN interface=ether4-LAN
+/interface bridge port add bridge=bridge-LAN interface=ether5-LAN
+
+# 3. LOOPBACK /32: endereço fixo do roteador, alcançável pela fibra OU pelo rádio (router-id do OSPF)
+/interface bridge add name=&quot;loopback&quot; comment=&quot;Loopback /32 - identificacao e monitoramento&quot;
+/ip address add address=10.255.255.1/32 interface=loopback comment=&quot;Loopback R-MATRIZ&quot;
+
+# 4. ENDEREÇAMENTO IP
+/ip address add address=192.168.10.1/24 interface=bridge-LAN comment=&quot;Gateway LAN Matriz&quot;
+/ip address add address=10.0.1.1/30 interface=sfp1-WAN-FIBRA comment=&quot;PAP Fibra Matriz&quot;
+/ip address add address=10.0.2.1/29 interface=ether1-WAN-RADIO comment=&quot;PAP Radio Matriz&quot;
+
+# 4b. DHCP NA LAN: notebooks e PCs pegam IP sozinhos (.100 a .199). IPs fixos ficam fora da faixa:
+#     roteador .1, switch .2, PCs do projeto .10, servidor Zabbix .50
+/ip pool add name=pool-LAN ranges=192.168.10.100-192.168.10.199
+/ip dhcp-server add name=dhcp-LAN interface=bridge-LAN address-pool=pool-LAN lease-time=1h disabled=no
+/ip dhcp-server network add address=192.168.10.0/24 gateway=192.168.10.1 comment=&quot;LAN Matriz&quot;
+
+# 5. USUÁRIOS
+/user add name=&quot;admin_senai&quot; group=full password=&quot;&lt;SENHA_ADMIN_MATRIZ&gt;&quot; comment=&quot;Usuario Administrativo&quot;
+/user disable admin
+
+# 6. HARDENING DE SERVIÇOS
+/ip service set telnet disabled=yes
+/ip service set ftp disabled=yes
+/ip service set www disabled=yes
+/ip service set api disabled=yes
+/ip service set api-ssl disabled=yes
+/ip service set www-ssl disabled=yes
+/ip service set ssh port=22 address=192.168.10.0/24,192.168.20.0/24 disabled=no
+/ip service set winbox address=192.168.10.0/24,192.168.20.0/24 disabled=no
+
+# 7. DESCOBERTA DE VIZINHOS SÓ NA LAN
+/interface list add name=&quot;LAN_MGMT&quot;
+/interface list add name=&quot;WAN_PUBLIC&quot;
+/interface list member add interface=bridge-LAN list=LAN_MGMT
+/interface list member add interface=sfp1-WAN-FIBRA list=WAN_PUBLIC
+/interface list member add interface=ether1-WAN-RADIO list=WAN_PUBLIC
+/ip neighbor discovery-settings set discover-interface-list=LAN_MGMT
+/tool mac-server set allowed-interface-list=LAN_MGMT
+/tool mac-server mac-winbox set allowed-interface-list=LAN_MGMT
+
+# 8. OSPF v7: fibra custo 10 (preferida), rádio custo 100 (backup), LAN e loopback anunciadas
+/routing ospf instance add name=&quot;ospf-matriz&quot; router-id=10.255.255.1
+/routing ospf area add name=&quot;area-0&quot; instance=ospf-matriz area-id=0.0.0.0
+/routing ospf interface-template add area=area-0 interfaces=sfp1-WAN-FIBRA cost=10 type=ptp comment=&quot;PAP Fibra - Custo 10 (Prioritario)&quot;
+/routing ospf interface-template add area=area-0 interfaces=ether1-WAN-RADIO cost=100 type=ptp comment=&quot;PAP Radio - Custo 100 (Backup)&quot;
+/routing ospf interface-template add area=area-0 interfaces=bridge-LAN passive comment=&quot;Anunciar LAN Matriz sem enviar pacotes OSPF&quot;
+/routing ospf interface-template add area=area-0 interfaces=loopback passive comment=&quot;Anunciar loopback /32&quot;
+
+# 9. FIREWALL STATEFUL
+/ip firewall filter
+add chain=input action=accept connection-state=established,related comment=&quot;1. Aceitar conexoes estabelecidas e relacionadas&quot;
+add chain=input action=drop connection-state=invalid comment=&quot;2. Bloquear conexoes invalidas&quot;
+add chain=input action=accept protocol=icmp comment=&quot;3. Permitir ICMP (Ping)&quot;
+add chain=input action=accept protocol=ospf comment=&quot;4. Permitir OSPF (Protocolo 89)&quot;
+add chain=input action=accept src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment=&quot;5. Acesso Gerencia&quot;
+add chain=input action=drop comment=&quot;6. Bloquear restante&quot;
+/ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.10.0/24
+/ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.20.0/24
+/ip firewall filter
+add chain=forward action=accept connection-state=established,related
+add chain=forward action=drop connection-state=invalid
+add chain=forward action=accept src-address=192.168.10.0/24 dst-address=192.168.20.0/24 comment=&quot;Matriz -&gt; Filial&quot;
+add chain=forward action=accept src-address=192.168.20.0/24 dst-address=192.168.10.0/24 comment=&quot;Filial -&gt; Matriz&quot;
+add chain=forward action=drop in-interface-list=WAN_PUBLIC
+
+# 10. BACKUP AUTOMÁTICO
+/system script add name=&quot;script_backup_automatico&quot; source=&quot;/system backup save name=(\&quot;backup_matriz_\&quot; . [/system clock get date])&quot;
+/system scheduler add name=&quot;agendador_backup&quot; interval=1d start-time=00:00:00 on-event=&quot;script_backup_automatico&quot;
+
+# 11. QUALIDADE DA FIBRA -&gt; TROCA AUTOMÁTICA PARA O RÁDIO (RouterOS 7.4+)
+#     A cada 10 s, 20 pings para a ponta da Filial na fibra. Se a média passar de 30 ms OU a perda passar
+#     de 10%, a fibra é considerada degradada: o custo OSPF dela sobe para 200 (acima dos 100 do rádio) e
+#     o tráfego vai para o rádio SEM a fibra cair. Quando a fibra volta a ficar boa, o custo volta a 10.
+/tool netwatch add host=10.0.1.2 type=icmp interval=10s packet-count=20 packet-interval=100ms \
+    thr-avg=30ms thr-loss-percent=10% comment=&quot;NOC: qualidade da fibra (troca para o radio se degradar)&quot; \
+    down-script=&quot;/routing ospf interface-template set [find comment~\&quot;PAP Fibra\&quot;] cost=200; :log warning \&quot;[NOC] FIBRA DEGRADADA ou CAIDA: trafego desviado para o RADIO\&quot;&quot; \
+    up-script=&quot;/routing ospf interface-template set [find comment~\&quot;PAP Fibra\&quot;] cost=10; :log warning \&quot;[NOC] FIBRA OK: trafego de volta para a FIBRA\&quot;&quot;</code></pre></details>
+</section>
+<section class="equip" id="r-filial">
+  <header class="equip-cab">
+    <div><p class="papel">Roteador da Filial</p><h2>R-FILIAL</h2></div>
+    <span class="estado pendente">Pendente</span>
+  </header>
+  <p class="estado-txt">Aguardando: equipamento novo ainda não configurado</p>
+  <dl class="dados"><dt>Modelo</dt><dd>MikroTik hEX S (RB760iGS), a confirmar no equipamento novo</dd><dt>RouterOS</dt><dd>7.24.5 depois da atualização</dd><dt>Usuário</dt><dd>admin_senai (o admin fica desativado)</dd><dt>Usuário do NOC</dt><dd>zabbix-ia, somente leitura, login por chave SSH</dd><dt>Senha</dt><dd>definida pelo aluno no gerador; não fica registrada aqui</dd></dl>
+  <div class="painel" aria-label="Painel frontal do hEX S"><div class="porta radio"><span class="led"></span><b>ether1</b><small>Rádio (backup)</small></div><div class="porta livre"><span class="led"></span><b>ether2</b><small>Reserva</small></div><div class="porta lan"><span class="led"></span><b>ether3</b><small>Rede local</small></div><div class="porta lan"><span class="led"></span><b>ether4</b><small>Rede local</small></div><div class="porta lan"><span class="led"></span><b>ether5</b><small>Rede local</small></div><div class="porta fibra"><span class="led"></span><b>sfp1</b><small>Fibra (principal)</small></div></div>
+  <h3>Portas</h3><div class="rolagem"><table><thead><tr><th>Porta</th><th>Nome</th><th>Uso</th><th>Endereço</th><th>MTU</th></tr></thead><tbody><tr><td><code>ether1</code></td><td><code>ether1-WAN-RADIO</code></td><td>Rádio (backup)</td><td><code>10.0.2.2/29</code></td><td>2000</td></tr><tr><td><code>ether2</code></td><td><code>ether2-reserva</code></td><td>Reserva</td><td>—</td><td>2000</td></tr><tr><td><code>ether3</code></td><td><code>ether3-LAN</code></td><td>Rede local</td><td>bridge-LAN</td><td>2000</td></tr><tr><td><code>ether4</code></td><td><code>ether4-LAN</code></td><td>Rede local</td><td>bridge-LAN</td><td>2000</td></tr><tr><td><code>ether5</code></td><td><code>ether5-LAN</code></td><td>Rede local</td><td>bridge-LAN</td><td>2000</td></tr><tr><td><code>sfp1</code></td><td><code>sfp1-WAN-FIBRA</code></td><td>Fibra (principal)</td><td><code>10.0.1.2/30</code></td><td>2000</td></tr></tbody></table></div>
+  <h3>Endereçamento</h3><div class="rolagem"><table><thead><tr><th>Item</th><th>Valor</th><th>Observação</th></tr></thead><tbody><tr><td>Rede local (bridge-LAN)</td><td><code>192.168.20.1/24</code></td><td>rede 192.168.20.0/24</td></tr><tr><td>Loopback</td><td><code>10.255.255.2/32</code></td><td>router-id do OSPF e endereço de monitoramento</td></tr><tr><td>Fibra (sfp1)</td><td><code>10.0.1.2/30</code></td><td>outra ponta: <code>10.0.1.1</code></td></tr><tr><td>Rádio (ether1)</td><td><code>10.0.2.2/29</code></td><td>outra ponta: <code>10.0.2.1</code></td></tr><tr><td>DHCP</td><td><code>192.168.20.100–192.168.20.199</code></td><td>pool-LAN, gateway 192.168.20.1, concessão de 1 h</td></tr></tbody></table></div>
+  <h3>Roteamento</h3><div class="rolagem"><table><tbody><tr><td>Instância</td><td><code>ospf-filial</code>, router-id <code>10.255.255.2</code>, área 0.0.0.0</td></tr><tr><td>sfp1-WAN-FIBRA</td><td>ptp, custo <b>10</b> (preferida); vai a 200 quando a fibra degrada</td></tr><tr><td>ether1-WAN-RADIO</td><td>ptp, custo <b>100</b> (backup)</td></tr><tr><td>bridge-LAN e loopback</td><td>passive: anunciadas sem formar vizinhança</td></tr><tr><td>Netwatch da fibra</td><td>ICMP em <code>10.0.1.1</code> a cada 10 s, 20 pacotes; média &gt; 30 ms ou perda &gt; 10% sobe o custo da fibra para 200 e o tráfego vai para o rádio</td></tr></tbody></table></div>
+  <h3>Segurança e manutenção</h3><div class="rolagem"><table><tbody><tr><td>Serviços desligados</td><td>telnet, ftp, www, www-ssl, api, api-ssl</td></tr><tr><td>SSH e WinBox</td><td>só a partir de 192.168.10.0/24 e 192.168.20.0/24</td></tr><tr><td>Descoberta de vizinhos e MAC-WinBox</td><td>só na rede local (LAN_MGMT)</td></tr><tr><td>Firewall de entrada</td><td>aceita estabelecidas, ICMP, OSPF e gerência vinda das LANs; bloqueia o resto</td></tr><tr><td>Firewall de passagem</td><td>libera Matriz ↔ Filial; bloqueia o que entra pelas WAN sem ter sido pedido</td></tr><tr><td>Backup</td><td>diário às 00:00, arquivo <code>backup_filial_&lt;data&gt;</code></td></tr></tbody></table></div>
+  <ul class="notas"><li>O gerador junta os dois scripts num só arquivo e troca a linha da chave SSH por /user ssh-keys import public-key-file=noc-analista.pub user=zabbix-ia.</li><li>SNMP v2c com a comunidade public_senai, respondendo só ao Zabbix (192.168.10.50).</li></ul>
+  <h3>Scripts</h3><details><summary><span>Configuração completa</span><code>routeros/r-filial.rsc</code></summary><div class="acoes"><button type="button" class="copiar" data-alvo="s-r-filial-0">Copiar</button></div><pre id="s-r-filial-0"><code># ====================================================================
+# PROJETO SENAI REDE-CONECTIVIDADE - SCRIPT FILIAL
+# EQUIPAMENTO: MikroTik RouterOS v7.4 ou superior (R-FILIAL)
+# Revisão 14/10/2026 (reunião com a CTI + montagem real): porta 1 = rádio, sfp1 = fibra, portas 3-5 = LAN em bridge,
+# loopback /32 e troca automática para o rádio quando a fibra DEGRADA (não só quando cai).
+# Senha substituída por &lt;SENHA_ADMIN_FILIAL&gt;. Depois, colar também routeros-r-filial-noc.rsc (integração com o NOC).
+# ====================================================================
+
+# 1. IDENTIFICAÇÃO
+/system identity set name=&quot;R-FILIAL&quot;
+
+# 2. PORTAS
+#    ether1 = rádio (backup) | sfp1 = fibra óptica (principal, módulo SFP) | ether3, ether4, ether5 = rede local (bridge)
+#    ether2 fica livre (reserva)
+# hEX S (RB760iGS): o MTU nao pode passar do L2MTU (1596 de fabrica). 2026 e o maximo do chip.
+/interface ethernet set [find where default-name~&quot;ether&quot;] l2mtu=2026
+/interface set [find default-name=ether1] name=&quot;ether1-WAN-RADIO&quot; comment=&quot;PAP Backup Radio (/29)&quot; mtu=2000
+/interface set [find default-name=ether2] name=&quot;ether2-reserva&quot; comment=&quot;Reserva (fibra no SFP)&quot; mtu=2000
+/interface ethernet set [find default-name=sfp1] name=&quot;sfp1-WAN-FIBRA&quot; comment=&quot;PAP Principal Fibra Optica (/30) - SFP&quot; l2mtu=2026 mtu=2000
+/interface set [find default-name=ether3] name=&quot;ether3-LAN&quot; comment=&quot;Rede Interna Filial&quot; mtu=2000
+/interface set [find default-name=ether4] name=&quot;ether4-LAN&quot; comment=&quot;Rede Interna Filial&quot; mtu=2000
+/interface set [find default-name=ether5] name=&quot;ether5-LAN&quot; comment=&quot;Rede Interna Filial&quot; mtu=2000
+/interface bridge add name=&quot;bridge-LAN&quot; mtu=2000 comment=&quot;Rede Interna Filial (192.168.20.0/24) - portas 3, 4 e 5&quot;
+/interface bridge port add bridge=bridge-LAN interface=ether3-LAN
+/interface bridge port add bridge=bridge-LAN interface=ether4-LAN
+/interface bridge port add bridge=bridge-LAN interface=ether5-LAN
+
+# 3. LOOPBACK /32: endereço fixo do roteador, alcançável pela fibra OU pelo rádio (router-id do OSPF)
+/interface bridge add name=&quot;loopback&quot; comment=&quot;Loopback /32 - identificacao e monitoramento&quot;
+/ip address add address=10.255.255.2/32 interface=loopback comment=&quot;Loopback R-FILIAL&quot;
+
+# 4. ENDEREÇAMENTO IP
+/ip address add address=192.168.20.1/24 interface=bridge-LAN comment=&quot;Gateway LAN Filial&quot;
+/ip address add address=10.0.1.2/30 interface=sfp1-WAN-FIBRA comment=&quot;PAP Fibra Filial&quot;
+/ip address add address=10.0.2.2/29 interface=ether1-WAN-RADIO comment=&quot;PAP Radio Filial&quot;
+
+# 4b. DHCP NA LAN: notebooks e PCs pegam IP sozinhos (.100 a .199). IPs fixos ficam fora da faixa:
+#     roteador .1, switch .2, PCs do projeto .10, servidor Zabbix .50
+/ip pool add name=pool-LAN ranges=192.168.20.100-192.168.20.199
+/ip dhcp-server add name=dhcp-LAN interface=bridge-LAN address-pool=pool-LAN lease-time=1h disabled=no
+/ip dhcp-server network add address=192.168.20.0/24 gateway=192.168.20.1 comment=&quot;LAN Filial&quot;
+
+# 5. USUÁRIOS
+/user add name=&quot;admin_senai&quot; group=full password=&quot;&lt;SENHA_ADMIN_FILIAL&gt;&quot; comment=&quot;Usuario Administrativo&quot;
+/user disable admin
+
+# 6. HARDENING DE SERVIÇOS
+/ip service set telnet disabled=yes
+/ip service set ftp disabled=yes
+/ip service set www disabled=yes
+/ip service set api disabled=yes
+/ip service set api-ssl disabled=yes
+/ip service set www-ssl disabled=yes
+/ip service set ssh port=22 address=192.168.10.0/24,192.168.20.0/24 disabled=no
+/ip service set winbox address=192.168.10.0/24,192.168.20.0/24 disabled=no
+
+# 7. DESCOBERTA DE VIZINHOS SÓ NA LAN
+/interface list add name=&quot;LAN_MGMT&quot;
+/interface list add name=&quot;WAN_PUBLIC&quot;
+/interface list member add interface=bridge-LAN list=LAN_MGMT
+/interface list member add interface=sfp1-WAN-FIBRA list=WAN_PUBLIC
+/interface list member add interface=ether1-WAN-RADIO list=WAN_PUBLIC
+/ip neighbor discovery-settings set discover-interface-list=LAN_MGMT
+/tool mac-server set allowed-interface-list=LAN_MGMT
+/tool mac-server mac-winbox set allowed-interface-list=LAN_MGMT
+
+# 8. OSPF v7: fibra custo 10 (preferida), rádio custo 100 (backup), LAN e loopback anunciadas
+/routing ospf instance add name=&quot;ospf-filial&quot; router-id=10.255.255.2
+/routing ospf area add name=&quot;area-0&quot; instance=ospf-filial area-id=0.0.0.0
+/routing ospf interface-template add area=area-0 interfaces=sfp1-WAN-FIBRA cost=10 type=ptp comment=&quot;PAP Fibra - Custo 10 (Prioritario)&quot;
+/routing ospf interface-template add area=area-0 interfaces=ether1-WAN-RADIO cost=100 type=ptp comment=&quot;PAP Radio - Custo 100 (Backup)&quot;
+/routing ospf interface-template add area=area-0 interfaces=bridge-LAN passive comment=&quot;Anunciar LAN Filial sem enviar pacotes OSPF&quot;
+/routing ospf interface-template add area=area-0 interfaces=loopback passive comment=&quot;Anunciar loopback /32&quot;
+
+# 9. FIREWALL STATEFUL
+/ip firewall filter
+add chain=input action=accept connection-state=established,related comment=&quot;1. Aceitar conexoes estabelecidas e relacionadas&quot;
+add chain=input action=drop connection-state=invalid comment=&quot;2. Bloquear conexoes invalidas&quot;
+add chain=input action=accept protocol=icmp comment=&quot;3. Permitir ICMP (Ping)&quot;
+add chain=input action=accept protocol=ospf comment=&quot;4. Permitir OSPF (Protocolo 89)&quot;
+add chain=input action=accept src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment=&quot;5. Acesso Gerencia&quot;
+add chain=input action=drop comment=&quot;6. Bloquear restante&quot;
+/ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.10.0/24
+/ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.20.0/24
+/ip firewall filter
+add chain=forward action=accept connection-state=established,related
+add chain=forward action=drop connection-state=invalid
+add chain=forward action=accept src-address=192.168.20.0/24 dst-address=192.168.10.0/24 comment=&quot;Filial -&gt; Matriz&quot;
+add chain=forward action=accept src-address=192.168.10.0/24 dst-address=192.168.20.0/24 comment=&quot;Matriz -&gt; Filial&quot;
+add chain=forward action=drop in-interface-list=WAN_PUBLIC
+
+# 10. BACKUP AUTOMÁTICO
+/system script add name=&quot;script_backup_automatico&quot; source=&quot;/system backup save name=(\&quot;backup_filial_\&quot; . [/system clock get date])&quot;
+/system scheduler add name=&quot;agendador_backup&quot; interval=1d start-time=00:00:00 on-event=&quot;script_backup_automatico&quot;
+
+# 11. QUALIDADE DA FIBRA -&gt; TROCA AUTOMÁTICA PARA O RÁDIO (RouterOS 7.4+)
+#     A cada 10 s, 20 pings para a ponta da Matriz na fibra. Se a média passar de 30 ms OU a perda passar
+#     de 10%, a fibra é considerada degradada: o custo OSPF dela sobe para 200 (acima dos 100 do rádio) e
+#     o tráfego vai para o rádio SEM a fibra cair. Quando a fibra volta a ficar boa, o custo volta a 10.
+/tool netwatch add host=10.0.1.1 type=icmp interval=10s packet-count=20 packet-interval=100ms \
+    thr-avg=30ms thr-loss-percent=10% comment=&quot;NOC: qualidade da fibra (troca para o radio se degradar)&quot; \
+    down-script=&quot;/routing ospf interface-template set [find comment~\&quot;PAP Fibra\&quot;] cost=200; :log warning \&quot;[NOC] FIBRA DEGRADADA ou CAIDA: trafego desviado para o RADIO\&quot;&quot; \
+    up-script=&quot;/routing ospf interface-template set [find comment~\&quot;PAP Fibra\&quot;] cost=10; :log warning \&quot;[NOC] FIBRA OK: trafego de volta para a FIBRA\&quot;&quot;</code></pre></details><details><summary><span>Integração com o NOC (SNMP, firewall e usuário de leitura)</span><code>routeros/routeros-r-filial-noc.rsc</code></summary><div class="acoes"><button type="button" class="copiar" data-alvo="s-r-filial-1">Copiar</button></div><pre id="s-r-filial-1"><code># ====================================================================
+# R-FILIAL - integração com o NOC (Zabbix + Analista IA)
+# Colar no terminal do R-FILIAL DEPOIS do script principal da Filial.
+# 192.168.10.50 = IP do servidor Zabbix (o instalador e o gerador da bancada trocam pelo IP do noc.conf).
+# O IP vai escrito em cada linha: variáveis :local somem entre linhas coladas no terminal.
+# ====================================================================
+
+# 1. SNMP v2c somente leitura, só para o Zabbix
+#    (security=none é obrigatório para v2c; &quot;private&quot; exige SNMPv3)
+/snmp community set [find default=yes] disabled=yes
+/snmp community add name=public_senai addresses=192.168.10.50/32 security=none read-access=yes write-access=no
+/snmp set enabled=yes contact=&quot;NOC SENAI TCC&quot; location=&quot;Rack Filial&quot;
+
+# 2. Firewall: liberar SNMP e SSH apenas para o Zabbix (antes do drop final)
+/ip firewall filter add chain=input action=accept protocol=udp dst-port=161 src-address=192.168.10.50 comment=&quot;NOC: Zabbix SNMP&quot;
+/ip firewall filter add chain=input action=accept protocol=tcp dst-port=22 src-address=192.168.10.50 comment=&quot;NOC: Analista IA SSH (leitura)&quot;
+/ip firewall filter move [find comment=&quot;NOC: Zabbix SNMP&quot;] destination=0
+/ip firewall filter move [find comment=&quot;NOC: Analista IA SSH (leitura)&quot;] destination=1
+
+# 3. Usuário SOMENTE LEITURA para o Analista IA, com login por chave
+#    Troque a senha abaixo por uma senha forte sua (com chave cadastrada,
+#    o RouterOS bloqueia login por senha desse usuário por padrão).
+/user add name=zabbix-ia group=read password=&quot;TROQUE_POR_UMA_SENHA_FORTE&quot; comment=&quot;Analista IA - somente leitura&quot;
+/user ssh-keys add user=zabbix-ia key=&quot;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ6p8g/oAtn3KK0x8Tze43LoZ5JZ6vePhG3ihVcCquum noc-analista@zabbix&quot;
+# Se a linha acima der erro na sua versão do RouterOS: envie o arquivo noc-analista.pub ao roteador
+# (Winbox &gt; Files) e use:  /user ssh-keys import public-key-file=noc-analista.pub user=zabbix-ia</code></pre></details>
+</section>
+  <section class="secao" id="outros"><h2>Outros equipamentos</h2><div class="outros"><article class="outro"><header><h3>Antenas do rádio P2P</h3><span class="estado falha">Com defeito</span></header><p class="estado-txt">Equipamento sem funcionar no teste de 14/10 (porta 1 sem link)</p><dl class="dados"><dt>RADIO-P2P-MATRIZ</dt><dd>Access Point PtP, bridge, 10.0.2.3/29, gateway 10.0.2.1, liga na ether1 do R-MATRIZ</dd><dt>RADIO-P2P-FILIAL</dt><dd>Station PtP, bridge, 10.0.2.4/29, gateway 10.0.2.2, liga na ether1 do R-FILIAL</dd><dt>Rede sem fio</dt><dd>SSID SENAI_LINK_P2P_BACKUP, WPA2-PSK (AES), mesma chave nas duas</dd><dt>MTU</dt><dd>2000, ou o máximo que o rádio aceitar</dd></dl></article><article class="outro"><header><h3>Notebook de testes</h3><span class="estado ok">Configurado</span></header><p class="estado-txt">Pega IP pelo DHCP do roteador em que estiver ligado</p><dl class="dados"><dt>Ligação</dt><dd>porta 3 de um dos roteadores</dd><dt>Na Matriz</dt><dd>192.168.10.100 a .199</dd><dt>Na Filial</dt><dd>192.168.20.100 a .199</dd><dt>Ping pela fibra</dt><dd>ping -S &lt;IP do cabo&gt; 192.168.10.1 (o -S evita que o Windows use o Wi-Fi)</dd></dl></article><article class="outro"><header><h3>PCs do projeto</h3><span class="estado pendente">Pendente</span></header><p class="estado-txt">Scripts prontos em bancada\saida (pc-matriz.ps1 e pc-filial.ps1)</p><dl class="dados"><dt>PC-MATRIZ</dt><dd>192.168.10.10/24, gateway 192.168.10.1, MTU 2000, ping liberado</dd><dt>PC-FILIAL</dt><dd>192.168.20.10/24, gateway 192.168.20.1, MTU 2000, ping liberado</dd></dl></article><article class="outro"><header><h3>Servidor Zabbix (VM)</h3><span class="estado fora">Fora do MVP</span></header><p class="estado-txt">Fora do MVP: entra depois que a rede estiver completa</p><dl class="dados"><dt>IP na Matriz</dt><dd>192.168.10.50/24 (placa ens33 em bridge com o cabo)</dd><dt>Monitora</dt><dd>R-FILIAL pela loopback 10.255.255.2, fibra, rádio e antenas</dd></dl></article></div></section>
+  <section class="secao" id="mudancas"><h2>Histórico de mudanças</h2><div class="rolagem"><table><thead><tr><th>Quando</th><th>Onde</th><th>O que mudou</th></tr></thead><tbody><tr><td><span style='white-space:nowrap'>16/10/2026 14:40</span></td><td>R-MATRIZ</td><td>Equipamento novo configurado do zero: RouterOS 6.48.2 → 7.24.5, arquivo testado sem erros e aplicado.</td></tr><tr><td><span style='white-space:nowrap'>16/10/2026</span></td><td>Bancada</td><td>A escola trocou os equipamentos. Toda a configuração está sendo refeita com os modelos corrigidos.</td></tr><tr><td><span style='white-space:nowrap'>14/10/2026</span></td><td>R-FILIAL</td><td>Teste do rádio: porta 1 sem link. A configuração está certa; o problema é o equipamento do rádio.</td></tr><tr><td><span style='white-space:nowrap'>14/10/2026</span></td><td>Ambos</td><td>Fibra movida da ether2 para a sfp1 (módulo SFP). A ether2 virou reserva.</td></tr><tr><td><span style='white-space:nowrap'>14/10/2026</span></td><td>Ambos</td><td>DHCP na rede local (.100 a .199), L2MTU 2026 para o MTU 2000 e OSPF passive sem =yes.</td></tr><tr><td><span style='white-space:nowrap'>14/10/2026</span></td><td>Ambos</td><td>Primeira configuração dos hEX S anteriores, atualizados de RouterOS 6 para 7.24.5.</td></tr></tbody></table></div></section>
+</main>
+<script>
+document.querySelectorAll('button.copiar').forEach(function(b){
+  b.addEventListener('click', function(){
+    var pre = document.getElementById(b.dataset.alvo), texto = pre.innerText;
+    function ok(){ b.textContent = 'Copiado'; setTimeout(function(){ b.textContent = 'Copiar'; }, 1500); }
+    function selecionar(){ var r = document.createRange(); r.selectNodeContents(pre);
+      var s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Selecionado: Ctrl+C'; }
+    try { navigator.clipboard.writeText(texto).then(ok, selecionar); } catch (x) { selecionar(); }
+  });
+});
+</script>
