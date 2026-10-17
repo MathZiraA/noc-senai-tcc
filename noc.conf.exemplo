@@ -41,6 +41,9 @@ PORTA_RADIO=ether1-WAN-RADIO
 FIBRA_LAT_MAX_MS=20
 FIBRA_PERDA_MAX=5
 RADIO_SINAL_MIN_DBM=-60
+RADIO_SINAL_CRIT_DBM=-70
+RADIO_SINAL_SAT_DBM=-40
+RADIO_CCQ_MIN=80
 # Chamado + e-mail formal ao cliente quando um enlace fica fora por mais deste tempo
 CHAMADO_APOS=1h
 CLIENTE_NOME="Cliente CTI"

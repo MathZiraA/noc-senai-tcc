@@ -37,6 +37,9 @@ PADRAO = {
     "FIBRA_LAT_MAX_MS": "20",
     "FIBRA_PERDA_MAX": "5",
     "RADIO_SINAL_MIN_DBM": "-60",             # sinal adequado entre -60 e -50 dBm
+    "RADIO_SINAL_CRIT_DBM": "-70",            # abaixo disso o enlace fica instável
+    "RADIO_SINAL_SAT_DBM": "-40",             # acima disso o receptor satura (antenas muito próximas)
+    "RADIO_CCQ_MIN": "80",                    # % mínimo de qualidade da transmissão
     # Chamado com e-mail formal ao cliente quando um enlace fica fora por mais deste tempo
     "CHAMADO_APOS": "1h",
     "CLIENTE_NOME": "Cliente CTI",

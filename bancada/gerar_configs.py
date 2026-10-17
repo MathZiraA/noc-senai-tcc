@@ -107,7 +107,8 @@ def main():
 Modo sem fio        Access Point PtP            Station PtP
 Modo de rede        Bridge (transparente)       Bridge (transparente)
 IP de gerência      10.0.2.3 / 29               10.0.2.4 / 29
-Gateway             10.0.2.1                    10.0.2.2
+Gateway             10.0.2.1                    10.0.2.1 (o R-MATRIZ, lado do Zabbix: com
+                                                10.0.2.2 a resposta ao Zabbix e barrada no R-FILIAL)
 SSID                SENAI_LINK_P2P_BACKUP       conectar em SENAI_LINK_P2P_BACKUP
 Segurança           WPA2-PSK (AES)              WPA2-PSK (AES), mesma chave
 MTU                 2000 (ou o máximo aceito)   2000 (ou o máximo aceito)

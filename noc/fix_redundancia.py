@@ -186,23 +186,89 @@ for desc, expr, sev, comment in triggers:
         call("trigger.update", {"triggerid": atuais_t[desc]["triggerid"], "tags": tags})
 print(f"[ok] {len(triggers)} triggers de redundância e qualidade (quedas marcadas com chamado=sim)")
 
-# 5b. Antenas do rádio como hosts próprios: separa "antena com defeito" de "roteador com defeito"
+# 5b. Antenas do rádio como hosts próprios: separa "antena com defeito" de "roteador com defeito".
+#     Ubiquiti PowerBeam M5 (airOS 6, XW): ping + SNMP do MIB UBNT-AirMAX (enterprise 41112), tabela ubntWlStat.
+#     Pedido da CTI: sinal adequado entre -60 e -50 dBm.
 tpl_icmp = call("template.get", {"filter": {"host": ["ICMP Ping"]}, "output": ["templateid"]})[0]["templateid"]
+UBNT = "1.3.6.1.4.1.41112.1.4"
+ITENS_ANTENA = [  # (chave, nome, OID, unidade, só na estação?)
+    ("ubnt.sinal", "Rádio - sinal recebido", f"{UBNT}.5.1.5.1", "dBm", True),
+    ("ubnt.ruido", "Rádio - ruído de fundo", f"{UBNT}.5.1.8.1", "dBm", False),
+    ("ubnt.ccq", "Rádio - CCQ (qualidade da transmissão)", f"{UBNT}.5.1.7.1", "%", False),
+    ("ubnt.estacoes", "Rádio - estações conectadas", f"{UBNT}.5.1.15.1", "", False),
+    ("ubnt.airmax.qualidade", "Rádio - qualidade airMAX", f"{UBNT}.6.1.3.1", "%", False),
+    ("ubnt.airmax.capacidade", "Rádio - capacidade airMAX", f"{UBNT}.6.1.4.1", "%", False),
+]
+MACROS_ANTENA = [
+    ("{$RADIO_SINAL_MIN}", config.C["RADIO_SINAL_MIN_DBM"], "Abaixo disso: sinal fraco (CTI: adequado entre -60 e -50 dBm)"),
+    ("{$RADIO_SINAL_CRIT}", config.C["RADIO_SINAL_CRIT_DBM"], "Abaixo disso: enlace instável"),
+    ("{$RADIO_SINAL_SAT}", config.C["RADIO_SINAL_SAT_DBM"], "Acima disso: sinal forte demais, satura o receptor"),
+    ("{$RADIO_CCQ_MIN}", config.C["RADIO_CCQ_MIN"], "Abaixo disso: muitas retransmissões"),
+    ("{$SNMP_COMMUNITY}", config.C["SNMP_COMMUNITY"], "Comunidade SNMP configurada na aba SERVICES da antena"),
+]
 antenas = []
-for nome, ip, visivel in (("RADIO-P2P-MATRIZ", config.C["ANTENA_MATRIZ"], "Rádio P2P Matriz (AP)"),
-                          ("RADIO-P2P-FILIAL", config.C["ANTENA_FILIAL"], "Rádio P2P Filial (Station)")):
-    a = call("host.get", {"filter": {"host": [nome]}, "output": ["hostid"]})
+for nome, ip, visivel, estacao in (("RADIO-P2P-MATRIZ", config.C["ANTENA_MATRIZ"], "Rádio P2P Matriz (AP)", False),
+                                   ("RADIO-P2P-FILIAL", config.C["ANTENA_FILIAL"], "Rádio P2P Filial (Station)", True)):
+    a = call("host.get", {"filter": {"host": [nome]}, "output": ["hostid"],
+                          "selectInterfaces": ["interfaceid", "type"], "selectMacros": ["hostmacroid", "macro", "value"]})
     if a:
-        antenas.append(a[0]["hostid"])
-        continue
-    antenas.append(call("host.create", {
-        "host": nome, "name": visivel, "groups": [{"groupid": grupo_id}], "templates": [{"templateid": tpl_icmp}],
-        "interfaces": [{"type": 1, "main": 1, "useip": 1, "ip": ip, "dns": "", "port": "10050"}],
-        "macros": [{"macro": "{$RADIO_SINAL_MIN}", "value": config.C["RADIO_SINAL_MIN_DBM"],
-                    "description": "Sinal adequado: entre -60 e -50 dBm (leitura depende do fabricante, ver documentação)"}],
-        "description": "Antena do enlace de backup. Ping, perda e latência; sinal em dBm depende do modelo do rádio.",
-        "tags": [{"tag": "component", "value": "radio"}]})["hostids"][0])
-print("[ok] antenas RADIO-P2P-MATRIZ e RADIO-P2P-FILIAL monitoradas por ping")
+        aid = a[0]["hostid"]
+    else:
+        aid = call("host.create", {
+            "host": nome, "name": visivel, "groups": [{"groupid": grupo_id}], "templates": [{"templateid": tpl_icmp}],
+            "interfaces": [{"type": 1, "main": 1, "useip": 1, "ip": ip, "dns": "", "port": "10050"}],
+            "description": "Antena Ubiquiti PowerBeam M5 do enlace de backup: ping e SNMP (sinal, ruído, CCQ, airMAX).",
+            "tags": [{"tag": "component", "value": "radio"}]})["hostids"][0]
+        a = call("host.get", {"hostids": aid, "output": ["hostid"], "selectInterfaces": ["interfaceid", "type"],
+                              "selectMacros": ["hostmacroid", "macro", "value"]})
+    antenas.append(aid)
+    # Interface SNMP (o protótipo criou as antenas só com ping)
+    snmp_if = [i["interfaceid"] for i in a[0]["interfaces"] if i["type"] == "2"]
+    if not snmp_if:
+        snmp_if = call("hostinterface.create", {"hostid": aid, "type": 2, "main": 1, "useip": 1, "ip": ip, "dns": "",
+                                                "port": "161", "details": {"version": 2, "bulk": 1,
+                                                                           "community": "{$SNMP_COMMUNITY}"}})["interfaceids"]
+    atuais_m = {m["macro"]: m for m in a[0]["macros"]}
+    for macro, valor, desc in MACROS_ANTENA:
+        if macro not in atuais_m:
+            call("usermacro.create", {"hostid": aid, "macro": macro, "value": valor, "description": desc})
+        elif atuais_m[macro]["value"] != valor:
+            call("usermacro.update", {"hostmacroid": atuais_m[macro]["hostmacroid"], "value": valor})
+    existentes = {i["key_"] for i in call("item.get", {"hostids": aid, "output": ["key_"]})}
+    for chave, nome_item, oid, unid, so_estacao in ITENS_ANTENA:
+        if (so_estacao and not estacao) or chave in existentes:
+            continue
+        call("item.create", {"hostid": aid, "interfaceid": snmp_if[0], "type": 20, "key_": chave, "name": nome_item,
+                             "snmp_oid": oid, "value_type": 3 if unid in ("%", "") else 0, "units": unid,
+                             "delay": "30s", "history": "90d", "trends": "365d",
+                             "tags": [{"tag": "component", "value": "radio"}]})
+    # Alertas: o sinal só existe na estação (a AP vê várias estações); a AP avisa quando ficar sem nenhuma
+    if estacao:
+        s = f"/{nome}/ubnt.sinal"
+        regras = [
+            ("Sinal do rádio fraco: abaixo de {$RADIO_SINAL_MIN} dBm por 5min",
+             f"max({s},5m)<{{$RADIO_SINAL_MIN}} and last({s})<0", 2,
+             "Fora da faixa pedida pela CTI (-60 a -50 dBm): conferir alinhamento, obstáculos e potência de saída."),
+            ("Sinal do rádio crítico: abaixo de {$RADIO_SINAL_CRIT} dBm por 5min",
+             f"max({s},5m)<{{$RADIO_SINAL_CRIT}} and last({s})<0", 3,
+             "Com esse sinal o enlace perde pacotes e cai com chuva ou desalinhamento."),
+            ("Sinal do rádio forte demais: acima de {$RADIO_SINAL_SAT} dBm por 10min",
+             f"min({s},10m)>{{$RADIO_SINAL_SAT}} and last({s})<0", 1,
+             "Receptor saturado (comum com antenas muito próximas): reduzir a potência de saída."),
+            (f"CCQ do rádio baixo: abaixo de {{$RADIO_CCQ_MIN}}% por 10min",
+             f"max(/{nome}/ubnt.ccq,10m)<{{$RADIO_CCQ_MIN}} and last(/{nome}/ubnt.ccq)>0", 2,
+             "Muitas retransmissões no rádio: interferência ou sinal fora da faixa."),
+        ]
+    else:
+        regras = [("Rádio sem estação conectada (enlace de backup desassociado)",
+                   f"max(/{nome}/ubnt.estacoes,#3)=0", 3,
+                   "A antena da Matriz está ligada, mas a da Filial não está conectada: o backup não existe agora.")]
+    atuais_r = {t["description"] for t in call("trigger.get", {"hostids": aid, "inherited": False, "output": ["description"]})}
+    for desc, expr, sev, comment in regras:
+        if desc not in atuais_r:
+            call("trigger.create", {"description": desc, "expression": expr, "priority": sev, "comments": comment,
+                                    "tags": [{"tag": "component", "value": "radio"}]})
+print("[ok] antenas RADIO-P2P-MATRIZ e RADIO-P2P-FILIAL: ping + SNMP (sinal, ruído, CCQ, airMAX) e alertas de sinal")
 
 # 6. Manutenção até a bancada ficar pronta (coleta continua, e-mails suprimidos)
 NOME_MANUT = "Montagem da bancada - TCC"

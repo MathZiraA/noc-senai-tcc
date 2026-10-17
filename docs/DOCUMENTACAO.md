@@ -1328,3 +1328,51 @@ No R-MATRIZ até o SSH e o WinBox aparecem fechados porque o teste veio da Filia
 - [ ] Instalar o Zabbix no servidor e ligar o monitoramento (incluindo o sinal das antenas por SNMP)
 - [ ] Remover a regra "Ping NOC TCC" do notebook da Filial quando não for mais necessária
 - [ ] Apagar a pasta `bancada\saida` (senhas) ao final do TCC
+- [ ] Trocar o gateway da antena da Filial para 10.0.2.1 (seção 22)
+- [ ] Definir o e-mail real do cliente (`CLIENTE_EMAIL`)
+
+## 22. Revisão do Zabbix contra a reunião da CTI (17/10/2026)
+
+O monitoramento atende aos pedidos do Jaison, com duas correções feitas a partir do que a bancada real mostrou: o sinal do rádio em dBm passou a ser lido pelo Zabbix, e o gateway da antena da Filial precisa mudar para o Zabbix conseguir enxergá-la.
+
+| Pedido | Como o Zabbix atende | Situação |
+| --- | --- | --- |
+| Loopback /32 para monitorar os dois enlaces | R-FILIAL monitorado pela loopback 10.255.255.2; item "Alcance loopback (fibra OU rádio)" | Alinhado |
+| Detectar a fibra degradada sem cair | Latência acima de 20 ms por 5 min, perda acima de 5%, piora em relação ao normal e previsão de 30 min | Alinhado |
+| Monitorar a latência da fibra | Item a cada 10 s, gráficos no Zabbix e no Grafana | Alinhado |
+| Trocar para o rádio quando a fibra degrada | O roteador troca (30 ms ou 10%); o Zabbix avisa antes (20 ms ou 5%) | Alinhado |
+| Chamado após 1 h fora e e-mail ao cliente | Ação "Chamado" com `{$NOC_CHAMADO_APOS}=1h`, livro SHA-256 | Alinhado; falta o e-mail real do cliente |
+| Sinal do rádio entre -60 e -50 dBm | **Corrigido em 17/10**: SNMP nas antenas e alertas | Alinhado |
+| Porta 1 = rádio, 3 a 5 = LAN | `PORTA_RADIO=ether1`; tráfego da fibra na sfp1 | Alinhado |
+| Prioridade "60 e 62" | — | Falta esclarecer |
+
+### Sinal do rádio no Zabbix
+
+As antenas Ubiquiti PowerBeam M5 (airOS 6) são lidas por SNMP com o MIB UBNT-AirMAX (enterprise 41112), a cada 30 s. O sinal só é lido na estação (Filial), porque o ponto de acesso enxerga várias estações; o ponto de acesso avisa quando fica sem nenhuma.
+
+| Item | OID | Antenas |
+| --- | --- | --- |
+| Sinal recebido (dBm) | 1.3.6.1.4.1.41112.1.4.5.1.5.1 | Filial |
+| Ruído de fundo (dBm) | 1.3.6.1.4.1.41112.1.4.5.1.8.1 | ambas |
+| CCQ (%) | 1.3.6.1.4.1.41112.1.4.5.1.7.1 | ambas |
+| Estações conectadas | 1.3.6.1.4.1.41112.1.4.5.1.15.1 | ambas |
+| Qualidade / capacidade airMAX (%) | 1.3.6.1.4.1.41112.1.4.6.1.3.1 e .4.1 | ambas |
+
+| Alerta | Condição | Gravidade |
+| --- | --- | --- |
+| Sinal fraco | abaixo de `{$RADIO_SINAL_MIN}` = -60 dBm por 5 min | atenção |
+| Sinal crítico | abaixo de `{$RADIO_SINAL_CRIT}` = -70 dBm por 5 min | média |
+| Sinal forte demais | acima de `{$RADIO_SINAL_SAT}` = -40 dBm por 10 min | informação |
+| CCQ baixo | abaixo de `{$RADIO_CCQ_MIN}` = 80% por 10 min | atenção |
+| Rádio sem estação | ponto de acesso com 0 estações em 3 leituras | média |
+
+Testado no Zabbix do protótipo com valores simulados: -53 dBm não gera alerta; -65 gera "sinal fraco"; -75 com CCQ 70% gera fraco, crítico e CCQ baixo; -35 gera "forte demais"; antena desconectada (valor 0) não gera alerta de sinal, porque esse caso é coberto pelo ping e pelo "rádio sem estação". Os OIDs ainda devem ser confirmados nas antenas reais (`snmpwalk -v2c -c <comunidade> 10.0.2.4 1.3.6.1.4.1.41112.1.4.5`) no dia do servidor.
+
+### Gateway da antena da Filial
+
+Com o gateway 10.0.2.2, a antena da Filial responde ao Zabbix (na Matriz) pelo R-FILIAL, cujo firewall descarta a resposta porque não viu a pergunta passar. Correção: na aba NETWORK da RADIO-P2P-FILIAL, gateway **10.0.2.1** (o R-MATRIZ, lado do Zabbix). A ficha do rádio gerada por `gerar_configs.py` já sai assim. Pendente até as antenas serem montadas de novo.
+
+### Pontos opcionais
+
+- Monitorar o R-MATRIZ por SNMP (CPU, memória, temperatura, interfaces): hoje só o R-FILIAL tem SNMP.
+- Confirmar a troca por fibra degradada pela tabela de rotas do roteador (hoje o Zabbix deduz pelo alerta; a confirmação aparece na análise da IA, que consulta o roteador).
