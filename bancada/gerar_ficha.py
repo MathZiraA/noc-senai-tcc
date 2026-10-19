@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "19/10/2026 16:00"
+ATUALIZADO = "19/10/2026 16:10"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -80,6 +80,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("19/10/2026 16:10", "Failover", "tracert do notebook da Matriz ao PC da Filial: com a fibra, salto 2 = 10.0.1.2 (fibra, ~5 ms); com o cabo da fibra desconectado, salto 2 = 10.0.2.2 (rádio, ~7 ms), sem perder o PC. Prova visual da troca de caminho para a apresentação."),
     ("19/10/2026 16:00", "PCs", "Notebook da Matriz (192.168.10.198) pinga o PC da Filial (192.168.20.197) sem perda, 5 ms, TTL 126; caminho R-MATRIZ → fibra (10.0.1.2) → PC. O PC só respondeu depois de liberar o ping no firewall do Windows."),
     ("19/10/2026 15:35", "Switches", "switches.rsc refeito no padrão dos roteadores: todas as portas em bridge com MTU 2000, gerência 192.168.10.2 / 192.168.20.2, só SSH/WinBox (SW-MATRIZ só da Matriz; SW-FILIAL da Filial e da Matriz), SNMP para o Zabbix, firewall da gerência e backup diário."),
     ("19/10/2026 15:30", "Testes", "Bateria completa da Matriz: 286 pings em 60 s até o R-FILIAL sem perda (2,0 ms); tracert direto 192.168.10.1 → 192.168.20.1; 2 vizinhos OSPF (fibra e rádio), rotas pela fibra; ping só pelo rádio 0% (2 ms); MTU 2000 sem fragmentar pela fibra e pelo rádio; netwatch up; nenhum erro no log do R-MATRIZ."),
