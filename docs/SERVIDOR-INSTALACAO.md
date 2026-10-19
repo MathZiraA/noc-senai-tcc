@@ -1,5 +1,24 @@
 # Servidor do NOC: Debian 12 direto no PC
 
+> **Atualização 19/10/2026:** o NOC vai rodar numa **VM no VMware ESXi** do servidor de rack (Dell PowerEdge T440,
+> ESXi em 192.168.10.40). Dentro da VM, o roteiro é o mesmo deste documento, com dois atalhos:
+>
+> - **Versão:** Debian **12.15.0** amd64, imagem `debian-12.15.0-amd64-netinst.iso` (a 13 não serve).
+> - **VM:** 2 vCPU, 8 GB de RAM, 60 GB de disco, **uma** placa de rede no port group da rede da Matriz
+>   (a internet vem pelo R-MATRIZ, porta ether2). Na instalação do Debian, deixe a rede em DHCP.
+> - **Depois do Debian instalado**, no console da VM, como root, um script faz o resto (rede fixa 192.168.10.50,
+>   pacotes, repositório, noc.conf, chave SSH do Analista IA e o `instalar_noc.sh`):
+>
+>   ```
+>   apt-get install -y curl
+>   curl -fsSL -H "Authorization: token SEU_TOKEN" -o preparar_servidor.sh \
+>     https://raw.githubusercontent.com/MathZiraA/noc-senai-tcc/main/servidor/preparar_servidor.sh
+>   bash preparar_servidor.sh
+>   ```
+>
+>   `SEU_TOKEN` = token de leitura do GitHub (o repositório é privado). O script pede, sem mostrar na tela, o
+>   usuário e o token do GitHub, o token da API do Zabbix, a senha de app do Gmail e a chave do Gemini.
+
 O servidor de produção é um PC de torre com o Debian 12 instalado direto no disco (sem máquina virtual). Depois da
 instalação básica, o `instalar_noc.sh` monta o NOC inteiro: Zabbix 7.0, banco, Apache com HTTPS, Grafana, Analista IA,
 e-mail, dashboards, mapa, página de status, backup diário e tarefas agendadas.
