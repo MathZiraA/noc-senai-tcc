@@ -11,11 +11,11 @@
 
 # 2. PORTAS
 #    ether1 = rádio (backup) | sfp1 = fibra óptica (principal, módulo SFP) | ether3, ether4, ether5 = rede local (bridge)
-#    ether2 fica livre (reserva)
+#    ether2 = internet da escola (DHCP + NAT): só para o servidor do NOC instalar pacotes, enviar e-mail e usar a IA
 # hEX S (RB760iGS): o MTU nao pode passar do L2MTU (1596 de fabrica). 2026 e o maximo do chip.
 /interface ethernet set [find where default-name~"ether"] l2mtu=2026
 /interface set [find default-name=ether1] name="ether1-WAN-RADIO" comment="PAP Backup Radio (/29)" mtu=2000
-/interface set [find default-name=ether2] name="ether2-reserva" comment="Reserva (fibra no SFP)" mtu=2000
+/interface set [find default-name=ether2] name="ether2-INTERNET" comment="Internet da escola (DHCP)" mtu=2000
 /interface ethernet set [find default-name=sfp1] name="sfp1-WAN-FIBRA" comment="PAP Principal Fibra Optica (/30) - SFP" l2mtu=2026 mtu=2000
 /interface set [find default-name=ether3] name="ether3-LAN" comment="Rede Interna Matriz" mtu=2000
 /interface set [find default-name=ether4] name="ether4-LAN" comment="Rede Interna Matriz" mtu=2000
@@ -41,7 +41,13 @@
 # Opção 121 (rotas sem classe): os PCs aprendem que as redes do projeto vão pelo cabo e o resto (internet)
 # pelo Wi-Fi deles; sem isso o Windows manda os pacotes para a outra unidade pelo Wi-Fi
 /ip dhcp-server option add name=rotas-projeto code=121 value=0x18c0a814c0a80a01080ac0a80a01
-/ip dhcp-server network add address=192.168.10.0/24 gateway=192.168.10.1 dhcp-option=rotas-projeto comment="LAN Matriz"
+/ip dhcp-server network add address=192.168.10.0/24 gateway=192.168.10.1 dns-server=192.168.10.1 dhcp-option=rotas-projeto comment="LAN Matriz"
+
+# 4c. INTERNET (ether2): IP da rede da escola por DHCP, NAT para a Matriz e a Filial, DNS para a LAN.
+#     A rede do projeto funciona sem isto; o servidor do NOC precisa (pacotes, e-mail e IA).
+/ip dhcp-client add interface=ether2-INTERNET add-default-route=yes use-peer-dns=yes comment="Internet da escola"
+/ip firewall nat add chain=srcnat out-interface=ether2-INTERNET action=masquerade comment="NAT: Matriz e Filial para a internet"
+/ip dns set allow-remote-requests=yes
 
 # 5. USUÁRIOS
 /user add name="admin_senai" group=full password="<SENHA_ADMIN_MATRIZ>" comment="Usuario Administrativo"
@@ -66,13 +72,14 @@
 /interface list add name="WAN_PUBLIC"
 /interface list member add interface=bridge-LAN list=LAN_MGMT
 /interface list member add interface=sfp1-WAN-FIBRA list=WAN_PUBLIC
+/interface list member add interface=ether2-INTERNET list=WAN_PUBLIC
 /interface list member add interface=ether1-WAN-RADIO list=WAN_PUBLIC
 /ip neighbor discovery-settings set discover-interface-list=LAN_MGMT
 /tool mac-server set allowed-interface-list=LAN_MGMT
 /tool mac-server mac-winbox set allowed-interface-list=LAN_MGMT
 
 # 8. OSPF v7: fibra custo 10 (preferida), rádio custo 100 (backup), LAN e loopback anunciadas
-/routing ospf instance add name="ospf-matriz" router-id=10.255.255.1
+/routing ospf instance add name="ospf-matriz" router-id=10.255.255.1 originate-default=if-installed
 /routing ospf area add name="area-0" instance=ospf-matriz area-id=0.0.0.0
 /routing ospf interface-template add area=area-0 interfaces=sfp1-WAN-FIBRA cost=10 type=ptp comment="PAP Fibra - Custo 10 (Prioritario)"
 /routing ospf interface-template add area=area-0 interfaces=ether1-WAN-RADIO cost=100 type=ptp comment="PAP Radio - Custo 100 (Backup)"
@@ -86,6 +93,8 @@ add chain=input action=drop connection-state=invalid comment="2. Bloquear conexo
 add chain=input action=accept protocol=icmp comment="3. Permitir ICMP (Ping)"
 add chain=input action=accept protocol=ospf comment="4. Permitir OSPF (Protocolo 89)"
 add chain=input action=accept protocol=tcp dst-port=22,8291 src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment="5. Acesso Gerencia (SSH e WinBox)"
+add chain=input action=accept protocol=udp dst-port=53 in-interface-list=LAN_MGMT comment="5c. DNS para a rede local"
+add chain=input action=accept protocol=tcp dst-port=53 in-interface-list=LAN_MGMT comment="5c. DNS para a rede local (TCP)"
 add chain=input action=drop comment="6. Bloquear restante"
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.10.0/24
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.20.0/24

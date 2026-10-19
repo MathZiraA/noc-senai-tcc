@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "19/10/2026 17:15"
+ATUALIZADO = "19/10/2026 17:45"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -22,6 +22,16 @@ EQUIPAMENTOS = [
         "lan": "192.168.10.0/24", "gw": "192.168.10.1", "loopback": "10.255.255.1/32",
         "fibra": ("10.0.1.1/30", "10.0.1.2"), "radio": ("10.0.2.1/29", "10.0.2.2"),
         "ospf": ("ospf-matriz", "10.255.255.1"), "netwatch": "10.0.1.2", "backup": "backup_matriz_<data>",
+        "portas": [
+            ("ether1", "ether1-WAN-RADIO", "Rádio (backup)", "radio", "10.0.2.1/29",
+             "porta LAN da fonte PoE da antena RADIO-P2P-MATRIZ (a porta POE da fonte vai na antena)"),
+            ("ether2", "ether2-INTERNET", "Internet da escola", "internet", "DHCP da escola",
+             "ponto de rede da escola com internet (pendente: o cabo testado em 19/10 estava sem sinal)"),
+            ("ether3", "ether3-LAN", "Rede local", "lan", "bridge-LAN", "notebook da Matriz (192.168.10.198, DHCP)"),
+            ("ether4", "ether4-LAN", "Rede local", "lan", "bridge-LAN", "porta dedicada da iDRAC do servidor Dell T440 (192.168.10.30)"),
+            ("ether5", "ether5-LAN", "Rede local", "lan", "bridge-LAN", "porta de rede comum do servidor Dell T440: ESXi (192.168.10.40) e VMs"),
+            ("sfp1", "sfp1-WAN-FIBRA", "Fibra (principal)", "fibra", "10.0.1.1/30", "módulo SFP + fibra até a sfp1 do R-FILIAL"),
+        ],
         "scripts": [("r-matriz.rsc", "Configuração completa")],
         "notas": ["Verificado: o notebook recebe 192.168.10.199 pelo DHCP e alcança 192.168.10.1 e a loopback 10.255.255.1."],
     },
@@ -35,6 +45,15 @@ EQUIPAMENTOS = [
         "lan": "192.168.20.0/24", "gw": "192.168.20.1", "loopback": "10.255.255.2/32",
         "fibra": ("10.0.1.2/30", "10.0.1.1"), "radio": ("10.0.2.2/29", "10.0.2.1"),
         "ospf": ("ospf-filial", "10.255.255.2"), "netwatch": "10.0.1.1", "backup": "backup_filial_<data>",
+        "portas": [
+            ("ether1", "ether1-WAN-RADIO", "Rádio (backup)", "radio", "10.0.2.2/29",
+             "porta LAN da fonte PoE da antena RADIO-P2P-FILIAL (a porta POE da fonte vai na antena)"),
+            ("ether2", "ether2-reserva", "Reserva", "livre", "—", "nada"),
+            ("ether3", "ether3-LAN", "Rede local", "lan", "bridge-LAN", "PC da Filial N07S12-1243997 (192.168.20.197, DHCP)"),
+            ("ether4", "ether4-LAN", "Rede local", "lan", "bridge-LAN", "livre (PCs ou SW-FILIAL)"),
+            ("ether5", "ether5-LAN", "Rede local", "lan", "bridge-LAN", "livre (PCs ou SW-FILIAL)"),
+            ("sfp1", "sfp1-WAN-FIBRA", "Fibra (principal)", "fibra", "10.0.1.2/30", "módulo SFP + fibra até a sfp1 do R-MATRIZ"),
+        ],
         "scripts": [("r-filial.rsc", "Configuração completa"),
                     ("routeros-r-filial-noc.rsc", "Integração com o NOC (SNMP, firewall e usuário de leitura)")],
         "notas": ["Verificado: o notebook recebe 192.168.20.199 pelo DHCP e alcança 192.168.20.1 e a loopback 10.255.255.2.",
@@ -46,14 +65,6 @@ EQUIPAMENTOS = [
     },
 ]
 
-PORTAS = [  # (porta, nome no roteador, papel, classe)
-    ("ether1", "ether1-WAN-RADIO", "Rádio (backup)", "radio"),
-    ("ether2", "ether2-reserva", "Reserva", "livre"),
-    ("ether3", "ether3-LAN", "Rede local", "lan"),
-    ("ether4", "ether4-LAN", "Rede local", "lan"),
-    ("ether5", "ether5-LAN", "Rede local", "lan"),
-    ("sfp1", "sfp1-WAN-FIBRA", "Fibra (principal)", "fibra"),
-]
 
 OUTROS = [
     ("Antenas do rádio P2P", "ok", "Ubiquiti PowerBeam M5 300 (airOS 6.1.7, sem os pratos). Enlace ativo desde 16/10/2026 16:11",
@@ -79,16 +90,16 @@ OUTROS = [
       ("iDRAC9 Enterprise", "192.168.10.30/24 (porta dedicada da iDRAC na ether4 do R-MATRIZ), gateway e DNS 192.168.10.1; console virtual em https://192.168.10.30"),
       ("Gerência do ESXi", "192.168.10.40/24, gateway 192.168.10.1, DNS 192.168.10.1, nome esxi-noc; acesso em https://192.168.10.40"),
       ("Placa física 1", "porta de rede comum do servidor na ether5 do R-MATRIZ: gerência do ESXi e port group VM Network"),
-      ("Placa física 2", "rede da escola (internet): port group Internet Escola para a VM do Zabbix"),
+      ("Internet", "pela ether2-INTERNET do R-MATRIZ (NAT): não precisa de segunda placa no servidor"),
       ("Outros grupos", "acessam o ESXi pela rede da Matriz ou com uma liberação específica para 192.168.10.40")]),
     ("Servidor Zabbix (VM no ESXi)", "pendente", "VM nova com Debian 12 + instalar_noc.sh (docs/SERVIDOR-INSTALACAO.md)",
      [("Recursos", "2 vCPU, 4 a 8 GB de RAM, 60 GB de disco"),
-      ("Placa 1", "VM Network → 192.168.10.50/24 (rede da Matriz)"),
-      ("Placa 2", "Internet Escola → DHCP da escola (atualizações, e-mail e IA)"),
+      ("Placa de rede", "VM Network → 192.168.10.50/24, gateway 192.168.10.1, DNS 192.168.10.1 (internet pelo R-MATRIZ)"),
       ("Monitora", "R-FILIAL pela loopback 10.255.255.2, fibra, rádio e as duas antenas (ping + SNMP)")]),
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("19/10/2026 17:45", "Portas", "Mapa de portas completo: cada porta dos dois roteadores com o que está ligado nela. R-MATRIZ: ether2 virou ether2-INTERNET (DHCP da escola, NAT, DNS e rota padrão anunciada no OSPF); ether4 = iDRAC; ether5 = servidor (ESXi)."),
     ("19/10/2026 17:15", "Servidor", "Servidor identificado: Dell PowerEdge T440 (9NRHYR2) com iDRAC9 ligada na ether4 do R-MATRIZ. IP da iDRAC trocado de 192.168.10.40 para 192.168.10.30, liberando o .40 para o ESXi. Plano de IPs: .30 iDRAC, .40 ESXi, .50 VM do Zabbix, .51 a .99 para VMs de outros grupos."),
     ("19/10/2026 16:30", "Servidor", "Mudança de plano: o NOC roda numa VM dentro do VMware ESXi de um servidor de rack compartilhado (não mais Debian direto no PC). Gerência do ESXi na rede da Matriz: 192.168.10.40."),
     ("19/10/2026 16:10", "Failover", "tracert do notebook da Matriz ao PC da Filial: com a fibra, salto 2 = 10.0.1.2 (fibra, ~5 ms); com o cabo da fibra desconectado, salto 2 = 10.0.2.2 (rádio, ~7 ms), sem perder o PC. Prova visual da troca de caminho para a apresentação."),
@@ -128,10 +139,10 @@ def script(nome):
     return (RAIZ / "routeros" / nome).read_text(encoding="utf-8").rstrip()
 
 
-def painel_portas():
+def painel_portas(portas):
     blocos = "".join(
         f'<div class="porta {c}"><span class="led"></span><b>{e(p)}</b><small>{e(papel)}</small></div>'
-        for p, _, papel, c in PORTAS)
+        for p, _, papel, c, _, _ in portas)
     return f'<div class="painel" aria-label="Painel frontal do hEX S">{blocos}</div>'
 
 
@@ -144,10 +155,8 @@ def tabela(linhas, cab=None):
 def roteador(r):
     lan, gw = r["lan"], r["gw"]
     rede = gw.rsplit(".", 1)[0]
-    portas = tabela([(f"<code>{e(p)}</code>", f"<code>{e(n)}</code>", e(papel),
-                      {"radio": f"<code>{r['radio'][0]}</code>", "fibra": f"<code>{r['fibra'][0]}</code>",
-                       "lan": "bridge-LAN", "livre": "—"}[c], "2000")
-                     for p, n, papel, c in PORTAS], ["Porta", "Nome", "Uso", "Endereço", "MTU"])
+    portas = tabela([(f"<code>{e(p)}</code>", f"<code>{e(n)}</code>", e(papel), e(end), e(liga))
+                     for p, n, papel, c, end, liga in r["portas"]], ["Porta", "Nome", "Uso", "Endereço", "Liga em"])
     ender = tabela([
         ("Rede local (bridge-LAN)", f"<code>{gw}/24</code>", f"rede {lan}"),
         ("Loopback", f"<code>{r['loopback']}</code>", "router-id do OSPF e endereço de monitoramento"),
@@ -186,7 +195,7 @@ def roteador(r):
   </header>
   <p class="estado-txt">{e(r['estado_txt'])}</p>
   <dl class="dados">{dados}</dl>
-  {painel_portas()}
+  {painel_portas(r["portas"])}
   <h3>Portas</h3>{portas}
   <h3>Endereçamento</h3>{ender}
   <h3>Roteamento</h3>{ospf}
@@ -258,7 +267,7 @@ td code,dd code{background:var(--code-bg);padding:1px 5px;border-radius:4px}
 .porta b{font-family:var(--f-mono);font-size:.82rem}
 .porta small{font-size:.7rem;color:var(--muted);line-height:1.2}
 .led{width:10px;height:10px;border-radius:2px;background:var(--livre)}
-.porta.fibra .led{background:var(--fibra)} .porta.radio .led{background:var(--radio)} .porta.lan .led{background:var(--lan)}
+.porta.fibra .led{background:var(--fibra)} .porta.internet .led{background:var(--accent)} .porta.internet{border-color:var(--accent)} .porta.radio .led{background:var(--radio)} .porta.lan .led{background:var(--lan)}
 .porta.fibra{border-color:var(--fibra)} .porta.radio{border-color:var(--radio)}
 .rolagem{overflow-x:auto;min-width:0}
 table{border-collapse:collapse;width:100%;font-size:.92rem}
