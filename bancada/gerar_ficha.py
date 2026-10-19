@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "19/10/2026 15:15"
+ATUALIZADO = "19/10/2026 15:40"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -79,6 +79,8 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("19/10/2026 15:35", "Switches", "switches.rsc refeito no padrão dos roteadores: todas as portas em bridge com MTU 2000, gerência 192.168.10.2 / 192.168.20.2, só SSH/WinBox (SW-MATRIZ só da Matriz; SW-FILIAL da Filial e da Matriz), SNMP para o Zabbix, firewall da gerência e backup diário."),
+    ("19/10/2026 15:30", "Testes", "Bateria completa da Matriz: 286 pings em 60 s até o R-FILIAL sem perda (2,0 ms); tracert direto 192.168.10.1 → 192.168.20.1; 2 vizinhos OSPF (fibra e rádio), rotas pela fibra; ping só pelo rádio 0% (2 ms); MTU 2000 sem fragmentar pela fibra e pelo rádio; netwatch up; nenhum erro no log do R-MATRIZ."),
     ("19/10/2026 15:10", "Acessos", "A Matriz gerencia tudo e a Filial não gerencia a Matriz: R-FILIAL aceita SSH/WinBox vindos da Matriz (regra 5b) e bloqueia os PCs da Filial nas páginas das antenas; R-MATRIZ aceita SSH/WinBox só da rede da Matriz. Opção 121 no DHCP do R-MATRIZ (rotas do projeto pelo cabo). Testado da Matriz: WinBox/SSH do R-FILIAL e páginas das duas antenas abrem."),
     ("19/10/2026 14:55", "Rádio", "Gateway da antena da Filial trocado para 10.0.2.1: ela passou a responder direto da Matriz (0% de perda, 3 ms)."),
     ("19/10/2026 14:40", "Mapeamento", "Bancada religada e mapeada: notebook na ether3 do R-MATRIZ; antena da Matriz (AP) ligada no R-MATRIZ (2,1 ms) e a da Filial do outro lado do rádio; fibra e rádio funcionando."),
