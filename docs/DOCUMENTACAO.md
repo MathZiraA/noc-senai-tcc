@@ -716,7 +716,10 @@ Antes de colar: troque os campos `<SENHA_...>` e `TROQUE_POR_UMA_SENHA_FORTE` (o
 #     roteador .1, switch .2, PCs do projeto .10, servidor Zabbix .50
 /ip pool add name=pool-LAN ranges=192.168.10.100-192.168.10.199
 /ip dhcp-server add name=dhcp-LAN interface=bridge-LAN address-pool=pool-LAN lease-time=1h disabled=no
-/ip dhcp-server network add address=192.168.10.0/24 gateway=192.168.10.1 comment="LAN Matriz"
+# Opção 121 (rotas sem classe): os PCs aprendem que as redes do projeto vão pelo cabo e o resto (internet)
+# pelo Wi-Fi deles; sem isso o Windows manda os pacotes para a outra unidade pelo Wi-Fi
+/ip dhcp-server option add name=rotas-projeto code=121 value=0x18c0a814c0a80a01080ac0a80a01
+/ip dhcp-server network add address=192.168.10.0/24 gateway=192.168.10.1 dhcp-option=rotas-projeto comment="LAN Matriz"
 
 # 5. USUÁRIOS
 /user add name="admin_senai" group=full password="<SENHA_ADMIN_MATRIZ>" comment="Usuario Administrativo"
@@ -729,8 +732,9 @@ Antes de colar: troque os campos `<SENHA_...>` e `TROQUE_POR_UMA_SENHA_FORTE` (o
 /ip service set api disabled=yes
 /ip service set api-ssl disabled=yes
 /ip service set www-ssl disabled=yes
-/ip service set ssh port=22 address=192.168.10.0/24,192.168.20.0/24 disabled=no
-/ip service set winbox address=192.168.10.0/24,192.168.20.0/24 disabled=no
+# A Matriz gerencia tudo; a Filial não gerencia a Matriz
+/ip service set ssh port=22 address=192.168.10.0/24 disabled=no
+/ip service set winbox address=192.168.10.0/24 disabled=no
 # Serviços que vêm ligados no RouterOS 7 e não são usados (pedido da CTI: só o necessário)
 /ip service set reverse-proxy disabled=yes
 /tool bandwidth-server set enabled=no
@@ -827,7 +831,10 @@ add chain=forward action=drop in-interface-list=WAN_PUBLIC
 #     roteador .1, switch .2, PCs do projeto .10, servidor Zabbix .50
 /ip pool add name=pool-LAN ranges=192.168.20.100-192.168.20.199
 /ip dhcp-server add name=dhcp-LAN interface=bridge-LAN address-pool=pool-LAN lease-time=1h disabled=no
-/ip dhcp-server network add address=192.168.20.0/24 gateway=192.168.20.1 comment="LAN Filial"
+# Opção 121 (rotas sem classe): os PCs aprendem que as redes do projeto vão pelo cabo e o resto (internet)
+# pelo Wi-Fi deles; sem isso o Windows manda os pacotes para a outra unidade pelo Wi-Fi
+/ip dhcp-server option add name=rotas-projeto code=121 value=0x18c0a80ac0a81401080ac0a81401
+/ip dhcp-server network add address=192.168.20.0/24 gateway=192.168.20.1 dhcp-option=rotas-projeto comment="LAN Filial"
 
 # 5. USUÁRIOS
 /user add name="admin_senai" group=full password="<SENHA_ADMIN_FILIAL>" comment="Usuario Administrativo"
@@ -871,12 +878,14 @@ add chain=input action=drop connection-state=invalid comment="2. Bloquear conexo
 add chain=input action=accept protocol=icmp comment="3. Permitir ICMP (Ping)"
 add chain=input action=accept protocol=ospf comment="4. Permitir OSPF (Protocolo 89)"
 add chain=input action=accept protocol=tcp dst-port=22,8291 src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment="5. Acesso Gerencia (SSH e WinBox)"
+add chain=input action=accept protocol=tcp dst-port=22,8291 src-address=192.168.10.0/24 comment="5b. Gerencia vinda da Matriz (SSH e WinBox)"
 add chain=input action=drop comment="6. Bloquear restante"
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.10.0/24
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.20.0/24
 /ip firewall filter
 add chain=forward action=accept connection-state=established,related
 add chain=forward action=drop connection-state=invalid
+add chain=forward action=drop src-address=192.168.20.0/24 dst-address=10.0.2.0/29 protocol=!icmp comment="Filial nao gerencia as antenas"
 add chain=forward action=accept src-address=192.168.20.0/24 dst-address=192.168.10.0/24 comment="Filial -> Matriz"
 add chain=forward action=accept src-address=192.168.10.0/24 dst-address=192.168.20.0/24 comment="Matriz -> Filial"
 add chain=forward action=drop in-interface-list=WAN_PUBLIC
@@ -1328,7 +1337,7 @@ No R-MATRIZ até o SSH e o WinBox aparecem fechados porque o teste veio da Filia
 - [ ] Instalar o Zabbix no servidor e ligar o monitoramento (incluindo o sinal das antenas por SNMP)
 - [ ] Remover a regra "Ping NOC TCC" do notebook da Filial quando não for mais necessária
 - [ ] Apagar a pasta `bancada\saida` (senhas) ao final do TCC
-- [ ] Trocar o gateway da antena da Filial para 10.0.2.1 (seção 22)
+- [x] Trocar o gateway da antena da Filial para 10.0.2.1 (seção 22)
 - [ ] Definir o e-mail real do cliente (`CLIENTE_EMAIL`)
 
 ## 22. Revisão do Zabbix contra a reunião da CTI (17/10/2026)
@@ -1376,3 +1385,48 @@ Com o gateway 10.0.2.2, a antena da Filial responde ao Zabbix (na Matriz) pelo R
 
 - Monitorar o R-MATRIZ por SNMP (CPU, memória, temperatura, interfaces): hoje só o R-FILIAL tem SNMP.
 - Confirmar a troca por fibra degradada pela tabela de rotas do roteador (hoje o Zabbix deduz pelo alerta; a confirmação aparece na análise da IA, que consulta o roteador).
+
+## 23. Mapeamento e acessos de gerência (19/10/2026)
+
+A bancada religada está com cada equipamento do lado certo, e a gerência ficou em um só sentido: a Matriz configura tudo, e a Filial não configura a Matriz nem as antenas.
+
+### Mapeamento
+
+Feito do notebook, sem senha: o roteador se anuncia no cabo (descoberta MikroTik) e a posição de cada antena sai do tempo de resposta (30 pings cada).
+
+| Equipamento | IP | Lado | Evidência |
+| --- | --- | --- | --- |
+| R-MATRIZ | 192.168.10.1, loopback 10.255.255.1 | Matriz, notebook na ether3 | anuncia "R-MATRIZ" no cabo (MAC 74:4D:28:3C:11:DF) |
+| RADIO-P2P-MATRIZ (ponto de acesso) | 10.0.2.3 | ligada na ether1 do R-MATRIZ | 2,10 ms, igual ao próprio roteador (2,00 ms); MAC 80:2A:A8:2A:9B:E6 |
+| RADIO-P2P-FILIAL (estação) | 10.0.2.4 | ligada na ether1 do R-FILIAL | MAC 44:D9:E7:B4:63:A9 |
+| R-FILIAL | 192.168.20.1, loopback 10.255.255.2 | Filial | ponta do rádio a 3,00 ms (atravessa o rádio) |
+| Fibra | 10.0.1.1 ↔ 10.0.1.2 | sfp1 ↔ sfp1 | 2 ms |
+| Rádio | 10.0.2.1 ↔ 10.0.2.2 | ether1 ↔ ether1 | 3 ms |
+
+### Gateway da antena da Filial corrigido
+
+O gateway da RADIO-P2P-FILIAL foi trocado de 10.0.2.2 para 10.0.2.1 pelo navegador (atalho temporário de NAT no R-MATRIZ, removido depois). A antena passou a responder direto da Matriz: 0% de perda, 3 ms. Era a pendência da seção 22; o Zabbix agora consegue monitorá-la.
+
+### Quem gerencia o quê
+
+| Acesso | Situação | Como |
+| --- | --- | --- |
+| Matriz → R-MATRIZ | permitido | regra 5 (LAN da Matriz), serviços SSH e WinBox só de 192.168.10.0/24 |
+| Matriz → R-FILIAL | permitido | regra "5b. Gerencia vinda da Matriz" no R-FILIAL (SSH e WinBox) |
+| Matriz → antenas | permitido | gateway das duas antenas em 10.0.2.1 |
+| Filial → R-FILIAL | permitido | regra 5 (manutenção local) |
+| Filial → R-MATRIZ | bloqueado | regra 5 do R-MATRIZ só aceita a LAN dele, e o serviço só aceita 192.168.10.0/24 |
+| Filial → antenas | bloqueado (ping liberado) | regra "Filial nao gerencia as antenas" no R-FILIAL |
+
+Para colar as regras no R-FILIAL sem ir até ele, o R-MATRIZ abriu um SSH com a origem trocada para 192.168.10.50 (o IP reservado ao Zabbix, que o R-FILIAL já aceitava), por um atalho de NAT temporário removido em seguida.
+
+Validado da Matriz: WinBox (8291) e SSH (22) do R-FILIAL abertos; páginas das duas antenas abertas; regras conferidas nos dois roteadores pelo `conferir.ps1`. Os bloqueios da Filial estão configurados e na ordem certa, mas só se comprovam com um PC na Filial: o WinBox para 192.168.10.1 e a página https://10.0.2.4 não devem abrir, e o ping deve responder.
+
+### Rotas pelo DHCP (opção 121)
+
+O Windows mandava os pacotes para a outra unidade pelo Wi-Fi (por isso o `ping -S`). O DHCP do R-MATRIZ passou a entregar a opção 121 (rotas sem classe) com 192.168.20.0/24 e 10.0.0.0/8 via 192.168.10.1: os PCs ligados na Matriz alcançam a Filial, as antenas e os enlaces pelo cabo, e a internet continua pelo Wi-Fi. Basta `ipconfig /renew`. O modelo do R-FILIAL traz o equivalente (192.168.10.0/24 e 10.0.0.0/8 via 192.168.20.1), ainda não aplicado no roteador:
+
+```text
+/ip dhcp-server option add name=rotas-projeto code=121 value=0x18c0a80ac0a81401080ac0a81401
+/ip dhcp-server network set [find comment="LAN Filial"] dhcp-option=rotas-projeto
+```

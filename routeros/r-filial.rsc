@@ -38,7 +38,10 @@
 #     roteador .1, switch .2, PCs do projeto .10, servidor Zabbix .50
 /ip pool add name=pool-LAN ranges=192.168.20.100-192.168.20.199
 /ip dhcp-server add name=dhcp-LAN interface=bridge-LAN address-pool=pool-LAN lease-time=1h disabled=no
-/ip dhcp-server network add address=192.168.20.0/24 gateway=192.168.20.1 comment="LAN Filial"
+# Opção 121 (rotas sem classe): os PCs aprendem que as redes do projeto vão pelo cabo e o resto (internet)
+# pelo Wi-Fi deles; sem isso o Windows manda os pacotes para a outra unidade pelo Wi-Fi
+/ip dhcp-server option add name=rotas-projeto code=121 value=0x18c0a80ac0a81401080ac0a81401
+/ip dhcp-server network add address=192.168.20.0/24 gateway=192.168.20.1 dhcp-option=rotas-projeto comment="LAN Filial"
 
 # 5. USUÁRIOS
 /user add name="admin_senai" group=full password="<SENHA_ADMIN_FILIAL>" comment="Usuario Administrativo"
@@ -82,12 +85,14 @@ add chain=input action=drop connection-state=invalid comment="2. Bloquear conexo
 add chain=input action=accept protocol=icmp comment="3. Permitir ICMP (Ping)"
 add chain=input action=accept protocol=ospf comment="4. Permitir OSPF (Protocolo 89)"
 add chain=input action=accept protocol=tcp dst-port=22,8291 src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment="5. Acesso Gerencia (SSH e WinBox)"
+add chain=input action=accept protocol=tcp dst-port=22,8291 src-address=192.168.10.0/24 comment="5b. Gerencia vinda da Matriz (SSH e WinBox)"
 add chain=input action=drop comment="6. Bloquear restante"
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.10.0/24
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.20.0/24
 /ip firewall filter
 add chain=forward action=accept connection-state=established,related
 add chain=forward action=drop connection-state=invalid
+add chain=forward action=drop src-address=192.168.20.0/24 dst-address=10.0.2.0/29 protocol=!icmp comment="Filial nao gerencia as antenas"
 add chain=forward action=accept src-address=192.168.20.0/24 dst-address=192.168.10.0/24 comment="Filial -> Matriz"
 add chain=forward action=accept src-address=192.168.10.0/24 dst-address=192.168.20.0/24 comment="Matriz -> Filial"
 add chain=forward action=drop in-interface-list=WAN_PUBLIC

@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "17/10/2026"
+ATUALIZADO = "19/10/2026 15:15"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -58,10 +58,9 @@ PORTAS = [  # (porta, nome no roteador, papel, classe)
 OUTROS = [
     ("Antenas do rádio P2P", "ok", "Ubiquiti PowerBeam M5 300 (airOS 6.1.7, sem os pratos). Enlace ativo desde 16/10/2026 16:11",
      [("RADIO-P2P-MATRIZ", "Ponto de acesso, WDS, 10.0.2.3/29, gateway 10.0.2.1, MAC 80:2A:A8:2A:9B:E6, ether1 do R-MATRIZ"),
-      ("RADIO-P2P-FILIAL", "Estação, WDS, 10.0.2.4/29, gateway 10.0.2.2 (trocar para 10.0.2.1, ver pendência), MAC 44:D9:E7:B4:63:A9, ether1 do R-FILIAL"),
+      ("RADIO-P2P-FILIAL", "Estação, WDS, 10.0.2.4/29, gateway 10.0.2.1 (corrigido em 19/10), MAC 44:D9:E7:B4:63:A9, ether1 do R-FILIAL"),
       ("Rede sem fio", "SSID SENAI_LINK_P2P_BACKUP, WPA2-AES PSK (chave definida pelo aluno), Brasil, canal automático 40 MHz"),
       ("Sinal medido (16/10 16:55)", "Filial recebe -53 dBm (H -64 / V -52), Matriz recebe -52 dBm: dentro da faixa da CTI (-50 a -60). Ruído -104 dBm, CCQ 99,1%, 300/300 Mbps, airMAX 96%/91%, 5505 MHz (DFS) 40 MHz"),
-      ("Pendente: gateway da Filial", "Trocar o gateway da RADIO-P2P-FILIAL de 10.0.2.2 para 10.0.2.1 (aba NETWORK). Com 10.0.2.2 a resposta ao Zabbix volta pelo R-FILIAL, cujo firewall descarta (não viu a pergunta), e o Zabbix não monitora essa antena."),
       ("Monitoramento no Zabbix", "Ping e SNMP (MIB UBNT-AirMAX): sinal, ruído, CCQ, estações e airMAX a cada 30 s. Alertas: sinal abaixo de -60 dBm (atenção), abaixo de -70 (grave), acima de -40 (forte demais), CCQ abaixo de 80% e AP sem estação."),
       ("Ajuste pendente", "Diferença de 12 dB entre as polarizações H e V na Filial: girar uma antena no próprio eixo até igualar (ideal até ~5 dB)"),
       ("Potência", "-4 dBm (bancada, antenas a poucos metros)"), ("MTU", "2000 (o airOS aceita até 2024)"),
@@ -80,6 +79,9 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("19/10/2026 15:10", "Acessos", "A Matriz gerencia tudo e a Filial não gerencia a Matriz: R-FILIAL aceita SSH/WinBox vindos da Matriz (regra 5b) e bloqueia os PCs da Filial nas páginas das antenas; R-MATRIZ aceita SSH/WinBox só da rede da Matriz. Opção 121 no DHCP do R-MATRIZ (rotas do projeto pelo cabo). Testado da Matriz: WinBox/SSH do R-FILIAL e páginas das duas antenas abrem."),
+    ("19/10/2026 14:55", "Rádio", "Gateway da antena da Filial trocado para 10.0.2.1: ela passou a responder direto da Matriz (0% de perda, 3 ms)."),
+    ("19/10/2026 14:40", "Mapeamento", "Bancada religada e mapeada: notebook na ether3 do R-MATRIZ; antena da Matriz (AP) ligada no R-MATRIZ (2,1 ms) e a da Filial do outro lado do rádio; fibra e rádio funcionando."),
     ("17/10/2026", "Zabbix", "Revisão contra a reunião da CTI: antenas passam a ter SNMP no Zabbix (sinal, ruído, CCQ, airMAX) com alertas da faixa -60 a -50 dBm; testado no Zabbix do protótipo. Achado: gateway da antena da Filial deve ser 10.0.2.1 para o Zabbix enxergá-la (pendente, antenas desmontadas)."),
     ("16/10/2026 17:30", "Ambos", "Comandos de serviços aplicados nos dois roteadores. Verificado da rede da Filial: R-FILIAL responde só nas portas 22 e 8291; 443, 2000, 80, 21, 23 e 8728 fechadas. R-MATRIZ não aceita gerência vinda de fora da sua rede local."),
     ("16/10/2026 17:20", "Ambos", "Pedido do Piffer (CTI): só os serviços necessários. Desligados o reverse-proxy e o btest; a regra de gerência do firewall passou a aceitar só SSH (22) e WinBox (8291). Comandos para colar nos dois roteadores; scripts atualizados."),
@@ -135,7 +137,7 @@ def roteador(r):
         ("Loopback", f"<code>{r['loopback']}</code>", "router-id do OSPF e endereço de monitoramento"),
         ("Fibra (sfp1)", f"<code>{r['fibra'][0]}</code>", f"outra ponta: <code>{r['fibra'][1]}</code>"),
         ("Rádio (ether1)", f"<code>{r['radio'][0]}</code>", f"outra ponta: <code>{r['radio'][1]}</code>"),
-        ("DHCP", f"<code>{rede}.100–{rede}.199</code>", f"pool-LAN, gateway {gw}, concessão de 1 h"),
+        ("DHCP", f"<code>{rede}.100–{rede}.199</code>", f"pool-LAN, gateway {gw}, concessão de 1 h; opção 121 com as rotas do projeto (dispensa o -S no ping)"),
     ], ["Item", "Valor", "Observação"])
     ospf = tabela([
         ("Instância", f"<code>{r['ospf'][0]}</code>, router-id <code>{r['ospf'][1]}</code>, área 0.0.0.0"),
@@ -147,7 +149,7 @@ def roteador(r):
     ])
     seg = tabela([
         ("Serviços desligados", "telnet, ftp, www, www-ssl, api, api-ssl, reverse-proxy e o servidor de teste de banda (btest)"),
-        ("SSH e WinBox", "só a partir da rede local do próprio roteador (portas 3, 4 e 5); quem chega pela fibra ou pelo rádio é bloqueado"),
+        ("SSH e WinBox", "R-MATRIZ: só da rede da Matriz. R-FILIAL: da rede da Filial e da Matriz (regra 5b). A Filial não gerencia a Matriz nem as antenas"),
         ("Descoberta de vizinhos e MAC-WinBox", "só na rede local (LAN_MGMT)"),
         ("Firewall de entrada", "aceita estabelecidas, ICMP, OSPF e, vindo das LANs, só SSH (22) e WinBox (8291); bloqueia o resto"),
         ("Firewall de passagem", "libera Matriz ↔ Filial; bloqueia o que entra pelas WAN sem ter sido pedido"),

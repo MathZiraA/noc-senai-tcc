@@ -38,7 +38,10 @@
 #     roteador .1, switch .2, PCs do projeto .10, servidor Zabbix .50
 /ip pool add name=pool-LAN ranges=192.168.10.100-192.168.10.199
 /ip dhcp-server add name=dhcp-LAN interface=bridge-LAN address-pool=pool-LAN lease-time=1h disabled=no
-/ip dhcp-server network add address=192.168.10.0/24 gateway=192.168.10.1 comment="LAN Matriz"
+# Opção 121 (rotas sem classe): os PCs aprendem que as redes do projeto vão pelo cabo e o resto (internet)
+# pelo Wi-Fi deles; sem isso o Windows manda os pacotes para a outra unidade pelo Wi-Fi
+/ip dhcp-server option add name=rotas-projeto code=121 value=0x18c0a814c0a80a01080ac0a80a01
+/ip dhcp-server network add address=192.168.10.0/24 gateway=192.168.10.1 dhcp-option=rotas-projeto comment="LAN Matriz"
 
 # 5. USUÁRIOS
 /user add name="admin_senai" group=full password="<SENHA_ADMIN_MATRIZ>" comment="Usuario Administrativo"
@@ -51,8 +54,9 @@
 /ip service set api disabled=yes
 /ip service set api-ssl disabled=yes
 /ip service set www-ssl disabled=yes
-/ip service set ssh port=22 address=192.168.10.0/24,192.168.20.0/24 disabled=no
-/ip service set winbox address=192.168.10.0/24,192.168.20.0/24 disabled=no
+# A Matriz gerencia tudo; a Filial não gerencia a Matriz
+/ip service set ssh port=22 address=192.168.10.0/24 disabled=no
+/ip service set winbox address=192.168.10.0/24 disabled=no
 # Serviços que vêm ligados no RouterOS 7 e não são usados (pedido da CTI: só o necessário)
 /ip service set reverse-proxy disabled=yes
 /tool bandwidth-server set enabled=no
