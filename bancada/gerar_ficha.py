@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "19/10/2026 15:40"
+ATUALIZADO = "19/10/2026 16:00"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -72,13 +72,15 @@ OUTROS = [
       ("Ping pela fibra", "ping -S <IP do cabo> 192.168.10.1 (o -S evita que o Windows use o Wi-Fi)")]),
     ("PCs do projeto", "pendente", "Scripts prontos em bancada\\saida (pc-matriz.ps1 e pc-filial.ps1)",
      [("PC-MATRIZ", "192.168.10.10/24, gateway 192.168.10.1, MTU 2000, ping liberado"),
-      ("PC-FILIAL", "192.168.20.10/24, gateway 192.168.20.1, MTU 2000, ping liberado")]),
+      ("PC-FILIAL", "192.168.20.10/24, gateway 192.168.20.1, MTU 2000, ping liberado"),
+      ("PC da Filial hoje (19/10)", "N07S12-1243997, IP automático 192.168.20.197 (MAC B4:45:06:7B:85:58), ping liberado no firewall; pc-filial.ps1 ainda não aplicado")]),
     ("Servidor Zabbix (VM)", "fora", "Fora do MVP: entra depois que a rede estiver completa",
      [("IP na Matriz", "192.168.10.50/24 (placa ens33 em bridge com o cabo)"),
       ("Monitora", "R-FILIAL pela loopback 10.255.255.2, fibra, rádio e antenas")]),
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("19/10/2026 16:00", "PCs", "Notebook da Matriz (192.168.10.198) pinga o PC da Filial (192.168.20.197) sem perda, 5 ms, TTL 126; caminho R-MATRIZ → fibra (10.0.1.2) → PC. O PC só respondeu depois de liberar o ping no firewall do Windows."),
     ("19/10/2026 15:35", "Switches", "switches.rsc refeito no padrão dos roteadores: todas as portas em bridge com MTU 2000, gerência 192.168.10.2 / 192.168.20.2, só SSH/WinBox (SW-MATRIZ só da Matriz; SW-FILIAL da Filial e da Matriz), SNMP para o Zabbix, firewall da gerência e backup diário."),
     ("19/10/2026 15:30", "Testes", "Bateria completa da Matriz: 286 pings em 60 s até o R-FILIAL sem perda (2,0 ms); tracert direto 192.168.10.1 → 192.168.20.1; 2 vizinhos OSPF (fibra e rádio), rotas pela fibra; ping só pelo rádio 0% (2 ms); MTU 2000 sem fragmentar pela fibra e pelo rádio; netwatch up; nenhum erro no log do R-MATRIZ."),
     ("19/10/2026 15:10", "Acessos", "A Matriz gerencia tudo e a Filial não gerencia a Matriz: R-FILIAL aceita SSH/WinBox vindos da Matriz (regra 5b) e bloqueia os PCs da Filial nas páginas das antenas; R-MATRIZ aceita SSH/WinBox só da rede da Matriz. Opção 121 no DHCP do R-MATRIZ (rotas do projeto pelo cabo). Testado da Matriz: WinBox/SSH do R-FILIAL e páginas das duas antenas abrem."),
