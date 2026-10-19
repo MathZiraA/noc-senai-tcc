@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "19/10/2026 16:10"
+ATUALIZADO = "19/10/2026 16:30"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -74,12 +74,20 @@ OUTROS = [
      [("PC-MATRIZ", "192.168.10.10/24, gateway 192.168.10.1, MTU 2000, ping liberado"),
       ("PC-FILIAL", "192.168.20.10/24, gateway 192.168.20.1, MTU 2000, ping liberado"),
       ("PC da Filial hoje (19/10)", "N07S12-1243997, IP automático 192.168.20.197 (MAC B4:45:06:7B:85:58), ping liberado no firewall; pc-filial.ps1 ainda não aplicado")]),
-    ("Servidor Zabbix (VM)", "fora", "Fora do MVP: entra depois que a rede estiver completa",
-     [("IP na Matriz", "192.168.10.50/24 (placa ens33 em bridge com o cabo)"),
-      ("Monitora", "R-FILIAL pela loopback 10.255.255.2, fibra, rádio e antenas")]),
+    ("Servidor ESXi (rack compartilhado)", "pendente", "Configurando: o grupo é o primeiro a usar o servidor; a gerência fica na rede da Matriz",
+     [("Gerência do ESXi", "192.168.10.40/24, gateway 192.168.10.1, DNS 192.168.10.1, nome esxi-noc; acesso em https://192.168.10.40"),
+      ("Placa física 1", "rede da Matriz (SW-MATRIZ ou porta 3/4/5 do R-MATRIZ): gerência do ESXi e port group VM Network"),
+      ("Placa física 2", "rede da escola (internet): port group Internet Escola para a VM do Zabbix"),
+      ("Outros grupos", "acessam o ESXi pela rede da Matriz ou com uma liberação específica para 192.168.10.40")]),
+    ("Servidor Zabbix (VM no ESXi)", "pendente", "VM nova com Debian 12 + instalar_noc.sh (docs/SERVIDOR-INSTALACAO.md)",
+     [("Recursos", "2 vCPU, 4 a 8 GB de RAM, 60 GB de disco"),
+      ("Placa 1", "VM Network → 192.168.10.50/24 (rede da Matriz)"),
+      ("Placa 2", "Internet Escola → DHCP da escola (atualizações, e-mail e IA)"),
+      ("Monitora", "R-FILIAL pela loopback 10.255.255.2, fibra, rádio e as duas antenas (ping + SNMP)")]),
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("19/10/2026 16:30", "Servidor", "Mudança de plano: o NOC roda numa VM dentro do VMware ESXi de um servidor de rack compartilhado (não mais Debian direto no PC). Gerência do ESXi na rede da Matriz: 192.168.10.40."),
     ("19/10/2026 16:10", "Failover", "tracert do notebook da Matriz ao PC da Filial: com a fibra, salto 2 = 10.0.1.2 (fibra, ~5 ms); com o cabo da fibra desconectado, salto 2 = 10.0.2.2 (rádio, ~7 ms), sem perder o PC. Prova visual da troca de caminho para a apresentação."),
     ("19/10/2026 16:00", "PCs", "Notebook da Matriz (192.168.10.198) pinga o PC da Filial (192.168.20.197) sem perda, 5 ms, TTL 126; caminho R-MATRIZ → fibra (10.0.1.2) → PC. O PC só respondeu depois de liberar o ping no firewall do Windows."),
     ("19/10/2026 15:35", "Switches", "switches.rsc refeito no padrão dos roteadores: todas as portas em bridge com MTU 2000, gerência 192.168.10.2 / 192.168.20.2, só SSH/WinBox (SW-MATRIZ só da Matriz; SW-FILIAL da Filial e da Matriz), SNMP para o Zabbix, firewall da gerência e backup diário."),
