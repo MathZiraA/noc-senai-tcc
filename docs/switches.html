@@ -1,0 +1,235 @@
+<title>Scripts dos Switches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: coluna única de leitura; cada roteador é uma ficha com o painel de portas do hEX S no topo */
+:root{
+  --bg:#f6f7f8; --surface:#ffffff; --fg:#17202a; --muted:#5b6672; --line:#d9dee3; --accent:#0b6b74;
+  --fibra:#c99700; --radio:#7a4fc2; --lan:#2d7d46; --livre:#8a939c;
+  --ok:#2d7d46; --pend:#a86400; --falha:#b3261e; --fora:#5b6672;
+  --code-bg:#eef1f3;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171c; --surface:#1a2128; --fg:#e4e9ee; --muted:#9aa6b1; --line:#2c353e; --accent:#4fb8c1;
+  --fibra:#e8c13a; --radio:#a98be6; --lan:#5fbf7c; --livre:#7c8792;
+  --ok:#5fbf7c; --pend:#e0a14a; --falha:#ef7268; --fora:#9aa6b1; --code-bg:#20282f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171c; --surface:#1a2128; --fg:#e4e9ee; --muted:#9aa6b1; --line:#2c353e; --accent:#4fb8c1;
+  --fibra:#e8c13a; --radio:#a98be6; --lan:#5fbf7c; --livre:#7c8792;
+  --ok:#5fbf7c; --pend:#e0a14a; --falha:#ef7268; --fora:#9aa6b1; --code-bg:#20282f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.pagina{max-width:960px;margin:0 auto;padding-inline:20px;padding-block:28px 64px;display:grid;gap:28px}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:1.9rem;font-weight:600;letter-spacing:-.01em}
+h2{font-size:1.5rem;font-weight:600}
+h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-top:8px}
+p{margin:0;max-width:68ch}
+a{color:var(--accent)}
+code,pre{font-family:var(--f-mono);font-size:.86em}
+td code,dd code{background:var(--code-bg);padding:1px 5px;border-radius:4px}
+.topo{display:grid;gap:10px}
+.topo .meta{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.indice{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:.92rem}
+.equip{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;display:grid;gap:14px;min-width:0}
+.equip-cab,.outro header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.papel{color:var(--muted);font-size:.85rem}
+.estado{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.estado::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.estado.ok{color:var(--ok)} .estado.pendente{color:var(--pend)} .estado.falha{color:var(--falha)} .estado.fora{color:var(--fora)}
+.estado-txt{color:var(--muted);font-size:.92rem}
+.dados{display:grid;grid-template-columns:minmax(120px,max-content) 1fr;gap:6px 18px;margin:0}
+.dados dt{color:var(--muted);font-size:.9rem}
+.dados dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.painel{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+.porta{display:grid;justify-items:center;gap:3px;padding:8px 4px;border-radius:6px;background:var(--surface);border:1px solid var(--line);text-align:center;min-width:0}
+.porta b{font-family:var(--f-mono);font-size:.82rem}
+.porta small{font-size:.7rem;color:var(--muted);line-height:1.2}
+.led{width:10px;height:10px;border-radius:2px;background:var(--livre)}
+.porta.fibra .led{background:var(--fibra)} .porta.radio .led{background:var(--radio)} .porta.lan .led{background:var(--lan)}
+.porta.fibra{border-color:var(--fibra)} .porta.radio{border-color:var(--radio)}
+.rolagem{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:.8rem;border-bottom:1px solid var(--line);padding:6px 10px 6px 0}
+td{border-bottom:1px solid var(--line);padding:7px 10px 7px 0;vertical-align:top;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.notas{margin:0;padding-left:18px;color:var(--muted);font-size:.9rem;display:grid;gap:4px}
+details{border:1px solid var(--line);border-radius:8px;min-width:0}
+summary{cursor:pointer;padding:10px 14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;font-weight:500}
+summary code{color:var(--muted);font-weight:400}
+summary:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.acoes{display:flex;justify-content:flex-end;padding:0 14px}
+button.copiar{font:inherit;font-size:.82rem;padding:4px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+button.copiar:hover{border-color:var(--accent);color:var(--accent)}
+pre{margin:8px 0 0;padding:14px;background:var(--code-bg);border-top:1px solid var(--line);overflow-x:auto;line-height:1.45;border-radius:0 0 8px 8px}
+.outros{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.outro{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:10px;align-content:start;min-width:0}
+.outro h3{text-transform:none;letter-spacing:0;color:var(--fg);font-size:1.05rem;margin:0}
+.secao{display:grid;gap:12px}
+.secao > h2{font-size:1.2rem}
+@media (max-width:560px){
+  .painel{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .dados{grid-template-columns:1fr} .dados dt{margin-top:6px}
+  .equip{padding:16px}
+}
+
+.passos{margin:0;padding-left:20px;display:grid;gap:6px}
+.senha{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.senha label{font-size:.9rem;color:var(--muted)}
+.senha input{font:inherit;font-family:var(--f-mono);font-size:.9rem;padding:6px 10px;border:1px solid var(--line);
+  border-radius:6px;background:var(--bg);color:var(--fg);min-width:0;width:16rem;max-width:100%}
+.senha input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.aviso{font-size:.85rem;color:var(--muted)}
+.cab-script{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+pre.script{border-radius:8px;border:1px solid var(--line);margin:0;max-height:70vh}
+.ip-sw{font-size:1rem;background:var(--code-bg);padding:4px 10px;border-radius:6px;border:1px solid var(--line)}
+</style>
+<main class="pagina">
+  <header class="topo">
+    <p class="papel">TCC SENAI 2026 · Rede Matriz/Filial</p>
+    <h1>Scripts dos Switches</h1>
+    <p>Configuração completa de cada switch MikroTik (RouterOS 7), pronta para colar no terminal do switch de fábrica.
+       Todas as portas ficam no mesmo switch com MTU 2000, a gerência fica restrita a SSH e WinBox e o Zabbix lê o switch por SNMP.</p>
+    <p class="aviso">Para switch MikroTik com SwOS (linha CSS) ou de outra marca, estes scripts não se aplicam.</p>
+  </header>
+  
+<section class="equip" id="sw-matriz" data-placeholder="&lt;SENHA_ADMIN_MATRIZ&gt;">
+  <header class="equip-cab">
+    <div><p class="papel">Switch da Matriz</p><h2>SW-MATRIZ</h2></div>
+    <code class="ip-sw">192.168.10.2</code>
+  </header>
+  <ol class="passos">
+    <li>Ligue a <b>porta 1</b> do switch numa porta de LAN do R-MATRIZ (3, 4 ou 5) e os PCs nas outras portas.</li>
+    <li>Entre no switch pelo WinBox (pelo MAC, na aba Neighbors), com <code>admin</code> e a senha de fábrica.</li>
+    <li>Abra <b>New Terminal</b>, cole o script inteiro e aperte Enter. Gerência só pela rede da Matriz.</li>
+    <li>Daí em diante, entre com <code>admin_senai</code> em <code>192.168.10.2</code>.</li>
+  </ol>
+  <div class="senha">
+    <label for="senha-sw-matriz">Senha do admin_senai (opcional)</label>
+    <input id="senha-sw-matriz" type="password" autocomplete="off" spellcheck="false" placeholder="troca o &lt;SENHA_ADMIN_MATRIZ&gt;">
+  </div>
+  <p class="aviso">A senha digitada só entra no texto copiado, neste navegador. Ela não é gravada nem enviada.</p>
+  <div class="cab-script"><h3>Script</h3><button type="button" class="copiar">Copiar</button></div>
+  <pre class="script"><code># 1. IDENTIFICAÇÃO
+/system identity set name=&quot;SW-MATRIZ&quot;
+
+# 2. PORTAS: todas na mesma bridge (switch puro). O L2MTU máximo muda conforme o modelo: tenta 2026 e,
+#    se o chip não aceitar, mantém o de fábrica.
+:do { /interface ethernet set [find] l2mtu=2026 } on-error={ :log warning &quot;SW: L2MTU 2026 nao suportado&quot; }
+:do { /interface ethernet set [find] mtu=2000 } on-error={ :log warning &quot;SW: MTU 2000 nao suportado&quot; }
+/interface bridge add name=&quot;bridge-SW&quot; mtu=2000 comment=&quot;Switch da Matriz (192.168.10.0/24)&quot;
+:foreach i in=[/interface ethernet find] do={ /interface bridge port add bridge=bridge-SW interface=$i }
+/interface ethernet set [find default-name=ether1] comment=&quot;Uplink: R-MATRIZ (porta 3, 4 ou 5 do roteador)&quot;
+
+# 3. GERÊNCIA: IP fixo fora da faixa do DHCP (.100 a .199). O switch não distribui IP: quem faz isso é o R-MATRIZ.
+/ip address add address=192.168.10.2/24 interface=bridge-SW comment=&quot;IP Gerencia SW-MATRIZ&quot;
+/ip route add gateway=192.168.10.1 comment=&quot;Gateway: R-MATRIZ&quot;
+
+# 4. USUÁRIOS
+/user add name=&quot;admin_senai&quot; group=full password=&quot;&lt;SENHA_ADMIN_MATRIZ&gt;&quot; comment=&quot;Usuario Administrativo&quot;
+/user disable admin
+
+# 5. SERVIÇOS: só SSH e WinBox, só da rede da Matriz (pedido da CTI)
+/ip service set telnet,ftp,www,www-ssl,api,api-ssl disabled=yes
+:do { /ip service set reverse-proxy disabled=yes } on-error={}
+/ip service set ssh,winbox address=192.168.10.0/24 disabled=no
+/tool bandwidth-server set enabled=no
+
+# 6. SNMP somente leitura para o Zabbix (192.168.10.50)
+/snmp community set [find default=yes] disabled=yes
+/snmp community add name=public_senai addresses=192.168.10.50/32 security=none read-access=yes write-access=no
+/snmp set enabled=yes contact=&quot;NOC SENAI TCC&quot; location=&quot;Rack Matriz&quot;
+
+# 7. FIREWALL DO PRÓPRIO SWITCH (só protege a gerência; o tráfego dos PCs passa pela bridge sem ser filtrado)
+/ip firewall filter
+add chain=input action=accept connection-state=established,related comment=&quot;1. Aceitar conexoes estabelecidas&quot;
+add chain=input action=drop connection-state=invalid comment=&quot;2. Bloquear conexoes invalidas&quot;
+add chain=input action=accept protocol=icmp comment=&quot;3. Permitir ICMP (Ping)&quot;
+add chain=input action=accept protocol=udp dst-port=161 src-address=192.168.10.50 comment=&quot;4. SNMP do Zabbix&quot;
+add chain=input action=accept protocol=tcp dst-port=22,8291 src-address=192.168.10.0/24 comment=&quot;5. Gerencia (SSH e WinBox) da Matriz&quot;
+add chain=input action=drop comment=&quot;6. Bloquear restante&quot;
+
+# 8. BACKUP AUTOMÁTICO
+/system script add name=&quot;script_backup_automatico&quot; source=&quot;/system backup save name=(\&quot;backup_sw_matriz_\&quot; . [/system clock get date])&quot;
+/system scheduler add name=&quot;agendador_backup&quot; interval=1d start-time=00:00:00 on-event=&quot;script_backup_automatico&quot;</code></pre>
+</section>
+<section class="equip" id="sw-filial" data-placeholder="&lt;SENHA_ADMIN_FILIAL&gt;">
+  <header class="equip-cab">
+    <div><p class="papel">Switch da Filial</p><h2>SW-FILIAL</h2></div>
+    <code class="ip-sw">192.168.20.2</code>
+  </header>
+  <ol class="passos">
+    <li>Ligue a <b>porta 1</b> do switch numa porta de LAN do R-FILIAL (3, 4 ou 5) e os PCs nas outras portas.</li>
+    <li>Entre no switch pelo WinBox (pelo MAC, na aba Neighbors), com <code>admin</code> e a senha de fábrica.</li>
+    <li>Abra <b>New Terminal</b>, cole o script inteiro e aperte Enter. Gerência pela rede da Filial e pela Matriz.</li>
+    <li>Daí em diante, entre com <code>admin_senai</code> em <code>192.168.20.2</code>.</li>
+  </ol>
+  <div class="senha">
+    <label for="senha-sw-filial">Senha do admin_senai (opcional)</label>
+    <input id="senha-sw-filial" type="password" autocomplete="off" spellcheck="false" placeholder="troca o &lt;SENHA_ADMIN_FILIAL&gt;">
+  </div>
+  <p class="aviso">A senha digitada só entra no texto copiado, neste navegador. Ela não é gravada nem enviada.</p>
+  <div class="cab-script"><h3>Script</h3><button type="button" class="copiar">Copiar</button></div>
+  <pre class="script"><code># 1. IDENTIFICAÇÃO
+/system identity set name=&quot;SW-FILIAL&quot;
+
+# 2. PORTAS: todas na mesma bridge (switch puro)
+:do { /interface ethernet set [find] l2mtu=2026 } on-error={ :log warning &quot;SW: L2MTU 2026 nao suportado&quot; }
+:do { /interface ethernet set [find] mtu=2000 } on-error={ :log warning &quot;SW: MTU 2000 nao suportado&quot; }
+/interface bridge add name=&quot;bridge-SW&quot; mtu=2000 comment=&quot;Switch da Filial (192.168.20.0/24)&quot;
+:foreach i in=[/interface ethernet find] do={ /interface bridge port add bridge=bridge-SW interface=$i }
+/interface ethernet set [find default-name=ether1] comment=&quot;Uplink: R-FILIAL (porta 3, 4 ou 5 do roteador)&quot;
+
+# 3. GERÊNCIA
+/ip address add address=192.168.20.2/24 interface=bridge-SW comment=&quot;IP Gerencia SW-FILIAL&quot;
+/ip route add gateway=192.168.20.1 comment=&quot;Gateway: R-FILIAL&quot;
+
+# 4. USUÁRIOS
+/user add name=&quot;admin_senai&quot; group=full password=&quot;&lt;SENHA_ADMIN_FILIAL&gt;&quot; comment=&quot;Usuario Administrativo&quot;
+/user disable admin
+
+# 5. SERVIÇOS: só SSH e WinBox, da rede da Filial e da Matriz (a Matriz gerencia tudo)
+/ip service set telnet,ftp,www,www-ssl,api,api-ssl disabled=yes
+:do { /ip service set reverse-proxy disabled=yes } on-error={}
+/ip service set ssh,winbox address=192.168.10.0/24,192.168.20.0/24 disabled=no
+/tool bandwidth-server set enabled=no
+
+# 6. SNMP somente leitura para o Zabbix (192.168.10.50)
+/snmp community set [find default=yes] disabled=yes
+/snmp community add name=public_senai addresses=192.168.10.50/32 security=none read-access=yes write-access=no
+/snmp set enabled=yes contact=&quot;NOC SENAI TCC&quot; location=&quot;Rack Filial&quot;
+
+# 7. FIREWALL DO PRÓPRIO SWITCH
+/ip firewall filter
+add chain=input action=accept connection-state=established,related comment=&quot;1. Aceitar conexoes estabelecidas&quot;
+add chain=input action=drop connection-state=invalid comment=&quot;2. Bloquear conexoes invalidas&quot;
+add chain=input action=accept protocol=icmp comment=&quot;3. Permitir ICMP (Ping)&quot;
+add chain=input action=accept protocol=udp dst-port=161 src-address=192.168.10.50 comment=&quot;4. SNMP do Zabbix&quot;
+add chain=input action=accept protocol=tcp dst-port=22,8291 src-address=192.168.10.0/24 comment=&quot;5. Gerencia (SSH e WinBox) da Matriz&quot;
+add chain=input action=accept protocol=tcp dst-port=22,8291 src-address=192.168.20.0/24 comment=&quot;5b. Gerencia local da Filial&quot;
+add chain=input action=drop comment=&quot;6. Bloquear restante&quot;
+
+# 8. BACKUP AUTOMÁTICO
+/system script add name=&quot;script_backup_automatico&quot; source=&quot;/system backup save name=(\&quot;backup_sw_filial_\&quot; . [/system clock get date])&quot;
+/system scheduler add name=&quot;agendador_backup&quot; interval=1d start-time=00:00:00 on-event=&quot;script_backup_automatico&quot;</code></pre>
+</section>
+</main>
+<script>
+document.querySelectorAll('.equip').forEach(function(card){
+  var pre = card.querySelector('pre.script'), original = pre.textContent, ph = card.dataset.placeholder;
+  var campo = card.querySelector('input'), botao = card.querySelector('button.copiar');
+  function atual(){ return campo.value ? original.split(ph).join(campo.value) : original; }
+  campo.addEventListener('input', function(){
+    botao.textContent = campo.value ? 'Copiar com a senha' : 'Copiar';
+  });
+  botao.addEventListener('click', function(){
+    var t = atual();
+    function ok(){ var a = botao.textContent; botao.textContent = 'Copiado'; setTimeout(function(){ botao.textContent = a; }, 1500); }
+    function selecionar(){ var r = document.createRange(); r.selectNodeContents(pre); var s = getSelection();
+      s.removeAllRanges(); s.addRange(r); botao.textContent = 'Selecionado: Ctrl+C'; }
+    try { navigator.clipboard.writeText(t).then(ok, selecionar); } catch (x) { selecionar(); }
+  });
+});
+</script>
