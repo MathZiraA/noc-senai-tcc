@@ -88,7 +88,7 @@ ok "git, ssh e utilitários"
 # --------------------------------------------------------------------
 passo "3/7 Repositório do projeto"
 if [ -d "$DESTINO/.git" ]; then
-    git -C "$DESTINO" pull -q && ok "repositório atualizado em $DESTINO"
+    if git -C "$DESTINO" -c credential.helper= -c core.askPass=true pull -q 2>/dev/null; then ok "repositório atualizado em $DESTINO"; else ok "repositório em $DESTINO (cópia local, sem atualizar do GitHub)"; fi
 else
     echo "    O repositório é privado. Use seu usuário do GitHub e, como senha, um token de acesso"
     echo "    (github.com > Settings > Developer settings > Personal access tokens, permissão de leitura)."
