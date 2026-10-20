@@ -92,13 +92,14 @@ OUTROS = [
       ("Placa física 1", "porta de rede comum do servidor na ether5 do R-MATRIZ: gerência do ESXi e port group VM Network"),
       ("Internet", "pela ether2-INTERNET do R-MATRIZ (NAT): não precisa de segunda placa no servidor"),
       ("Outros grupos", "acessam o ESXi pela rede da Matriz ou com uma liberação específica para 192.168.10.40")]),
-    ("Servidor Zabbix (VM no ESXi)", "ok", "Instalado em 20/10/2026: VM SennaGuard (Debian 12, hostname noc-senai) no ESXi; 11 de 14 verificações do validar_bancada OK",
+    ("Servidor Zabbix (VM no ESXi)", "ok", "Instalado em 20/10/2026: VM SennaGuard (Debian 12, hostname noc-senai) no ESXi; validar_bancada 17 de 18 OK (só o PC-FILIAL sem IP fixo); simulação de queda com e-mails e análise da IA OK",
      [("Recursos", "2 vCPU, 4 a 8 GB de RAM, 60 GB de disco"),
       ("Placa de rede", "VM Network → 192.168.10.50/24, gateway 192.168.10.1, DNS 192.168.10.1 (internet pelo R-MATRIZ)"),
       ("Monitora", "R-FILIAL pela loopback 10.255.255.2, fibra, rádio e as duas antenas (ping + SNMP)")]),
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("20/10/2026", "R-FILIAL", "Chave SSH nova do Analista IA (noc-analista@noc-senai) cadastrada no usuário zabbix-ia. validar_bancada: 17 de 18 OK. Simulação de queda da fibra: alerta, análise da IA, e-mail com a análise e normalização enviados."),
     ("20/10/2026", "Zabbix", "Antenas Ubiquiti só respondem SNMP v1 (airOS 6): interface SNMP das antenas trocada para v1. Zabbix lendo sinal (-44 dBm na Filial), ruído (-103), CCQ (99%), estações (1) e airMAX (96%/91%)."),
     ("20/10/2026", "Servidor", "NOC instalado na VM do ESXi (192.168.10.50) por servidor/preparar_servidor.sh + instalar_noc.sh: Zabbix, banco, HTTPS, Grafana, Analista IA, e-mail, chamados e backup. Chave nova do Analista IA gerada (cadastrar no R-FILIAL). Credenciais do Gemini e do Gmail trocadas por terem sido expostas."),
     ("19/10/2026 17:45", "Portas", "Mapa de portas completo: cada porta dos dois roteadores com o que está ligado nela. R-MATRIZ: ether2 virou ether2-INTERNET (DHCP da escola, NAT, DNS e rota padrão anunciada no OSPF); ether4 = iDRAC; ether5 = servidor (ESXi)."),
