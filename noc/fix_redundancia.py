@@ -210,7 +210,7 @@ antenas = []
 for nome, ip, visivel, estacao in (("RADIO-P2P-MATRIZ", config.C["ANTENA_MATRIZ"], "Rádio P2P Matriz (AP)", False),
                                    ("RADIO-P2P-FILIAL", config.C["ANTENA_FILIAL"], "Rádio P2P Filial (Station)", True)):
     a = call("host.get", {"filter": {"host": [nome]}, "output": ["hostid"],
-                          "selectInterfaces": ["interfaceid", "type"], "selectMacros": ["hostmacroid", "macro", "value"]})
+                          "selectInterfaces": ["interfaceid", "type", "details"], "selectMacros": ["hostmacroid", "macro", "value"]})
     if a:
         aid = a[0]["hostid"]
     else:
@@ -219,15 +219,20 @@ for nome, ip, visivel, estacao in (("RADIO-P2P-MATRIZ", config.C["ANTENA_MATRIZ"
             "interfaces": [{"type": 1, "main": 1, "useip": 1, "ip": ip, "dns": "", "port": "10050"}],
             "description": "Antena Ubiquiti PowerBeam M5 do enlace de backup: ping e SNMP (sinal, ruído, CCQ, airMAX).",
             "tags": [{"tag": "component", "value": "radio"}]})["hostids"][0]
-        a = call("host.get", {"hostids": aid, "output": ["hostid"], "selectInterfaces": ["interfaceid", "type"],
+        a = call("host.get", {"hostids": aid, "output": ["hostid"], "selectInterfaces": ["interfaceid", "type", "details"],
                               "selectMacros": ["hostmacroid", "macro", "value"]})
     antenas.append(aid)
     # Interface SNMP (o protótipo criou as antenas só com ping)
-    snmp_if = [i["interfaceid"] for i in a[0]["interfaces"] if i["type"] == "2"]
-    if not snmp_if:
+    # O airOS 6 (XW) só responde SNMP v1: em v2c o agente fica mudo (testado em 20/10/2026)
+    snmp = [i for i in a[0]["interfaces"] if i["type"] == "2"]
+    detalhes = {"version": 1, "community": "{$SNMP_COMMUNITY}"}
+    if not snmp:
         snmp_if = call("hostinterface.create", {"hostid": aid, "type": 2, "main": 1, "useip": 1, "ip": ip, "dns": "",
-                                                "port": "161", "details": {"version": 2, "bulk": 1,
-                                                                           "community": "{$SNMP_COMMUNITY}"}})["interfaceids"]
+                                                "port": "161", "details": detalhes})["interfaceids"]
+    else:
+        snmp_if = [snmp[0]["interfaceid"]]
+        if str(snmp[0].get("details", {}).get("version")) != "1":
+            call("hostinterface.update", {"interfaceid": snmp_if[0], "details": detalhes})
     atuais_m = {m["macro"]: m for m in a[0]["macros"]}
     for macro, valor, desc in MACROS_ANTENA:
         if macro not in atuais_m:
