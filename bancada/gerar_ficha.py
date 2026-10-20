@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "20/10/2026 17:00"
+ATUALIZADO = "20/10/2026 18:00"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -49,7 +49,7 @@ EQUIPAMENTOS = [
             ("ether1", "ether1-WAN-RADIO", "Rádio (backup)", "radio", "10.0.2.2/29",
              "porta LAN da fonte PoE da antena RADIO-P2P-FILIAL (a porta POE da fonte vai na antena)"),
             ("ether2", "ether2-reserva", "Reserva", "livre", "—", "nada"),
-            ("ether3", "ether3-LAN", "Rede local", "lan", "bridge-LAN", "PC da Filial N07S12-1243997 (192.168.20.197, DHCP)"),
+            ("ether3", "ether3-LAN", "Rede local", "lan", "bridge-LAN", "PC da Filial com VM Kali Linux bridged (192.168.20.10 fixo)"),
             ("ether4", "ether4-LAN", "Rede local", "lan", "bridge-LAN", "livre (PCs ou SW-FILIAL)"),
             ("ether5", "ether5-LAN", "Rede local", "lan", "bridge-LAN", "livre (PCs ou SW-FILIAL)"),
             ("sfp1", "sfp1-WAN-FIBRA", "Fibra (principal)", "fibra", "10.0.1.2/30", "módulo SFP + fibra até a sfp1 do R-MATRIZ"),
@@ -84,7 +84,7 @@ OUTROS = [
     ("PCs do projeto", "pendente", "Scripts prontos em bancada\\saida (pc-matriz.ps1 e pc-filial.ps1)",
      [("PC-MATRIZ", "192.168.10.10/24, gateway 192.168.10.1, MTU 2000, ping liberado"),
       ("PC-FILIAL", "192.168.20.10/24, gateway 192.168.20.1, MTU 2000, ping liberado"),
-      ("PC da Filial hoje (19/10)", "N07S12-1243997, IP automático 192.168.20.197 (MAC B4:45:06:7B:85:58), ping liberado no firewall; pc-filial.ps1 ainda não aplicado")]),
+      ("Cliente da Filial (20/10)", "VM Kali Linux no VMware do PC N07S12-1243997, placa Bridged na placa cabeada; IP fixo 192.168.20.10/24, gw 192.168.20.1, DNS 192.168.10.1 (MAC 00:0C:29:32:F1:3F); internet pelo R-MATRIZ")]),
     ("Servidor ESXi (rack compartilhado)", "pendente", "Configurando: o grupo é o primeiro a usar o servidor; a gerência fica na rede da Matriz",
      [("Servidor", "Dell PowerEdge T440, service tag 9NRHYR2, BIOS 1.4.8"),
       ("iDRAC9 Enterprise", "192.168.10.30/24 (porta dedicada da iDRAC na ether4 do R-MATRIZ), gateway e DNS 192.168.10.1; console virtual em https://192.168.10.30"),
@@ -92,13 +92,14 @@ OUTROS = [
       ("Placa física 1", "porta de rede comum do servidor na ether5 do R-MATRIZ: gerência do ESXi e port group VM Network"),
       ("Internet", "pela ether2-INTERNET do R-MATRIZ (NAT): não precisa de segunda placa no servidor"),
       ("Outros grupos", "acessam o ESXi pela rede da Matriz ou com uma liberação específica para 192.168.10.40")]),
-    ("Servidor Zabbix (VM no ESXi)", "ok", "Instalado em 20/10/2026: VM SennaGuard (Debian 12, hostname noc-senai) no ESXi; validar_bancada 17 de 18 OK (só o PC-FILIAL sem IP fixo); simulação de queda com e-mails e análise da IA OK",
+    ("Servidor Zabbix (VM no ESXi)", "ok", "Instalado em 20/10/2026: VM SennaGuard (Debian 12, hostname noc-senai) no ESXi; validar_bancada OK (cliente da Filial = VM Kali 192.168.20.10); simulação de queda com e-mails e análise da IA OK",
      [("Recursos", "2 vCPU, 4 a 8 GB de RAM, 60 GB de disco"),
       ("Placa de rede", "VM Network → 192.168.10.50/24, gateway 192.168.10.1, DNS 192.168.10.1 (internet pelo R-MATRIZ)"),
       ("Monitora", "R-FILIAL pela loopback 10.255.255.2, fibra, rádio e as duas antenas (ping + SNMP)")]),
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("20/10/2026", "R-MATRIZ / R-FILIAL", "Internet liberada para a Filial: R-MATRIZ ganhou regra forward 'Filial -> internet' (antes do drop WAN_PUBLIC) e regras 5d de DNS para 192.168.20.0/24; DHCP do R-FILIAL entrega DNS 192.168.10.1. Cliente da Filial agora é uma VM Kali Linux (VMware, bridged) com IP fixo 192.168.20.10, gw .1, DNS 192.168.10.1."),
     ("20/10/2026", "R-FILIAL", "Chave SSH nova do Analista IA (noc-analista@noc-senai) cadastrada no usuário zabbix-ia. validar_bancada: 17 de 18 OK. Simulação de queda da fibra: alerta, análise da IA, e-mail com a análise e normalização enviados."),
     ("20/10/2026", "Zabbix", "Antenas Ubiquiti só respondem SNMP v1 (airOS 6): interface SNMP das antenas trocada para v1. Zabbix lendo sinal (-44 dBm na Filial), ruído (-103), CCQ (99%), estações (1) e airMAX (96%/91%)."),
     ("20/10/2026", "Servidor", "NOC instalado na VM do ESXi (192.168.10.50) por servidor/preparar_servidor.sh + instalar_noc.sh: Zabbix, banco, HTTPS, Grafana, Analista IA, e-mail, chamados e backup. Chave nova do Analista IA gerada (cadastrar no R-FILIAL). Credenciais do Gemini e do Gmail trocadas por terem sido expostas."),

@@ -95,6 +95,8 @@ add chain=input action=accept protocol=ospf comment="4. Permitir OSPF (Protocolo
 add chain=input action=accept protocol=tcp dst-port=22,8291 src-address-list=REDES_AUTORIZADAS in-interface-list=LAN_MGMT comment="5. Acesso Gerencia (SSH e WinBox)"
 add chain=input action=accept protocol=udp dst-port=53 in-interface-list=LAN_MGMT comment="5c. DNS para a rede local"
 add chain=input action=accept protocol=tcp dst-port=53 in-interface-list=LAN_MGMT comment="5c. DNS para a rede local (TCP)"
+add chain=input action=accept protocol=udp dst-port=53 src-address=192.168.20.0/24 comment="5d. DNS para a LAN da Filial"
+add chain=input action=accept protocol=tcp dst-port=53 src-address=192.168.20.0/24 comment="5d. DNS para a LAN da Filial (TCP)"
 add chain=input action=drop comment="6. Bloquear restante"
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.10.0/24
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.20.0/24
@@ -103,6 +105,7 @@ add chain=forward action=accept connection-state=established,related
 add chain=forward action=drop connection-state=invalid
 add chain=forward action=accept src-address=192.168.10.0/24 dst-address=192.168.20.0/24 comment="Matriz -> Filial"
 add chain=forward action=accept src-address=192.168.20.0/24 dst-address=192.168.10.0/24 comment="Filial -> Matriz"
+add chain=forward action=accept src-address=192.168.20.0/24 out-interface=ether2-INTERNET comment="Filial -> internet"
 add chain=forward action=drop in-interface-list=WAN_PUBLIC
 
 # 10. BACKUP AUTOMÁTICO

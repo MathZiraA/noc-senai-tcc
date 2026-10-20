@@ -41,7 +41,7 @@
 # Opção 121 (rotas sem classe): os PCs aprendem que as redes do projeto vão pelo cabo e o resto (internet)
 # pelo Wi-Fi deles; sem isso o Windows manda os pacotes para a outra unidade pelo Wi-Fi
 /ip dhcp-server option add name=rotas-projeto code=121 value=0x18c0a80ac0a81401080ac0a81401
-/ip dhcp-server network add address=192.168.20.0/24 gateway=192.168.20.1 dhcp-option=rotas-projeto comment="LAN Filial"
+/ip dhcp-server network add address=192.168.20.0/24 gateway=192.168.20.1 dns-server=192.168.10.1 dhcp-option=rotas-projeto comment="LAN Filial"
 
 # 5. USUÁRIOS
 /user add name="admin_senai" group=full password="<SENHA_ADMIN_FILIAL>" comment="Usuario Administrativo"
