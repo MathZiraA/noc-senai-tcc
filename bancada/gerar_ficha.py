@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "20/10/2026 18:00"
+ATUALIZADO = "21/10/2026 17:00"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -99,6 +99,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("21/10/2026", "PCs", "Cliente da Matriz = VM Windows 11 (PC-MATRIZ) com IP fixo 192.168.10.11, gateway/DNS 192.168.10.1. Testes da VM: R-MATRIZ, servidor do NOC, R-FILIAL e google.com OK; o NOC pinga a VM sem perda (0,7 ms)."),
     ("20/10/2026", "R-MATRIZ / R-FILIAL", "Internet liberada para a Filial: R-MATRIZ ganhou regra forward 'Filial -> internet' (antes do drop WAN_PUBLIC) e regras 5d de DNS para 192.168.20.0/24; DHCP do R-FILIAL entrega DNS 192.168.10.1. Cliente da Filial agora é uma VM Kali Linux (VMware, bridged) com IP fixo 192.168.20.10, gw .1, DNS 192.168.10.1."),
     ("20/10/2026", "R-FILIAL", "Chave SSH nova do Analista IA (noc-analista@noc-senai) cadastrada no usuário zabbix-ia. validar_bancada: 17 de 18 OK. Simulação de queda da fibra: alerta, análise da IA, e-mail com a análise e normalização enviados."),
     ("20/10/2026", "Zabbix", "Antenas Ubiquiti só respondem SNMP v1 (airOS 6): interface SNMP das antenas trocada para v1. Zabbix lendo sinal (-44 dBm na Filial), ruído (-103), CCQ (99%), estações (1) e airMAX (96%/91%)."),
