@@ -100,6 +100,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("26/10/2026 15:56", "Zabbix", "Ping, perda e latência da fibra, do rádio e da loopback e o caminho ativo passaram de 10 s para 5 s (alertas e painel reagem 2x mais rápido). Trigger 'ether2-reserva: Link down' desativada (porta sem uso) e o problema aberto desde 23/10 fechado com comentário."),
     ("26/10/2026 15:50", "R-MATRIZ / R-FILIAL", "Hora certa por NTP: R-MATRIZ sincroniza no ntp.br e serve NTP (regra 5e: udp 123 só de 10.0.0.0/8); R-FILIAL sincroniza na loopback 10.255.255.1. Fuso America/Sao_Paulo nos dois. O relógio do R-FILIAL estava em 28/09."),
     ("26/10/2026", "SennaGuard", "Varredura completa do painel contra o Zabbix e correções no GitHub (MathZiraA/sennaguard): tela em branco no chat, PDF do relatório, equipamentos, tráfego, sinal, alertas antigos, atualização a cada 5-10 s, perfis (só o cliente abre chamado) e chat do Gemini. Manual com prints publicado."),
     ("23/10/2026", "R-MATRIZ", "Usuários zabbix-ia (leitura, só do 192.168.10.50, por chave) e sennaguard-teste (escrita para o teste de failover, só do servidor, por chave) criados. SennaGuard atualizado e validado com a rede real; backup das configurações do R-MATRIZ e do R-FILIAL OK."),

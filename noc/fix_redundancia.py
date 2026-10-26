@@ -81,9 +81,9 @@ for key, name, vtype, units, vmap, enlace in items:
         continue
     call("item.create", {"hostid": hid, "interfaceid": iface["interfaceid"], "type": 3, "key_": key,
                          "name": name, "value_type": vtype, "units": units, "valuemapid": vmap,
-                         "delay": "10s", "history": "90d", "trends": "365d",
+                         "delay": "5s", "history": "90d", "trends": "365d",
                          "tags": [{"tag": "component", "value": "enlace"}, {"tag": "enlace", "value": enlace}]})
-print("[ok] itens de estado/latência dos enlaces (coleta a cada 10s)")
+print("[ok] itens de estado/latência dos enlaces (coleta a cada 5s)")
 
 # 4b. Caminho ativo calculado: fibra*2 + rádio -> 3/2 = FIBRA, 1 = RÁDIO, 0 = ISOLADA
 if K_CAMINHO not in existing:
@@ -93,7 +93,7 @@ if K_CAMINHO not in existing:
         "mappings": [{"value": "0", "newvalue": "FILIAL ISOLADA"}, {"value": "1", "newvalue": "RÁDIO (failover)"},
                      {"value": "2", "newvalue": "FIBRA"}, {"value": "3", "newvalue": "FIBRA"}]})["valuemapids"][0]
     call("item.create", {"hostid": hid, "type": 15, "key_": K_CAMINHO, "name": "Caminho ativo Matriz-Filial",
-                         "value_type": 3, "delay": "10s", "history": "90d", "trends": "365d",
+                         "value_type": 3, "delay": "5s", "history": "90d", "trends": "365d",
                          "params": f"last(//{K_FIBRA})*2+last(//{K_RADIO})", "valuemapid": vm_caminho,
                          "description": "3 ou 2 = tráfego pela fibra, 1 = pelo rádio (failover), 0 = Filial isolada",
                          "tags": [{"tag": "component", "value": "enlace"}, {"tag": "enlace", "value": "caminho"}]})
@@ -103,8 +103,8 @@ print("[ok] item calculado 'Caminho ativo Matriz-Filial'")
 #     Perda de pacotes por enlace: base da previsão de degradação do rádio
 extras = [
     (K_LAN, "Alcance LAN Filial (1s)", 3, "", vmid, "1s", "30d", "lan"),
-    (K_PERDA_FIBRA, "Enlace FIBRA - perda de pacotes", 0, "%", "0", "10s", "90d", "fibra"),
-    (K_PERDA_RADIO, "Enlace RÁDIO - perda de pacotes", 0, "%", "0", "10s", "90d", "radio"),
+    (K_PERDA_FIBRA, "Enlace FIBRA - perda de pacotes", 0, "%", "0", "5s", "90d", "fibra"),
+    (K_PERDA_RADIO, "Enlace RÁDIO - perda de pacotes", 0, "%", "0", "5s", "90d", "radio"),
 ]
 for key, name, vtype, units, vmap, delay, hist, enlace in extras:
     if key in existing:
