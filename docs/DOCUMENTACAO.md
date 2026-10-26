@@ -1639,3 +1639,50 @@ O SennaGuard passou a mostrar queda e volta dos enlaces em segundos, sem depende
 - [x] Desativar no Zabbix o alerta "ether2-reserva: Link down" (porta sem uso): feito em 26/10. No mesmo dia, ping, perda e latência dos enlaces passaram de 10 s para 5 s
 - [x] NTP no R-FILIAL: feito em 26/10 (R-MATRIZ no ntp.br servindo o R-FILIAL pela loopback; os dois sincronizados)
 - [ ] Primeiro teste de failover pelo painel, acompanhado
+
+## 27. Segurança do SennaGuard e do servidor (26/10/2026)
+
+O painel e o servidor passaram por uma revisão de segurança completa: 3 revisões independentes do código (autenticação e permissões; injeção, arquivos e comandos; interface e implantação) e testes no servidor no ar. Nenhuma falha crítica ou alta foi encontrada; todos os achados de severidade média e baixa foram corrigidos e testados. Nenhum sistema é 100% seguro: os riscos aceitos estão no fim da seção.
+
+### Correções no código (GitHub MathZiraA/sennaguard, commit 87a6804)
+
+| Achado | Severidade | Correção |
+| --- | --- | --- |
+| Bloqueio de login contornável com espaços ou maiúsculas no e-mail | Média | E-mail normalizado; 5 tentativas por e-mail e 20 por IP a cada 5 min (testado: a 6ª variante já é bloqueada) |
+| Trocar senha ou e-mail não derrubava outras sessões | Média | As outras sessões caem na hora; um cookie roubado deixa de valer |
+| Administrador aprovava o próprio teste de failover | Média | Quem pede não aprova: sempre duas pessoas |
+| Texto de chamado ia cru para o Telegram (link de phishing pelo bot) | Média | Escape de HTML em todas as mensagens |
+| Upload sem limite real de memória e sem cota | Média | Leitura em blocos até 5 MB, máximo de 20 anexos pendentes por pessoa, limite também no Apache |
+| Vulnerabilidades conhecidas na starlette 0.41 e no react-router 6.28 | Média | FastAPI 0.162 / starlette 1.10 / uvicorn 0.54 e react-router 6.30.6 |
+| Tempo de resposta revelava e-mails cadastrados | Baixa | Senha sempre conferida, mesmo sem usuário |
+| Chave do link de TV no log do Apache | Baixa | Chave no fragmento `#k=` e enviada por cabeçalho |
+| Notas internas podiam ir para artigos públicos | Baixa | Notas fora do rascunho da IA |
+| Usuário novo herdava dados de um removido | Baixa | Foto, códigos e anexos apagados na remoção |
+| Laudo PDF quebrava com emoji | Baixa | Caracteres fora do Latin-1 trocados |
+| Mapa da API (`/openapi.json`) público | Baixa | Desligado |
+| Tokens do `.env` visíveis na lista de processos durante a instalação | Baixa | `.env` lido dentro do processo |
+
+### Servidor
+
+| Item | Antes | Depois |
+| --- | --- | --- |
+| Firewall | nenhum | nftables: entra só 22 (Matriz e rede da escola), 80/443/3000 (LANs da Matriz e da Filial) e ping; Zabbix 10050/10051, banco e painel interno fechados para fora (conferido por varredura) |
+| SSH | 6 tentativas, X11 ligado | 3 tentativas, sem X11, root só por chave; fail2ban bane 1 h após 5 erros em 10 min |
+| HTTPS | TLS 1.2 e 1.3 | mantido; CSP completa, `Permissions-Policy`, `Referrer-Policy`, `Cross-Origin-Opener-Policy`, `nosniff` |
+| Versão do servidor nas respostas | `Apache/2.4.68 (Debian)` e `uvicorn` | `Apache` |
+| Serviço do painel | `NoNewPrivileges`, `ProtectSystem` | sandbox completa do systemd (sem acesso a kernel, dispositivos, relógio, outros processos; só rede e `CAP_NET_RAW` para o ping); testado: ping, backup SSH, Telegram e Gemini funcionando |
+| Atualizações | 18 de segurança pendentes | aplicadas; atualizações de segurança automáticas ligadas |
+| Avahi (mDNS) | anunciava o servidor | desligado |
+
+Arquivos no repositório: `servidor/seguranca/` (`nftables.conf`, SSH, fail2ban e `aplicar.sh`, que aplica tudo com trava de 3 minutos no firewall).
+
+**Incidente durante a blindagem:** a atualização do PHP só recarregou o Apache, e o módulo antigo não carregou a extensão nova do MySQL. Das 16:28 às 16:52 a tela e a API do Zabbix responderam "DB type MYSQL is not supported" (o Zabbix continuou coletando). Resolvido com `systemctl restart apache2`. Lição: depois de atualizar PHP, reiniciar o Apache.
+
+### Riscos aceitos
+
+- **Certificado da CA própria:** sem a CA instalada nos PCs, o navegador avisa e permite continuar. HSTS não foi ligado: navegadores o ignoram em acesso por IP e ele impediria o "continuar". Instalar a CA (`http://192.168.10.50/NOC-SENAI-CA.crt`) em todos os PCs.
+- **react-router:** 2 avisos moderados só corrigidos na versão 7 (reescrita); não se aplicam ao painel (sem navegação com caminho vindo do usuário e sem SSR).
+- **IA externa:** o chat e a explicação de backups enviam dados ao Gemini (Google). As ferramentas da IA são só de leitura e o cliente só vê os próprios chamados.
+- **SSH do administrator com senha:** mantido por praticidade, protegido por fail2ban e pelo firewall; o ideal é migrar para chave.
+- **Grafana:** visitante anônimo só leitura (para a TV), restrito às LANs pelo firewall.
+- **Segredos expostos no chat em 20 e 22/10:** trocar o token do bot (`/revoke`), a senha de app do Gmail, a chave do Gemini, a senha do admin do painel e a senha `ubnt` das antenas.
