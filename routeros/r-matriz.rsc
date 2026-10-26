@@ -97,6 +97,7 @@ add chain=input action=accept protocol=udp dst-port=53 in-interface-list=LAN_MGM
 add chain=input action=accept protocol=tcp dst-port=53 in-interface-list=LAN_MGMT comment="5c. DNS para a rede local (TCP)"
 add chain=input action=accept protocol=udp dst-port=53 src-address=192.168.20.0/24 comment="5d. DNS para a LAN da Filial"
 add chain=input action=accept protocol=tcp dst-port=53 src-address=192.168.20.0/24 comment="5d. DNS para a LAN da Filial (TCP)"
+add chain=input action=accept protocol=udp dst-port=123 src-address=10.0.0.0/8 comment="5e. NTP para o R-FILIAL (fibra, radio e loopback)"
 add chain=input action=drop comment="6. Bloquear restante"
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.10.0/24
 /ip firewall address-list add list=REDES_AUTORIZADAS address=192.168.20.0/24
@@ -107,6 +108,11 @@ add chain=forward action=accept src-address=192.168.10.0/24 dst-address=192.168.
 add chain=forward action=accept src-address=192.168.20.0/24 dst-address=192.168.10.0/24 comment="Filial -> Matriz"
 add chain=forward action=accept src-address=192.168.20.0/24 out-interface=ether2-INTERNET comment="Filial -> internet"
 add chain=forward action=drop in-interface-list=WAN_PUBLIC
+
+# 9b. HORA CERTA (NTP): pega do ntp.br e serve para o R-FILIAL
+/system clock set time-zone-name=America/Sao_Paulo
+/system ntp client set enabled=yes servers=a.ntp.br,b.ntp.br,c.ntp.br
+/system ntp server set enabled=yes
 
 # 10. BACKUP AUTOMÁTICO
 /system script add name="script_backup_automatico" source="/system backup save name=(\"backup_matriz_\" . [/system clock get date])"

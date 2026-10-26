@@ -97,6 +97,10 @@ add chain=forward action=accept src-address=192.168.20.0/24 dst-address=192.168.
 add chain=forward action=accept src-address=192.168.10.0/24 dst-address=192.168.20.0/24 comment="Matriz -> Filial"
 add chain=forward action=drop in-interface-list=WAN_PUBLIC
 
+# 9b. HORA CERTA (NTP): pela loopback do R-MATRIZ, funciona pela fibra ou pelo rádio
+/system clock set time-zone-name=America/Sao_Paulo
+/system ntp client set enabled=yes servers=10.255.255.1
+
 # 10. BACKUP AUTOMÁTICO
 /system script add name="script_backup_automatico" source="/system backup save name=(\"backup_filial_\" . [/system clock get date])"
 /system scheduler add name="agendador_backup" interval=1d start-time=00:00:00 on-event="script_backup_automatico"
