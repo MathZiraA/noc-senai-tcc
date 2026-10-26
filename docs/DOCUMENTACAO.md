@@ -1680,9 +1680,29 @@ Arquivos no repositório: `servidor/seguranca/` (`nftables.conf`, SSH, fail2ban 
 
 ### Riscos aceitos
 
-- **Certificado da CA própria:** sem a CA instalada nos PCs, o navegador avisa e permite continuar. HSTS não foi ligado: navegadores o ignoram em acesso por IP e ele impediria o "continuar". Instalar a CA (`http://192.168.10.50/NOC-SENAI-CA.crt`) em todos os PCs.
+- **Certificado da CA própria:** sem a CA instalada nos PCs, o navegador avisa e permite continuar. HSTS não foi ligado: navegadores o ignoram em acesso por IP e ele impediria o "continuar". Instalar a CA (`http://192.168.10.50/NOC-SENAI-CA.crt`) em todos os PCs. Feito no notebook da Matriz em 26/10 (cadeado sem aviso no painel, no Zabbix e no Grafana); faltam os PCs da Matriz e da Filial, a VM Windows e a TV.
 - **react-router:** 2 avisos moderados só corrigidos na versão 7 (reescrita); não se aplicam ao painel (sem navegação com caminho vindo do usuário e sem SSR).
 - **IA externa:** o chat e a explicação de backups enviam dados ao Gemini (Google). As ferramentas da IA são só de leitura e o cliente só vê os próprios chamados.
 - **SSH do administrator com senha:** mantido por praticidade, protegido por fail2ban e pelo firewall; o ideal é migrar para chave.
 - **Grafana:** visitante anônimo só leitura (para a TV), restrito às LANs pelo firewall.
 - **Segredos expostos no chat em 20 e 22/10:** trocar o token do bot (`/revoke`), a senha de app do Gmail, a chave do Gemini, a senha do admin do painel e a senha `ubnt` das antenas.
+
+### Instalar o certificado da CA do NOC num computador (Windows)
+
+Sem a CA, o navegador mostra "Inseguro" e pede para continuar. Com ela, o painel, o Zabbix, o Grafana e a página de status abrem com o cadeado.
+
+1. Baixar `http://192.168.10.50/NOC-SENAI-CA.crt` (vai para a pasta Downloads).
+2. No CMD (não precisa ser administrador), com o caminho completo do arquivo:
+
+```
+certutil -user -addstore Root "C:\Users\<usuário>\Downloads\NOC-SENAI-CA.crt"
+```
+
+3. Confirmar com **Sim** o aviso de segurança, conferindo o nome "NOC SENAI - Autoridade Certificadora".
+4. Reiniciar o navegador por completo: `chrome://restart`. Fechar só a aba não basta, porque o Chrome lembra a exceção "continuar mesmo assim" enquanto estiver aberto.
+
+Cuidados aprendidos na instalação do notebook:
+
+- Pelo assistente do Windows (clicar duas vezes no `.crt`), escolher o repositório **Autoridades de Certificação Raiz Confiáveis**. A primeira tentativa foi para "Autoridades de Certificação Intermediárias", e o navegador continuou sem confiar.
+- Rodar o `certutil` fora da pasta do arquivo dá "O sistema não pode encontrar o arquivo especificado": usar o caminho completo.
+- Para conferir no PowerShell: `Get-ChildItem Cert:\CurrentUser\Root | Where-Object Subject -like "*NOC SENAI*"`. A CA é válida até 17/10/2036.

@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "26/10/2026 17:10"
+ATUALIZADO = "26/10/2026 17:30"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -100,6 +100,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("26/10/2026 17:30", "Certificado", "CA do NOC instalada no notebook da Matriz (Raízes Confiáveis do usuário, via certutil -user -addstore Root): painel, Zabbix e Grafana com cadeado. Faltam PCs da Matriz e da Filial, VM Windows e TV. Atenção: o assistente do Windows tinha posto a CA em 'Intermediárias' e o Chrome precisa de chrome://restart."),
     ("26/10/2026 17:10", "Segurança", "Revisão de segurança do SennaGuard e do servidor: 13 correções no código (sem falha crítica/alta), FastAPI/starlette e react-router atualizados, firewall nftables (só 22, 80, 443, 3000 abertos), SSH blindado com fail2ban, Apache sem versão, sandbox do systemd, Avahi desligado, atualizações de segurança automáticas. Arquivos em servidor/seguranca/."),
     ("26/10/2026 16:20", "SennaGuard", "Painel em tempo real para a apresentação: sonda de 1 s na fibra e no rádio (queda em ~2 s, volta em ~1 s), períodos de 5, 10 e 30 min com 1 ponto por segundo e seletor 'Atualizar a cada' (Automático, Desligado, 1 s a 5 min). Serviço com CAP_NET_RAW só para o ping."),
     ("26/10/2026 16:02", "OSPF", "Hello 1 s / dead 4 s na fibra e no rádio (antes 10 s / 40 s): uma fibra que para de passar tráfego sem derrubar o link agora é detectada em ~4 s. Os dois lados precisam ter os mesmos tempos: na troca a Filial ficou ~1 min isolada até o R-MATRIZ receber o mesmo ajuste. Vizinhos de volta em Full."),
