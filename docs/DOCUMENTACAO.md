@@ -1555,7 +1555,7 @@ A Filial tinha rota até a internet pelo OSPF, mas o R-MATRIZ descartava o tráf
 
 ## 26. SennaGuard: implantação, varredura e manual (22 a 26/10/2026)
 
-O SennaGuard, painel web do NOC, está no ar em `https://192.168.10.50/sennaguard/` com dados reais do Zabbix e dos roteadores. O manual com prints de cada tela está em [Manual do SennaGuard](https://claude.ai/artifact/J4Zc9FRWiddRLUJEwL5NmK).
+O SennaGuard, painel web do NOC, está no ar em `https://192.168.10.50/sennaguard/` com dados reais do Zabbix e dos roteadores. O manual com prints de cada tela (atualizado em 26/10, 17:15, com os períodos de 5/10/30 min, o menu "Atualizar a cada", o "Enter envia" nos chamados e as seções de segurança e de instalação do certificado) está em [Manual do SennaGuard](https://claude.ai/artifact/J4Zc9FRWiddRLUJEwL5NmK).
 
 ### Implantação
 
