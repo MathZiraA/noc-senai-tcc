@@ -1613,6 +1613,24 @@ Comandos aplicados nos dois roteadores, **sempre no R-FILIAL e logo em seguida n
 
 Na troca, o comando entrou só no R-FILIAL e a Filial ficou cerca de 1 minuto isolada; o log do R-MATRIZ mostrava os hellos sendo descartados ("dropping") até ele receber o mesmo ajuste. Depois, os dois vizinhos voltaram para Full em segundos. Próximo passo recomendado: o teste de failover pelo painel, para registrar no laudo os tempos novos.
 
+### Painel em tempo real para a apresentação (26/10)
+
+O SennaGuard passou a mostrar queda e volta dos enlaces em segundos, sem depender do ritmo do Zabbix.
+
+| Item | Antes | Depois |
+| --- | --- | --- |
+| Fibra ou rádio cai | aparecia em 5 a 15 s | \~2 s (2 pings perdidos seguidos) |
+| Fibra ou rádio volta | 5 a 15 s | \~1 s (primeiro ping respondido) |
+| Períodos do gráfico | a partir de 1 hora | Últimos **5, 10 e 30 minutos** (1 ponto por segundo), além de 1 h, 6 h, 24 h, 7 dias, 30 dias e personalizado |
+| Ritmo da tela | fixo | seletor **Atualizar a cada**, como no Grafana: Automático, Desligado, 1 s, 2 s, 5 s, 10 s, 30 s, 1 min e 5 min |
+| Tela de TV | a cada 10 s | a cada 2 s |
+
+**Como funciona:** o serviço do SennaGuard tem uma sonda própria (`backend/sonda.py`) que pinga o IP da Filial na fibra (10.0.1.2) e no rádio (10.0.2.2) a cada 1 s e guarda os últimos 30 minutos na memória. Quando um enlace muda, ela avisa a tela pelo canal de tempo real na mesma hora. O Zabbix continua com a coleta de 5 s e segue sendo a fonte do histórico, dos alertas e dos e-mails. O serviço recebeu só a permissão `CAP_NET_RAW` (necessária para o ping), sem perder o `NoNewPrivileges`.
+
+**Ritmo "Automático":** 1 s nos períodos de até 30 min, 10 s nos demais, e recarga imediata quando um enlace cai ou volta. Qualquer outro ritmo é seguido à risca (testado: com 1 s, foram 10 buscas de cada dado em 10 s). A escolha fica guardada no navegador.
+
+**Roteiro da demonstração:** Visão do enlace → **Últimos 5 minutos** → **Automático** (ou 1 s) → desligar a fibra: em \~2 s o gráfico marca "Fibra fora" e o caminho ativo muda para **No rádio** → religar: em \~1 s volta para **Na fibra**. Se a aba foi aberta antes de uma atualização do painel, apertar F5.
+
 ### Pendências
 
 - [ ] Ligar o cabo do servidor de volta numa porta LAN do R-MATRIZ (hoje está na rede da escola)

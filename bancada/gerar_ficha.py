@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "26/10/2026 16:05"
+ATUALIZADO = "26/10/2026 16:25"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -100,6 +100,7 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("26/10/2026 16:20", "SennaGuard", "Painel em tempo real para a apresentação: sonda de 1 s na fibra e no rádio (queda em ~2 s, volta em ~1 s), períodos de 5, 10 e 30 min com 1 ponto por segundo e seletor 'Atualizar a cada' (Automático, Desligado, 1 s a 5 min). Serviço com CAP_NET_RAW só para o ping."),
     ("26/10/2026 16:02", "OSPF", "Hello 1 s / dead 4 s na fibra e no rádio (antes 10 s / 40 s): uma fibra que para de passar tráfego sem derrubar o link agora é detectada em ~4 s. Os dois lados precisam ter os mesmos tempos: na troca a Filial ficou ~1 min isolada até o R-MATRIZ receber o mesmo ajuste. Vizinhos de volta em Full."),
     ("26/10/2026 15:56", "Zabbix", "Ping, perda e latência da fibra, do rádio e da loopback e o caminho ativo passaram de 10 s para 5 s (alertas e painel reagem 2x mais rápido). Trigger 'ether2-reserva: Link down' desativada (porta sem uso) e o problema aberto desde 23/10 fechado com comentário."),
     ("26/10/2026 15:50", "R-MATRIZ / R-FILIAL", "Hora certa por NTP: R-MATRIZ sincroniza no ntp.br e serve NTP (regra 5e: udp 123 só de 10.0.0.0/8); R-FILIAL sincroniza na loopback 10.255.255.1. Fuso America/Sao_Paulo nos dois. O relógio do R-FILIAL estava em 28/09."),
