@@ -1594,11 +1594,30 @@ O SennaGuard, painel web do NOC, está no ar em `https://192.168.10.50/sennaguar
 | Sinal da antena vazio | Lê o item `ubnt.sinal` |
 | Perfis genéricos | Matriz acima (só o cliente abre chamado) |
 
+### Ajustes de desempenho (26/10)
+
+Quatro ajustes deixaram a detecção de falhas mais rápida e os alertas mais limpos. Todos estão nos scripts do repositório.
+
+| Ajuste | Antes | Depois | Ganho |
+| --- | --- | --- | --- |
+| OSPF na fibra e no rádio | hello 10 s, dead 40 s | hello 1 s, dead 4 s | Fibra que para de passar tráfego **sem derrubar o link** (conversor travado, SFP com defeito) é detectada em \~4 s, não em 40 s |
+| Coleta do Zabbix nos enlaces (ping, perda, latência, loopback, caminho ativo) | 10 s | 5 s | Alertas de queda e painel do SennaGuard reagem 2x mais rápido |
+| Alerta "ether2-reserva: Link down" | aberto desde 23/10 | trigger desativada e alerta fechado com comentário | Lista de alertas sem falso positivo; a IA para de citar a porta sem uso |
+| Hora dos roteadores | R-FILIAL em 28/09, sem NTP | R-MATRIZ no ntp.br serve o R-FILIAL pela loopback (regra 5e libera udp 123 só de 10.0.0.0/8); fuso America/Sao\_Paulo | Logs e backups com data e hora certas |
+
+Comandos aplicados nos dois roteadores, **sempre no R-FILIAL e logo em seguida no R-MATRIZ** (com tempos diferentes nos dois lados, a vizinhança cai):
+
+```
+/routing ospf interface-template set [find comment~"PAP"] hello-interval=1s dead-interval=4s
+```
+
+Na troca, o comando entrou só no R-FILIAL e a Filial ficou cerca de 1 minuto isolada; o log do R-MATRIZ mostrava os hellos sendo descartados ("dropping") até ele receber o mesmo ajuste. Depois, os dois vizinhos voltaram para Full em segundos. Próximo passo recomendado: o teste de failover pelo painel, para registrar no laudo os tempos novos.
+
 ### Pendências
 
 - [ ] Ligar o cabo do servidor de volta numa porta LAN do R-MATRIZ (hoje está na rede da escola)
 - [ ] Testes de ponta a ponta com um usuário Cliente (tour, chamado com print, nota interna, Telegram, celular)
 - [ ] Trocar o token do bot (`/revoke`), a senha do admin do painel e a senha `ubnt` das antenas
-- [ ] Desativar no Zabbix o alerta "ether2-reserva: Link down" (porta sem uso), se quiserem
-- [ ] NTP no R-FILIAL (relógio em 28/09)
+- [x] Desativar no Zabbix o alerta "ether2-reserva: Link down" (porta sem uso): feito em 26/10. No mesmo dia, ping, perda e latência dos enlaces passaram de 10 s para 5 s
+- [x] NTP no R-FILIAL: feito em 26/10 (R-MATRIZ no ntp.br servindo o R-FILIAL pela loopback; os dois sincronizados)
 - [ ] Primeiro teste de failover pelo painel, acompanhado
