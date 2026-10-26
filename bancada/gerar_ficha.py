@@ -9,7 +9,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
-ATUALIZADO = "21/10/2026 17:00"
+ATUALIZADO = "26/10/2026 16:00"
 
 # estado: ok | pendente | falha | fora
 EQUIPAMENTOS = [
@@ -85,20 +85,24 @@ OUTROS = [
      [("PC-MATRIZ", "192.168.10.10/24, gateway 192.168.10.1, MTU 2000, ping liberado"),
       ("PC-FILIAL", "192.168.20.10/24, gateway 192.168.20.1, MTU 2000, ping liberado"),
       ("Cliente da Filial (20/10)", "VM Kali Linux no VMware do PC N07S12-1243997, placa Bridged na placa cabeada; IP fixo 192.168.20.10/24, gw 192.168.20.1, DNS 192.168.10.1 (MAC 00:0C:29:32:F1:3F); internet pelo R-MATRIZ")]),
-    ("Servidor ESXi (rack compartilhado)", "pendente", "Configurando: o grupo é o primeiro a usar o servidor; a gerência fica na rede da Matriz",
+    ("Servidor ESXi (rack compartilhado)", "pendente", "ESXi 8.0U3 instalado; em 22/10 o cabo foi para a rede da escola (gerência em 172.16.31.25) e a iDRAC sumiu da rede",
      [("Servidor", "Dell PowerEdge T440, service tag 9NRHYR2, BIOS 1.4.8"),
-      ("iDRAC9 Enterprise", "192.168.10.30/24 (porta dedicada da iDRAC na ether4 do R-MATRIZ), gateway e DNS 192.168.10.1; console virtual em https://192.168.10.30"),
-      ("Gerência do ESXi", "192.168.10.40/24, gateway 192.168.10.1, DNS 192.168.10.1, nome esxi-noc; acesso em https://192.168.10.40"),
+      ("iDRAC9 Enterprise", "configurada como 192.168.10.30/24 em 19/10; desde 21/10 não responde na rede (alterada por outro grupo). Ver IP: esxcli hardware ipmi bmc get, ou F2 no boot"),
+      ("Gerência do ESXi", "planejado 192.168.10.40; esteve em 192.168.10.197 (DHCP) e hoje em 172.16.31.25 (rede da escola)"),
       ("Placa física 1", "porta de rede comum do servidor na ether5 do R-MATRIZ: gerência do ESXi e port group VM Network"),
       ("Internet", "pela ether2-INTERNET do R-MATRIZ (NAT): não precisa de segunda placa no servidor"),
       ("Outros grupos", "acessam o ESXi pela rede da Matriz ou com uma liberação específica para 192.168.10.40")]),
     ("Servidor Zabbix (VM no ESXi)", "ok", "Instalado em 20/10/2026: VM SennaGuard (Debian 12, hostname noc-senai) no ESXi; validar_bancada OK (cliente da Filial = VM Kali 192.168.20.10); simulação de queda com e-mails e análise da IA OK",
-     [("Recursos", "2 vCPU, 4 a 8 GB de RAM, 60 GB de disco"),
+     [("Recursos", "VM Debina-SennaGuard: 2 vCPU, 8 GB de RAM, 250 GB de disco, Debian 12.15"),
       ("Placa de rede", "VM Network → 192.168.10.50/24, gateway 192.168.10.1, DNS 192.168.10.1 (internet pelo R-MATRIZ)"),
-      ("Monitora", "R-FILIAL pela loopback 10.255.255.2, fibra, rádio e as duas antenas (ping + SNMP)")]),
+      ("Monitora", "R-FILIAL pela loopback 10.255.255.2, fibra, rádio e as duas antenas (ping + SNMP v1)"),
+      ("SennaGuard", "painel web em https://192.168.10.50/sennaguard/ (serviço sennaguard, porta 8010); manual: https://claude.ai/artifact/J4Zc9FRWiddRLUJEwL5NmK")]),
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("26/10/2026", "SennaGuard", "Varredura completa do painel contra o Zabbix e correções no GitHub (MathZiraA/sennaguard): tela em branco no chat, PDF do relatório, equipamentos, tráfego, sinal, alertas antigos, atualização a cada 5-10 s, perfis (só o cliente abre chamado) e chat do Gemini. Manual com prints publicado."),
+    ("23/10/2026", "R-MATRIZ", "Usuários zabbix-ia (leitura, só do 192.168.10.50, por chave) e sennaguard-teste (escrita para o teste de failover, só do servidor, por chave) criados. SennaGuard atualizado e validado com a rede real; backup das configurações do R-MATRIZ e do R-FILIAL OK."),
+    ("22/10/2026", "SennaGuard", "Painel SennaGuard instalado no servidor (/opt/sennaguard), admin criado pelo usuário, bot @SennaGuardBot conectado, /var/lib/sennaguard incluído no backup_noc.sh. O cabo do servidor estava na rede da escola: VM em DHCP temporário para a instalação e depois de volta ao 192.168.10.50."),
     ("21/10/2026", "PCs", "Cliente da Matriz = VM Windows 11 (PC-MATRIZ) com IP fixo 192.168.10.11, gateway/DNS 192.168.10.1. Testes da VM: R-MATRIZ, servidor do NOC, R-FILIAL e google.com OK; o NOC pinga a VM sem perda (0,7 ms)."),
     ("20/10/2026", "R-MATRIZ / R-FILIAL", "Internet liberada para a Filial: R-MATRIZ ganhou regra forward 'Filial -> internet' (antes do drop WAN_PUBLIC) e regras 5d de DNS para 192.168.20.0/24; DHCP do R-FILIAL entrega DNS 192.168.10.1. Cliente da Filial agora é uma VM Kali Linux (VMware, bridged) com IP fixo 192.168.20.10, gw .1, DNS 192.168.10.1."),
     ("20/10/2026", "R-FILIAL", "Chave SSH nova do Analista IA (noc-analista@noc-senai) cadastrada no usuário zabbix-ia. validar_bancada: 17 de 18 OK. Simulação de queda da fibra: alerta, análise da IA, e-mail com a análise e normalização enviados."),

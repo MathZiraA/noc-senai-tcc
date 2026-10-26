@@ -14,7 +14,7 @@ O que foi construído:
 - **E-mail:** alerta na abertura e na normalização de cada problema, via Gmail.
 - **Analista NOC com IA:** ao abrir um problema, uma IA (Google Gemini, gratuito) investiga o Zabbix e o MikroTik com ferramentas somente leitura e envia um relatório com linha do tempo, causa provável, impacto e ações recomendadas.
 
-![Arquitetura do NOC: do enlace ao e-mail](arquitetura.png)
+&#91;embedded content: arquitetura do NOC · do enlace ao e-mail\]
 
 O Zabbix detecta a queda e manda o alerta direto ao Gmail; em paralelo, chama o Analista IA, que investiga (Zabbix, Gemini e SSH no roteador) e devolve um comentário ao evento, que vira o segundo e-mail.
 
@@ -1507,3 +1507,98 @@ Validado em 19/10: o R-MATRIZ resolveu `deb.debian.org` pela internet. O roteado
 ### Servidor (instalação adiada)
 
 O Dell PowerEdge T440 (service tag 9NRHYR2) terá o VMware ESXi 8.0 U3 (imagem personalizada da Dell, A08, com o T440 entre os suportados; ISO baixada e conferida pelo SHA-256). O console virtual e a mídia virtual da iDRAC não funcionaram no navegador (firmware 3.21, de 2018, com o Chrome atual), e a montagem da ISO pela rede (HTTP) também falhou. A instalação fica para um pendrive gravado com o Rufus, com monitor e teclado no servidor; depois do ESXi em 192.168.10.40, a VM e o NOC são feitos pela rede. Atualizar o firmware da iDRAC fica como melhoria.
+
+## 25. Servidor em produção, clientes de teste e internet da Filial (20 a 23/10/2026)
+
+O NOC saiu do protótipo e roda no servidor de rack: o Zabbix, o Analista IA e os alertas por e-mail foram validados com a rede real, e a Filial passou a ter internet pela Matriz.
+
+### Servidor
+
+| Item | Valor |
+| --- | --- |
+| Host | Dell PowerEdge T440 com VMware ESXi 8.0U3 (gerência hoje em 172.16.31.25, na rede da escola) |
+| VM | Debina-SennaGuard, hostname noc-senai, Debian 12.15, 2 vCPU, 8 GB, 250 GB |
+| IP | 192.168.10.50/24, gateway e DNS 192.168.10.1 (perfil "Wired connection 1" do NetworkManager) |
+| Instalação | `servidor/preparar_servidor.sh` + `instalar_noc.sh` (Zabbix 7.0, banco, HTTPS, Grafana, Analista IA, e-mail, chamados, backup) |
+| Validação | `validar_bancada.py` 17 de 18 OK; simulação de queda: alerta, análise da IA, e-mail com a análise e normalização enviados |
+
+- **Antenas por SNMP v1:** o airOS 6 não responde SNMP v2c. A interface SNMP das antenas no Zabbix passou para v1 (`fix_redundancia.py`) e o sinal, o ruído, o CCQ e o airMAX passaram a ser coletados (sinal da Filial entre -44 e -54 dBm).
+- **Chave do Analista IA:** chave SSH nova do servidor cadastrada no usuário `zabbix-ia` do R-FILIAL e, em 23/10, também no R-MATRIZ.
+- **Gemini:** o Analista IA usa `gemini-3.5-flash` → `gemini-flash-latest` → `flash-lite`; quando a camada gratuita responde 429/503, a análise atrasa alguns minutos, mas sai.
+- **iDRAC:** não aparece mais na rede (cabo ou configuração mudados por outro grupo). O IP pode ser visto pelo ESXi (`esxcli hardware ipmi bmc get`) ou pelo F2 no boot.
+
+### Clientes de teste
+
+| Lado | Cliente | Rede |
+| --- | --- | --- |
+| Matriz | VM Windows 11 "PC-MATRIZ" no notebook (Bridged) | 192.168.10.11/24, gw e DNS 192.168.10.1, ping liberado (`bancada/vm-windows/cliente-matriz.ps1`) |
+| Filial | VM Kali Linux (Bridged) | 192.168.20.10/24, gw 192.168.20.1, DNS 192.168.10.1 |
+| Filial | PC físico | DHCP do R-FILIAL (192.168.20.1xx) |
+
+### Internet da Filial
+
+A Filial tinha rota até a internet pelo OSPF, mas o R-MATRIZ descartava o tráfego que entrava pela fibra e a Filial não tinha DNS. Correção (colada pelo usuário no WinBox):
+
+- **R-MATRIZ:** regra de forward "Filial -> internet" (saída pela ether2-INTERNET) antes do drop do WAN\_PUBLIC, e regras 5d liberando DNS (udp/tcp 53) de 192.168.20.0/24.
+- **R-FILIAL:** o DHCP entrega DNS 192.168.10.1.
+
+### Problemas de bancada e a causa
+
+| Sintoma | Causa | Solução |
+| --- | --- | --- |
+| PC da Filial sem rede | Cabo com defeito; depois, cabo na **porta 2** (reserva, fora da LAN) | Trocar o cabo e usar só as portas 3, 4 ou 5 |
+| PC da Filial sem internet | Placa cabeada com IP fixo 10.1.10.10/29, deixado por outra turma | `netsh interface ipv4 set address "Ethernet" source=dhcp` |
+| Notebook sem rede cabeada | `netsh add address` transformou a placa em IP fixo | `set address source=dhcp` e `set dnsservers source=dhcp` |
+| SSH no servidor recusando senha | Usuário digitado como `Administrator` | O usuário é `administrator`, tudo minúsculo; o root só entra por chave |
+| Console web do ESXi perdendo teclas | Console HTML5 com teclado ABNT2 perde Shift e Ctrl | Usar SSH; em emergência, a API do console (`sendInputString`) |
+| Servidor fora da LAN da Matriz | Cabo do ESXi movido para a rede da escola | Temporário: perfil DHCP na VM; definitivo: cabo na LAN do R-MATRIZ |
+
+## 26. SennaGuard: implantação, varredura e manual (22 a 26/10/2026)
+
+O SennaGuard, painel web do NOC, está no ar em `https://192.168.10.50/sennaguard/` com dados reais do Zabbix e dos roteadores. O manual com prints de cada tela está em [Manual do SennaGuard](https://claude.ai/artifact/J4Zc9FRWiddRLUJEwL5NmK).
+
+### Implantação
+
+| Item | Situação |
+| --- | --- |
+| Código | repositório público MathZiraA/sennaguard em `/opt/sennaguard`, serviço `sennaguard` (porta 8010 atrás do Apache) |
+| Atualização | `bash /opt/sennaguard/deploy/atualizar.sh` (git pull + reinstala, mantém banco e configuração) |
+| Contas | admins Matheus e Henrique Piffer; 1 cliente |
+| Telegram | bot @SennaGuardBot conectado |
+| IA | Gemini (mesma chave do Analista IA) |
+| Roteadores | usuário `zabbix-ia` (leitura) no R-MATRIZ e no R-FILIAL; `sennaguard-teste` (escrita, só do IP do servidor, por chave) no R-MATRIZ para o teste de failover |
+| Backup | `/var/lib/sennaguard` e `/etc/sennaguard` incluídos no `backup_noc.sh` diário |
+| Validação | latência, perda, enlaces, caminho e sinal batem com o Zabbix (dados de \~6 s); backup das configurações dos 2 roteadores OK |
+
+### Perfis de acesso
+
+| Perfil | Pode |
+| --- | --- |
+| Administrador | tudo do Analista + usuários, telas de TV e aprovar teste de failover; não abre chamado |
+| Analista | alertas, atender chamados, equipamentos, manutenções, backups, relatórios, base de conhecimento, pedir teste; não abre chamado |
+| Operador | plantão: alertas, reconhecer, atender chamados, ver equipamentos; não pede teste nem cria manutenção |
+| Cliente | ver o enlace, **abrir chamados** e responder, ler a base de conhecimento, chat |
+
+### Correções feitas no código (todas no GitHub e no servidor)
+
+| Problema | Correção |
+| --- | --- |
+| Tela em branco quando o chat respondia | `useEffect` devolvia a Promise do `scrollIntoView` (Chrome novo) |
+| Chat com erro 500, lento ou mostrando Markdown cru | Ordem de modelos do Analista IA, timeout tratado, segunda rodada e formatação |
+| Relatório PDF e "tempo no rádio" falhavam | Data do livro de chamados no formato do Zabbix (`2026.10.23 17:26:01`) |
+| Gráficos a cada 60 s; alertas e equipamentos a cada 15–30 s | 10 s; vigia de alertas a cada 5 s |
+| Aba Equipamentos vazia | `problem.get` do Zabbix 7.0 não aceita `selectHosts` |
+| Equipamento "fora" por qualquer aviso; ficha sempre "Sem resposta" | Fora só sem resposta ou com alerta Alta/Desastre; ficha com a situação real |
+| Alerta aberto há mais de 24 h sumia | Inclui problemas ainda abertos |
+| Tráfego da Filial zerado | Lia a ether2-reserva (o comentário dela cita "fibra"); agora sfp1/ether1 com 2 casas |
+| Sinal da antena vazio | Lê o item `ubnt.sinal` |
+| Perfis genéricos | Matriz acima (só o cliente abre chamado) |
+
+### Pendências
+
+- [ ] Ligar o cabo do servidor de volta numa porta LAN do R-MATRIZ (hoje está na rede da escola)
+- [ ] Testes de ponta a ponta com um usuário Cliente (tour, chamado com print, nota interna, Telegram, celular)
+- [ ] Trocar o token do bot (`/revoke`), a senha do admin do painel e a senha `ubnt` das antenas
+- [ ] Desativar no Zabbix o alerta "ether2-reserva: Link down" (porta sem uso), se quiserem
+- [ ] NTP no R-FILIAL (relógio em 28/09)
+- [ ] Primeiro teste de failover pelo painel, acompanhado

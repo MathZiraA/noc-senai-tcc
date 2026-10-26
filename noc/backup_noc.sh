@@ -12,12 +12,19 @@ chmod 700 "$DESTINO"
 # Banco: dump consistente sem travar o Zabbix
 mysqldump --single-transaction --quick --routines --triggers zabbix | gzip > "$DESTINO/zabbix-banco-$DATA.sql.gz"
 
+# SennaGuard: cópia consistente do SQLite (usuários, chamados SG, artigos, testes), sem parar o serviço
+if [ -f /var/lib/sennaguard/sennaguard.db ]; then
+    python3 -c "import sqlite3,sys; o=sqlite3.connect('/var/lib/sennaguard/sennaguard.db'); d=sqlite3.connect(sys.argv[1]); o.backup(d); d.close()" \
+        "$DESTINO/sennaguard-banco-$DATA.db" && gzip "$DESTINO/sennaguard-banco-$DATA.db"
+fi
+
 # Configurações e dados pequenos (inclui credenciais: a pasta é só do root)
 tar czf "$DESTINO/noc-config-$DATA.tar.gz" --ignore-failed-read \
     /etc/zabbix /etc/grafana /var/lib/grafana/grafana.db /var/lib/grafana/dashboards \
     /etc/apache2/sites-available /etc/apache2/conf-available /etc/ssl/noc /root/noc-ca \
     /root/noc /etc/cron.d/noc-* /etc/systemd/system/noc-analista.service \
     /etc/NetworkManager/system-connections /var/lib/noc-analista \
+    /etc/sennaguard /var/lib/sennaguard/backups /etc/systemd/system/sennaguard.service /etc/apache2/conf-available/sennaguard.conf \
     /root/.zabbix_token /root/.zabbix_token_analista /root/.gemini_key /root/.grafana_admin \
     /root/.ssh/id_ed25519_mikrotik /root/.ssh/id_ed25519_mikrotik.pub 2>/dev/null
 
