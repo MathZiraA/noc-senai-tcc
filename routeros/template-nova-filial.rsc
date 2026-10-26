@@ -50,8 +50,8 @@
 
 /routing ospf instance add name="ospf-inst" router-id=$LOOPBACK
 /routing ospf area add name="area-0" instance=ospf-inst area-id=0.0.0.0
-/routing ospf interface-template add area=area-0 interfaces=sfp1-WAN-FIBRA cost=10 type=ptp comment="PAP Fibra"
-/routing ospf interface-template add area=area-0 interfaces=ether1-WAN-RADIO cost=100 type=ptp comment="PAP Radio"
+/routing ospf interface-template add area=area-0 interfaces=sfp1-WAN-FIBRA cost=10 type=ptp hello-interval=1s dead-interval=4s comment="PAP Fibra"
+/routing ospf interface-template add area=area-0 interfaces=ether1-WAN-RADIO cost=100 type=ptp hello-interval=1s dead-interval=4s comment="PAP Radio"
 /routing ospf interface-template add area=area-0 interfaces=bridge-LAN passive
 /routing ospf interface-template add area=area-0 interfaces=loopback passive
 

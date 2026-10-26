@@ -81,8 +81,8 @@
 # 8. OSPF v7: fibra custo 10 (preferida), rádio custo 100 (backup), LAN e loopback anunciadas
 /routing ospf instance add name="ospf-matriz" router-id=10.255.255.1 originate-default=if-installed
 /routing ospf area add name="area-0" instance=ospf-matriz area-id=0.0.0.0
-/routing ospf interface-template add area=area-0 interfaces=sfp1-WAN-FIBRA cost=10 type=ptp comment="PAP Fibra - Custo 10 (Prioritario)"
-/routing ospf interface-template add area=area-0 interfaces=ether1-WAN-RADIO cost=100 type=ptp comment="PAP Radio - Custo 100 (Backup)"
+/routing ospf interface-template add area=area-0 interfaces=sfp1-WAN-FIBRA cost=10 type=ptp hello-interval=1s dead-interval=4s comment="PAP Fibra - Custo 10 (Prioritario)"
+/routing ospf interface-template add area=area-0 interfaces=ether1-WAN-RADIO cost=100 type=ptp hello-interval=1s dead-interval=4s comment="PAP Radio - Custo 100 (Backup)"
 /routing ospf interface-template add area=area-0 interfaces=bridge-LAN passive comment="Anunciar LAN Matriz sem enviar pacotes OSPF"
 /routing ospf interface-template add area=area-0 interfaces=loopback passive comment="Anunciar loopback /32"
 
