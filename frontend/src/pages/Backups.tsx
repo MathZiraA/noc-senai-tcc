@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowsClockwise, Sparkle } from '@phosphor-icons/react'
+import { ArrowsClockwise, DownloadSimple, Sparkle } from '@phosphor-icons/react'
 import { api, useApi } from '../lib/api'
 import { dataHora, desde } from '../lib/fmt'
 import { Botao, Card, Carregando, Chip, Vazio } from '../components/ui'
@@ -27,6 +27,13 @@ export default function Backups() {
     setOcupado('backup')
     try { await api('/api/backups/agora', { method: 'POST' }); recarregar() } finally { setOcupado('') }
   }
+  // Baixa a versão como .rsc (o mesmo texto do /export terse, pronto para /import)
+  const baixar = async (v: Versao) => {
+    const { texto } = await api<{ texto: string }>(`/api/backups/${host}/${v.arquivo}`)
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(new Blob([texto], { type: 'text/plain' })), download: `${host}-${v.arquivo}` })
+    a.click(); URL.revokeObjectURL(a.href)
+  }
   const explicar = async () => {
     if (!sel) return
     setOcupado('ia'); setExplicacao('')
@@ -51,14 +58,18 @@ export default function Backups() {
               {vs.map((v, i) => {
                 const marcado = sel?.includes(v.arquivo)
                 return (
-                  <li key={v.arquivo}>
+                  <li key={v.arquivo} className={`flex items-center rounded-lg transition-colors ${marcado ? 'bg-ativo' : 'hover:bg-pilula-hover'}`}>
                     <button onClick={() => i < vs.length - 1 && setSel([vs[i + 1].arquivo, v.arquivo])}
-                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${marcado ? 'bg-ativo' : 'hover:bg-pilula-hover'}`}>
+                      className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left">
                       <span className={`size-2 rounded-full ${i === 0 ? 'bg-led' : 'bg-tinta-4'}`} />
                       <span className="min-w-0 flex-1">
                         <span className="num block font-medium">{dataHora(v.em)}</span>
                         <span className="text-[11px] text-tinta-3">{i === 0 ? 'atual · ' : ''}há {desde(v.em)} · {v.linhas} linhas</span>
                       </span>
+                    </button>
+                    <button onClick={() => baixar(v)} title="Baixar .rsc" aria-label={`Baixar a versão de ${dataHora(v.em)}`}
+                      className="mr-1.5 grid size-8 shrink-0 place-items-center rounded-md text-tinta-3 transition-colors hover:bg-pilula-hover hover:text-tinta">
+                      <DownloadSimple size={16} />
                     </button>
                   </li>
                 )
@@ -79,6 +90,17 @@ export default function Backups() {
           )}
         </Card>
       </div>
+
+      <Card titulo="Como restaurar um roteador">
+        <p className="mb-3 text-tinta-3">O painel só guarda e compara: aplicar é sempre manual, no WinBox. O roteador reinicia e a Filial passa para o rádio (ou fica isolada) até ele voltar.</p>
+        <ol className="flex list-decimal flex-col gap-2 pl-5 leading-relaxed text-tinta-2">
+          <li><b className="text-tinta">Roteador ainda liga?</b> Prefira o backup completo do próprio roteador (guarda senhas e chaves): WinBox → <i>Files</i> → <code>backup_matriz_…</code> ou <code>backup_filial_…</code> → <i>Restore</i>.</li>
+          <li>Se não der (roteador trocado ou zerado): escolha a versão aqui, confira em <i>O que mudou</i> e clique em <DownloadSimple size={13} className="inline" /> para baixar o <code>.rsc</code>.</li>
+          <li>No WinBox, arraste o arquivo para <i>Files</i> e rode no terminal: <code>/system reset-configuration no-defaults=yes run-after-reset=NOME-DO-ARQUIVO.rsc</code></li>
+          <li>Quando voltar, entre como <code>admin</code> sem senha e recrie o que o arquivo não traz: o usuário administrador com senha nova e os usuários <code>zabbix-ia</code> e <code>sennaguard-teste</code> com as chaves públicas do servidor.</li>
+          <li>Clique em <b className="text-tinta">Fazer backup agora</b>: se a configuração voltou igual, nenhuma versão nova aparece.</li>
+        </ol>
+      </Card>
     </div>
   )
 }
