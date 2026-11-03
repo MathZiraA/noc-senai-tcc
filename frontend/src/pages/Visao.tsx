@@ -2,7 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import * as Menu from '@radix-ui/react-dropdown-menu'
 import { ArrowDown, ArrowsClockwise, ArrowsOut, ArrowUp, CalendarBlank, CaretDown, CaretRight, CellSignalFull, CellSignalX, Cpu, DotsSixVertical, DownloadSimple, Eye, EyeSlash, FileText, LinkBreak, LinkSimple, MagnifyingGlassMinus, Plus, SlidersHorizontal, SquaresFour } from '@phosphor-icons/react'
-import { api, useApi, type Alerta, type ListaChamados, type Painel, type Ponto, type Visao as TVisao } from '../lib/api'
+import { api, useApi, type Alerta, type LinkWan, type ListaChamados, type Painel, type Ponto, type Visao as TVisao } from '../lib/api'
 import { dataHora, desde, duracao, hora } from '../lib/fmt'
 import { useSessao } from '../lib/sessao'
 import Grafico, { faixasSemResposta, type Limite } from '../components/Grafico'
@@ -48,6 +48,7 @@ const CARTOES: Record<string, { nome: string; tamanho: 'total' | 'largo' | 'estr
   chamados: { nome: 'Seus chamados', tamanho: 'estreito' },
   trafego: { nome: 'Tráfego na Filial', tamanho: 'largo' },
   caminho: { nome: 'Caminho ativo', tamanho: 'estreito' },
+  internet: { nome: 'Internet', tamanho: 'estreito' },
 }
 const LARGURA = { total: 'basis-full', largo: 'basis-[520px] grow-[10]', estreito: 'basis-[300px] grow' }
 
@@ -96,7 +97,7 @@ export default function Visao() {
   const [comLimites, setComLimites] = useState(true)
   const { pode, eu, recarregar } = useSessao()
   const interno = pode('alertas') // equipe do NOC; o cliente vê os próprios chamados no lugar dos alertas
-  const padrao = ['contexto', 'latencia', interno ? 'alertas' : 'chamados', 'trafego', 'caminho']
+  const padrao = ['contexto', 'latencia', interno ? 'alertas' : 'chamados', 'trafego', 'caminho', 'internet']
   const [rascunho, setRascunho] = useState<Painel | null>(null) // != null = editando o painel
   const [arrastando, setArrastando] = useState<string | null>(null)
   const painel = rascunho ?? montar(eu?.painel ?? null, padrao)
@@ -151,6 +152,7 @@ export default function Visao() {
     ),
     alertas: <CardAlertas alertas={alertas} baixar={baixar} />,
     chamados: <CardChamados ch={ch} />,
+    internet: <CardInternet i={v?.internet} />,
     trafego: (
       <Card className="h-full md:!px-9 md:!pt-7 !pb-5" titulo="Tráfego na Filial"
         extra={<Valor valor={mbps == null ? '—' : `${mbps.toLocaleString('pt-BR', { maximumFractionDigits: mbps < 10 ? 2 : 0 })} Mbps`} cor="var(--color-fibra)" quando={recorte ? undefined : trf?.[trf.length - 1]?.t} />}>
@@ -407,6 +409,32 @@ function CardChamados({ ch }: { ch: ListaChamados | null }) {
           <span className="ml-auto">Total <b className="font-semibold text-tinta">{ch.manuais.length}</b></span>
         </div>
       )}
+    </Card>
+  )
+}
+
+/** Links de internet do R-MATRIZ: VIVO (principal) e TIN (backup); o ativo segue a regra do roteador. */
+function CardInternet({ i }: { i: TVisao['internet'] }) {
+  const pilula = i == null ? null : i.ativo == null
+    ? <span className="inline-flex items-center gap-1.5 rounded-full bg-desastre/15 px-2 py-0.5 text-[11px] font-semibold text-desastre"><span className="size-1.5 rounded-full bg-current" />Sem internet</span>
+    : <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${i.ativo === 'vivo' ? 'bg-led/15 text-led' : 'bg-radio/15 text-radio'}`}>
+      <span className="size-1.5 rounded-full bg-current" />{i.ativo === 'vivo' ? 'Pela VIVO' : 'Pelo TIN (backup)'}</span>
+  const linha = (nome: string, papel: string, l: LinkWan, ativo: boolean) => (
+    <li className="grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-3 border-t border-fio py-2.5 text-[12px]">
+      <span className={`size-2 rounded-full ${l.up ? 'bg-led' : 'bg-desastre'}`} />
+      <span className="min-w-0 truncate"><b className={`font-semibold ${ativo ? 'text-tinta' : 'text-tinta-2'}`}>{nome}</b> <span className="text-tinta-3">· {papel}{l.ip ? ` · ${l.ip}` : ''}</span></span>
+      <span className="num text-tinta-2">{l.up ? `${l.latencia?.toLocaleString('pt-BR') ?? '—'} ms` : 'fora'}</span>
+    </li>
+  )
+  return (
+    <Card className="h-full" titulo="Internet">
+      {i == null ? <p className="py-6 text-center text-tinta-3">Sem dados do R-MATRIZ.</p> : <>
+        <div className="text-[11px] text-tinta-2">Saída da rede<div className="mt-1.5">{pilula}</div></div>
+        <ul className="mt-4">
+          {linha('VIVO', 'principal', i.vivo, i.ativo === 'vivo')}
+          {linha('TIN', 'backup', i.tin, i.ativo === 'tin')}
+        </ul>
+      </>}
     </Card>
   )
 }

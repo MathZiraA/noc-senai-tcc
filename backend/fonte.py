@@ -111,6 +111,33 @@ mostrou 0 erros CRC no sfp1 antes da queda e link down limpo, o que aponta para 
 3. Acompanhar o trigger "fibra instável" nas próximas 24 h."""
 
 
+INTERNET = {"vivo": "1.0.0.1", "tin": "9.9.9.9"}  # IPs de teste presos a cada link no R-MATRIZ (rota /32 + blackhole)
+
+
+def _internet():
+    """Links de internet do R-MATRIZ (VIVO principal, TIN backup). Ativo = VIVO se responder, senão TIN (regra do roteador)."""
+    try:
+        h = call("host.get", {"filter": {"host": ["R-MATRIZ"]}, "output": ["hostid"]})
+        if not h:
+            return None
+        chaves = [f"{k}[{ip},3,,,500]" for ip in INTERNET.values() for k in ("icmpping", "icmppingsec", "icmppingloss")]
+        it = {i["key_"]: i["lastvalue"] for i in call("item.get", {
+            "hostids": h[0]["hostid"], "output": ["key_", "lastvalue"],
+            "filter": {"key_": chaves + [f"noc.ip.{n}" for n in INTERNET]}})}
+    except Exception:
+        return None
+
+    def link(nome, ip):
+        up = it.get(f"icmpping[{ip},3,,,500]") == "1"
+        lat, perda = it.get(f"icmppingsec[{ip},3,,,500]"), it.get(f"icmppingloss[{ip},3,,,500]")
+        return {"up": up, "latencia": round(float(lat) * 1000, 1) if up and lat not in ("", None) else None,
+                "perda": float(perda) if perda not in ("", None) else None, "ip": it.get(f"noc.ip.{nome}") or None}
+
+    links = {n: link(n, ip) for n, ip in INTERNET.items()}
+    ativo = "vivo" if links["vivo"]["up"] else "tin" if links["tin"]["up"] else None
+    return {"ativo": ativo, **links}
+
+
 def _hora(ts):
     return time.strftime("%H:%M:%S", time.localtime(ts))
 
@@ -130,6 +157,8 @@ def visao():
             "ultimo_failover": {"em": _queda_ini, "segundos": 3.9, "retorno_em": _queda_fim, "retorno_sem_perda": True},
             "disponibilidade_24h": {"fibra": 98.1, "radio": 94.4, "filial": 99.99},
             "snmp": {"cpu": 4, "memoria": 21, "uptime": 6 * 86400 + 3 * 3600, "routeros": "7.24.5", "modelo": "hEX S RB760iGS"},
+            "internet": {"ativo": "vivo", "vivo": {"up": True, "latencia": 2.0, "perda": 0, "ip": "172.16.31.41"},
+                         "tin": {"up": True, "latencia": 3.9, "perda": 0, "ip": "172.16.31.39"}},
         }
     h = call("host.get", {"filter": {"host": [HOST]}, "output": ["hostid", "available"]})[0]
     itens = {i["key_"]: i for i in call("item.get", {"hostids": h["hostid"], "output": ["key_", "lastvalue", "lastclock"],
@@ -164,7 +193,7 @@ def visao():
         via = "fibra" if fibra["up"] else "radio"
     falhou = fail and fail[0]["lastclock"] not in ("0", "", None)
     return {"modo": "zabbix", "host": HOST, "atualizado": _agora(), "caminho": via,
-            "enlaces": {"fibra": fibra, "radio": radio},
+            "enlaces": {"fibra": fibra, "radio": radio}, "internet": _internet(),
             "ultimo_failover": {"em": int(fail[0]["lastclock"]), "segundos": round(float(fail[0]["lastvalue"]), 1)} if falhou else None,
             "disponibilidade_24h": None, "snmp": {"disponivel": h.get("available") == "1"}}
 

@@ -7,7 +7,9 @@ export type Visao = {
   ultimo_failover: { em: number; segundos: number; retorno_em?: number; retorno_sem_perda?: boolean } | null
   disponibilidade_24h: { fibra: number; radio: number; filial: number } | null
   snmp: { cpu?: number; memoria?: number; uptime?: number; routeros?: string; modelo?: string; disponivel?: boolean }
+  internet?: { ativo: 'vivo' | 'tin' | null; vivo: LinkWan; tin: LinkWan } | null
 }
+export type LinkWan = { up: boolean; latencia: number | null; perda: number | null; ip: string | null }
 export type Ponto = { t: number; [serie: string]: number | null }
 export type Alerta = {
   id: string; severidade: string; nivel: number; nome: string; host: string
