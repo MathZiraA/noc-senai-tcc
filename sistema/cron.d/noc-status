@@ -1,1 +1,0 @@
-* * * * * root cd /root/noc && /opt/noc-analista/bin/python status_page.py >> /var/log/noc_status.log 2>&1

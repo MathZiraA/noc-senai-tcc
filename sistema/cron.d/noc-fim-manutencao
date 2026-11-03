@@ -1,1 +1,0 @@
-* * * * * root cd /root/noc && python3 auto_fim_manutencao.py >> /var/log/noc_manutencao.log 2>&1

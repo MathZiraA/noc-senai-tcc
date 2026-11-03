@@ -173,8 +173,7 @@ cp "$REPO/sistema/noc-analista.service" /etc/systemd/system/
 systemctl daemon-reload && systemctl enable noc-analista >>"$LOG" 2>&1 && systemctl restart noc-analista
 cp "$REPO"/sistema/cron.d/noc-* /etc/cron.d/ && chmod 644 /etc/cron.d/noc-*
 chmod 700 "$NOC/backup_noc.sh"
-"$PY" status_page.py
-ok "analista, Grafana, página de status, backup diário, failover e fim de manutenção"
+ok "analista, Grafana, backup diário e registro de failover"
 
 # --------------------------------------------------------------------
 passo "10/10 Bloco para colar no $HOST_FILIAL"
@@ -190,7 +189,7 @@ cat <<EOF
    Zabbix ............ https://$SERVIDOR_IP/zabbix
    Grafana (TV) ...... https://$SERVIDOR_IP:3000/d/noc-redundancia?kiosk
    Grafana (admin) ... usuário admin, senha em /root/.grafana_admin
-   Página de status .. https://$SERVIDOR_IP/status
+   SennaGuard ........ https://$SERVIDOR_IP/sennaguard/ (instalar à parte: repositório sennaguard)
    Certificado da CA . http://$SERVIDOR_IP/NOC-SENAI-CA.crt
  Próximo passo: colar $RSC no $HOST_FILIAL.
  Log completo: $LOG
