@@ -1,3 +1,5 @@
+> **Cópia de 26/10/2026, desatualizada.** A versão viva é a [Documentação geral](https://claude.ai/artifact/UEsPH3zeYA2Exj1LSUC5yq) (seção 28: WAN, Matriz, backups e auditoria de 03/11). O documento de entrega é a [Documentação Técnica Oficial](https://claude.ai/artifact/5YfWXRHmDa4ck4NKFZbAx4).
+
 # NOC SENAI — Zabbix + Analista IA: Documentação Técnica
 
 Oct 3, 2026 · @Matheus
