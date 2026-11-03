@@ -115,7 +115,7 @@ add chain=forward action=drop in-interface-list=WAN_PUBLIC
 /system ntp server set enabled=yes
 
 # 10. BACKUP AUTOMÁTICO
-/system script add name="script_backup_automatico" source="/system backup save name=(\"backup_matriz_\" . [/system clock get date])"
+/system script add name="script_backup_automatico" source=":local d [/system clock get date]; /system backup save name=(\"backup_matriz_\" . ([:tonum [:pick \$d 8 10]] % 7))"
 /system scheduler add name="agendador_backup" interval=1d start-time=00:00:00 on-event="script_backup_automatico"
 
 # 11. QUALIDADE DA FIBRA -> TROCA AUTOMÁTICA PARA O RÁDIO (RouterOS 7.4+)
