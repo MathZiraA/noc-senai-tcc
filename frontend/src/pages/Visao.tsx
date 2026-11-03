@@ -97,7 +97,8 @@ export default function Visao() {
   const [comLimites, setComLimites] = useState(true)
   const { pode, eu, recarregar } = useSessao()
   const interno = pode('alertas') // equipe do NOC; o cliente vê os próprios chamados no lugar dos alertas
-  const padrao = ['contexto', 'latencia', interno ? 'alertas' : 'chamados', 'trafego', 'caminho', 'internet']
+  // Links de internet (WAN) do R-MATRIZ: só a equipe do NOC vê
+  const padrao = ['contexto', 'latencia', interno ? 'alertas' : 'chamados', 'trafego', 'caminho', ...(interno ? ['internet'] : [])]
   const [rascunho, setRascunho] = useState<Painel | null>(null) // != null = editando o painel
   const [arrastando, setArrastando] = useState<string | null>(null)
   const painel = rascunho ?? montar(eu?.painel ?? null, padrao)
@@ -115,6 +116,7 @@ export default function Visao() {
   const { dados: v } = useApi<TVisao>('/api/visao', cada(curto ? 2000 : 10000), canais(['visao']))
   const { dados: lat } = useApi<Ponto[]>(`/api/serie/latencia?${periodo}`, ao_vivo, recorte ? [] : canais(['visao']))
   const { dados: trf } = useApi<Ponto[]>(`/api/serie/trafego?${periodo}`, ao_vivo)
+  const { dados: wan } = useApi<Ponto[]>(interno ? `/api/serie/wan?${periodo}` : '', ao_vivo)
   const { dados: alertas } = useApi<Alerta[]>(interno ? '/api/alertas' : '', cada(10000), canais(['alertas']))
   const { dados: ch } = useApi<ListaChamados>(interno ? '' : '/api/chamados', cada(60000), canais(['chamados']))
 
@@ -152,7 +154,7 @@ export default function Visao() {
     ),
     alertas: <CardAlertas alertas={alertas} baixar={baixar} />,
     chamados: <CardChamados ch={ch} />,
-    internet: <CardInternet i={v?.internet} />,
+    internet: <CardInternet i={v?.internet} wan={wan} onZoom={zoom} />,
     trafego: (
       <Card className="h-full md:!px-9 md:!pt-7 !pb-5" titulo="Tráfego na Filial"
         extra={<Valor valor={mbps == null ? '—' : `${mbps.toLocaleString('pt-BR', { maximumFractionDigits: mbps < 10 ? 2 : 0 })} Mbps`} cor="var(--color-fibra)" quando={recorte ? undefined : trf?.[trf.length - 1]?.t} />}>
@@ -414,7 +416,9 @@ function CardChamados({ ch }: { ch: ListaChamados | null }) {
 }
 
 /** Links de internet do R-MATRIZ: VIVO (principal) e TIN (backup); o ativo segue a regra do roteador. */
-function CardInternet({ i }: { i: TVisao['internet'] }) {
+function CardInternet({ i, wan, onZoom }: { i: TVisao['internet']; wan: Ponto[] | null; onZoom: (de: number, ate: number) => void }) {
+  const [link, setLink] = useState<'vivo' | 'tin'>('vivo')
+  const corLink = link === 'vivo' ? 'var(--color-fibra)' : 'var(--color-radio)'
   const pilula = i == null ? null : i.ativo == null
     ? <span className="inline-flex items-center gap-1.5 rounded-full bg-desastre/15 px-2 py-0.5 text-[11px] font-semibold text-desastre"><span className="size-1.5 rounded-full bg-current" />Sem internet</span>
     : <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${i.ativo === 'vivo' ? 'bg-led/15 text-led' : 'bg-radio/15 text-radio'}`}>
@@ -434,6 +438,15 @@ function CardInternet({ i }: { i: TVisao['internet'] }) {
           {linha('VIVO', 'principal', i.vivo, i.ativo === 'vivo')}
           {linha('TIN', 'backup', i.tin, i.ativo === 'tin')}
         </ul>
+        <div className="mt-3 flex items-center justify-between text-[11px] text-tinta-2">
+          Download por link
+          <span className="flex gap-1.5">
+            <Chip ativo={link === 'vivo'} onClick={() => setLink('vivo')}>VIVO</Chip>
+            <Chip ativo={link === 'tin'} onClick={() => setLink('tin')}>TIN</Chip>
+          </span>
+        </div>
+        {wan?.length ? <Grafico dados={wan} serie={link} cor={corLink} unidade="Mbps" altura={120} onZoom={onZoom} />
+          : <p className="py-6 text-center text-[12px] text-tinta-3">Coletando o tráfego dos links…</p>}
       </>}
     </Card>
   )

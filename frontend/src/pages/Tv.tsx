@@ -26,6 +26,7 @@ export default function Tv() {
   if (erro && !d) return <div className="grid min-h-screen place-items-center text-[20px] text-tinta-2">{erro}</div>
   if (!d) return null
   const redundante = d.visao.enlaces.fibra.up && d.visao.enlaces.radio.up
+  const net = d.visao.internet // links de internet do R-MATRIZ (VIVO principal, TIN backup)
 
   return (
     <div className="flex min-h-screen flex-col gap-5 p-8">
@@ -35,6 +36,13 @@ export default function Tv() {
         <span className={`rounded-full px-4 py-1.5 text-[15px] font-semibold ${redundante ? 'bg-led/15 text-led' : 'bg-desastre/15 text-desastre'}`}>
           {redundante ? '● Rede com redundância' : '● Rede sem redundância'}
         </span>
+        {net && (
+          <span className={`rounded-full px-4 py-1.5 text-[15px] font-semibold ${net.ativo === 'vivo' ? 'bg-led/15 text-led' : net.ativo === 'tin' ? 'bg-radio/15 text-radio' : 'bg-desastre/15 text-desastre'}`}
+            title={`VIVO ${net.vivo.up ? 'no ar' : 'fora'} · TIN ${net.tin.up ? 'no ar' : 'fora'}`}>
+            {net.ativo === 'vivo' ? '● Internet pela VIVO' : net.ativo === 'tin' ? '● Internet pelo TIN (backup)' : '● Sem internet'}
+            <span className="ml-2 font-normal opacity-80">VIVO {net.vivo.up ? '✓' : '✗'} · TIN {net.tin.up ? '✓' : '✗'}</span>
+          </span>
+        )}
         {erro && <span className="text-[14px] text-desastre">sem atualização: {erro}</span>}
         <span className="num ml-auto text-[40px] font-semibold tracking-[-0.02em]">{agora.toLocaleTimeString('pt-BR')}</span>
       </header>

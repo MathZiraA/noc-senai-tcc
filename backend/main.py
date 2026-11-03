@@ -165,14 +165,19 @@ def trocar_senha(dados: TrocaSenha, req: Request, u=auth.exigir("visao")):
 
 # ---------------------------------------------------------------- NOC
 @app.get("/api/visao")
-def visao(_=auth.exigir("visao")):
-    return fonte.visao()
+def visao(u=auth.exigir("visao")):
+    v = fonte.visao()
+    if "equipamentos" not in auth.PERMISSOES[u["papel"]]:  # links de internet (WAN) só para a equipe do NOC
+        v.pop("internet", None)
+    return v
 
 
 @app.get("/api/serie/{metrica}")
-def serie(metrica: Literal["latencia", "trafego", "sinal"], horas: float = 24, de: int | None = None, ate: int | None = None,
-          _=auth.exigir("visao")):
+def serie(metrica: Literal["latencia", "trafego", "sinal", "wan"], horas: float = 24, de: int | None = None, ate: int | None = None,
+          u=auth.exigir("visao")):
     """Últimas `horas` horas, ou o intervalo `de`–`ate` (segundos Unix) do período personalizado e do zoom."""
+    if metrica == "wan" and "equipamentos" not in auth.PERMISSOES[u["papel"]]:
+        raise HTTPException(403, "Seu perfil não tem acesso a isso.")
     if de is not None and ate is not None:
         if not 0 < ate - de <= 31 * 86400:
             raise HTTPException(422, "Período inválido (de 1 minuto a 31 dias).")

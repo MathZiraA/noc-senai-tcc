@@ -75,6 +75,9 @@ def _sim_serie(metrica, horas, ate=None):
         elif metrica == "sinal":
             pontos.append({"t": t, "matriz": None if t >= _radio_ini else round(-53 + 1.6 * math.sin(t / 5000) + random.uniform(-.1, .1), 1),
                            "filial": None if t >= _radio_ini else round(-52 + 1.4 * math.sin(t / 4300) + random.uniform(-.1, .1), 1)})
+        elif metrica == "wan":  # download em Mbps em cada link de internet: tudo pela VIVO
+            base = 18 + 9 * math.sin(t / 2600)
+            pontos.append({"t": t, "vivo": round(base + random.uniform(-0.3, 0.3), 1), "tin": round(random.uniform(.01, .05), 2)})
         else:  # trafego em Mbps no caminho ativo
             base = 38 + 22 * math.sin((t % 86400) / 86400 * 2 * math.pi - 1.9) + 5 * math.sin(t / 2600)
             pontos.append({"t": t, "fibra": None if _queda_ini <= t <= _queda_fim else round(base + random.uniform(-0.15, 0.15), 1),
@@ -213,7 +216,10 @@ def serie(metrica, horas, ate=None):
 
 
 def _serie_zabbix(metrica, horas, ate=None):
-    h = call("host.get", {"filter": {"host": [HOST]}, "output": ["hostid"]})[0]
+    hosts = call("host.get", {"filter": {"host": ["R-MATRIZ" if metrica == "wan" else HOST]}, "output": ["hostid"]})
+    if not hosts:
+        return []
+    h = hosts[0]
     ate = ate or _agora()
     desde = int(ate - horas * 3600)
     passo = _passo(horas * 3600)
@@ -233,7 +239,8 @@ def _serie_zabbix(metrica, horas, ate=None):
         rec = call("item.get", {"hostids": h["hostid"], "output": ["itemid", "value_type", "name"], "search": {"name": "Bits received"}})
         # Um nome de cada vez, na ordem: "sfp1" antes de "FIBRA" (o comentário da ether2-reserva também diz "fibra")
         achar = lambda *nomes: next((i for n in nomes for i in rec if n.lower() in i["name"].lower()), None)
-        itens = {"fibra": achar("sfp1", "FIBRA"), "radio": achar("ether1", "RADIO")}
+        itens = ({"vivo": achar("ether2"), "tin": achar("ether4")} if metrica == "wan"  # links de internet do R-MATRIZ
+                 else {"fibra": achar("sfp1", "FIBRA"), "radio": achar("ether1", "RADIO")})
         escala = 1 / 1_000_000  # bps -> Mbps
     for nome, it in itens.items():
         if not it:
