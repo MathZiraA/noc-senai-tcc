@@ -25,10 +25,11 @@ EQUIPAMENTOS = [
         "portas": [
             ("ether1", "ether1-WAN-RADIO", "Rádio (backup)", "radio", "10.0.2.1/29",
              "porta LAN da fonte PoE da antena RADIO-P2P-MATRIZ (a porta POE da fonte vai na antena)"),
-            ("ether2", "ether2-INTERNET", "Internet da escola", "internet", "DHCP da escola",
-             "ponto de rede da escola com internet (pendente: o cabo testado em 19/10 estava sem sinal)"),
+            ("ether2", "ether2-INTERNET", "LINK VIVO (internet principal)", "internet", "DHCP da escola (172.16.31.41)",
+             "ponto de rede da escola com internet: LINK VIVO, rota padrão distância 1"),
             ("ether3", "ether3-LAN", "Rede local", "lan", "bridge-LAN", "notebook da Matriz (192.168.10.198, DHCP)"),
-            ("ether4", "ether4-LAN", "Rede local", "lan", "bridge-LAN", "porta dedicada da iDRAC do servidor Dell T440 (192.168.10.30)"),
+            ("ether4", "ether4-TIN", "LINK TIN (internet backup)", "internet", "DHCP da escola (172.16.31.39)",
+             "segundo ponto de rede da escola: LINK TIN, rota padrão distância 2 (desde 03/11; a iDRAC, que usaria esta porta, fica sem porta própria)"),
             ("ether5", "ether5-LAN", "Rede local", "lan", "bridge-LAN", "porta de rede comum do servidor Dell T440: ESXi (192.168.10.40) e VMs"),
             ("sfp1", "sfp1-WAN-FIBRA", "Fibra (principal)", "fibra", "10.0.1.1/30", "módulo SFP + fibra até a sfp1 do R-FILIAL"),
         ],
@@ -100,6 +101,10 @@ OUTROS = [
 ]
 
 MUDANCAS = [  # mais recente primeiro
+    ("03/11/2026 17:00", "Backups", "Página Backups do SennaGuard: baixar cada versão (.rsc) e guia de restauração. Backup binário diário dos roteadores passa a rodízio de 7 arquivos (routeros/limpar-backups.rsc, a colar nos dois)."),
+    ("03/11/2026 16:50", "Zabbix", "Faixa do sinal do rádio: aviso acima de -50 dBm e abaixo de -62 dBm (crítico -70). Alerta 'Link down' da ether3-LAN da Filial desativado (porta sem uso). Temperatura do R-MATRIZ com aviso só acima de 65 °C (hEX S trabalha a ~54 °C). Gráficos do painel de redundância corrigidos (host 'R-FILIAL*')."),
+    ("03/11/2026 16:20", "SennaGuard", "Cartão Internet (só equipe): link ativo, estado, latência, IP e download de VIVO e TIN; o Cliente não recebe esses dados. TV mostra 'Internet pela VIVO/TIN'. Grafana com a linha Internet."),
+    ("03/11/2026 15:50", "R-MATRIZ", "Redundância WAN: LINK VIVO (ether2, principal) e LINK TIN (ether4, backup, saiu da LAN), ambos DHCP na rede da escola. Netwatch a cada 5 s (VIVO 1.0.0.1, TIN 9.9.9.9) troca a rota padrão em ~5-10 s e volta sozinho. SNMP liberado para o NOC; R-MATRIZ cadastrado no Zabbix. Failover testado tirando o cabo da ether2."),
     ("26/10/2026 17:15", "Manual", "Manual do SennaGuard com prints novos (Visão em 5 min, menus de período e Atualizar a cada, chamado com Enter envia) e seções de segurança e de instalação do certificado: https://claude.ai/artifact/J4Zc9FRWiddRLUJEwL5NmK"),
     ("26/10/2026 17:30", "Certificado", "CA do NOC instalada no notebook da Matriz (Raízes Confiáveis do usuário, via certutil -user -addstore Root): painel, Zabbix e Grafana com cadeado. Faltam PCs da Matriz e da Filial, VM Windows e TV. Atenção: o assistente do Windows tinha posto a CA em 'Intermediárias' e o Chrome precisa de chrome://restart."),
     ("26/10/2026 17:10", "Segurança", "Revisão de segurança do SennaGuard e do servidor: 13 correções no código (sem falha crítica/alta), FastAPI/starlette e react-router atualizados, firewall nftables (só 22, 80, 443, 3000 abertos), SSH blindado com fail2ban, Apache sem versão, sandbox do systemd, Avahi desligado, atualizações de segurança automáticas. Arquivos em servidor/seguranca/."),
