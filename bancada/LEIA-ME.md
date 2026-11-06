@@ -1,7 +1,7 @@
 # Montagem automática da bancada
 
 > **Bancada já configurada?** Para remontar (os roteadores guardam a configuração), siga
-> [PASSO-A-PASSO.md](PASSO-A-PASSO.md). Este arquivo é a configuração do zero.
+> [instalacao/bancada-remontar.md](../instalacao/bancada-remontar.md). Este arquivo é a configuração do zero.
 >
 > Ferramentas auxiliares: `atualizar_v7.ps1` (RouterOS 6 → 7), `testar.ps1` (testa o arquivo sem aplicar) e
 > `conferir.ps1` (lê a configuração e testa a fibra e o rádio de dentro do roteador).
