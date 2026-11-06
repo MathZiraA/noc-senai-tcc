@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 # Instala ou atualiza o SennaGuard no servidor do NOC (Debian 12, como root), ao lado do Zabbix.
+# O SennaGuard vive em sennaguard/ dentro do monorepo privado MathZiraA/noc-senai-tcc.
 #
-#   git clone https://github.com/MathZiraA/sennaguard.git /opt/sennaguard
-#   bash /opt/sennaguard/deploy/instalar.sh
+#   git clone https://github.com/MathZiraA/noc-senai-tcc.git /opt/noc-senai-tcc
+#   bash /opt/noc-senai-tcc/sennaguard/deploy/instalar.sh
+#
+# Repo privado: o servidor precisa de uma deploy key read-only (ver sennaguard/docs/INSTALACAO.md).
 #
 # Publica em https://<SERVIDOR_IP>/sennaguard/ pelo Apache que já serve o Zabbix (HTTPS com a CA do NOC).
 # Os PCs da Filial chegam por OSPF (fibra ou rádio): o R-MATRIZ já libera 192.168.20.0/24 -> 192.168.10.0/24.
 # Pode rodar de novo a qualquer momento: cada etapa pula o que já está pronto.
 set -euo pipefail
 
-APP=/opt/sennaguard
+APP=/opt/noc-senai-tcc/sennaguard
 ETC=/etc/sennaguard
 DADOS=/var/lib/sennaguard
 PORTA=8010
@@ -18,7 +21,7 @@ LIVRO=/var/lib/noc-analista/chamados.jsonl
 
 [ "$(id -u)" = 0 ] || { echo "Rode como root."; exit 1; }
 cd "$(dirname "$0")/.."
-[ "$(pwd)" = "$APP" ] || { echo "Clone o repositório em $APP (git clone ... $APP)."; exit 1; }
+[ "$(pwd)" = "$APP" ] || { echo "Rode a partir de $APP (clone o monorepo: git clone ...noc-senai-tcc.git /opt/noc-senai-tcc)."; exit 1; }
 conf() { grep -E "^\s*$1\s*=" "$NOC_CONF" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d "\"' " || true; }
 
 echo "==> 1/7 Pacotes"

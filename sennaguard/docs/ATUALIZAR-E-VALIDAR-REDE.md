@@ -15,12 +15,12 @@ Você é uma sessão do Claude com terminal no servidor do NOC (Debian 12, `192.
 ## Antes de começar
 
 1. Leia o roteiro principal inteiro. Ele tem os comandos detalhados das etapas citadas aqui:
-   `curl -s https://raw.githubusercontent.com/MathZiraA/sennaguard/main/docs/IMPLANTACAO-SERVIDOR.md`
+   `curl -s https://raw.githubusercontent.com/MathZiraA/noc-senai-tcc/main/sennaguard/docs/IMPLANTACAO-SERVIDOR.md`
 2. Siga as **Regras de segurança** do roteiro à risca:
    - nunca altere os MikroTik: comandos RouterOS vão prontos para o usuário colar no WinBox;
    - nunca derrube a fibra nem rode ou aprove teste de failover;
    - nunca mostre segredos: tokens, chaves privadas, community SNMP, `.env`;
-   - não edite `/opt/sennaguard` e não faça `git push`;
+   - não edite `/opt/noc-senai-tcc/sennaguard` e não faça `git push`;
    - no Zabbix, só acrescente.
 3. Rodando no notebook, siga a seção do roteiro "Se a sessão roda no notebook da Matriz": todo comando roda no servidor, via `ssh root@192.168.10.50`.
 4. Quando um passo for do usuário, pare, diga exatamente o que ele deve fazer e espere a confirmação.
@@ -52,22 +52,22 @@ Confira também:
 ## Fase B: atualizar o SennaGuard
 
 ```bash
-git -C /opt/sennaguard log --oneline -1                       # versão atual (anote)
+git -C /opt/noc-senai-tcc/sennaguard log --oneline -1                       # versão atual (anote)
 grep -c '^TELEGRAM_TOKEN=' /etc/sennaguard/sennaguard.env      # 0 = o instalador vai perguntar o token
 ```
 
-**Se a contagem der 0:** o `atualizar.sh` vai pedir o token do Telegram, então é o usuário quem roda, numa janela própria: `bash /opt/sennaguard/deploy/atualizar.sh`.
+**Se a contagem der 0:** o `atualizar.sh` vai pedir o token do Telegram, então é o usuário quem roda, numa janela própria: `bash /opt/noc-senai-tcc/sennaguard/deploy/atualizar.sh`.
 
 **Se der 1:** rode você mesmo:
 
 ```bash
-bash /opt/sennaguard/deploy/atualizar.sh
+bash /opt/noc-senai-tcc/sennaguard/deploy/atualizar.sh
 ```
 
 Confira depois:
 
 ```bash
-git -C /opt/sennaguard log --oneline -1                       # 7cdfb80 ou mais novo
+git -C /opt/noc-senai-tcc/sennaguard log --oneline -1                       # 7cdfb80 ou mais novo
 systemctl is-active sennaguard; journalctl -u sennaguard -n 60 --no-pager | grep -iE 'traceback|error' || echo "sem erros"
 B=http://127.0.0.1:8010
 curl -s $B/api/publico                                         # "simulacao": false
@@ -95,8 +95,8 @@ Faça **todas**, mesmo que parte pareça feita, e confira o estado real antes de
 Na Etapa 5, confira também o que veio nesta versão:
 
 ```bash
-cd /opt/sennaguard/backend
-runuser -u sennaguard -- env $(grep -v '^#' /etc/sennaguard/sennaguard.env | xargs) /opt/sennaguard/.venv/bin/python - <<'PY'
+cd /opt/noc-senai-tcc/sennaguard/backend
+runuser -u sennaguard -- env $(grep -v '^#' /etc/sennaguard/sennaguard.env | xargs) /opt/noc-senai-tcc/sennaguard/.venv/bin/python - <<'PY'
 import time, fonte
 for h in (1, 24, 168, 720):
     s = fonte.serie("latencia", h); print(f"latência {h}h:", len(s), "pontos")
@@ -117,8 +117,8 @@ Peça ao usuário cada item e marque **ok** ou **falhou**, com o que ele viu:
 4. **Perfil.** Enviar uma foto, conectar o Telegram e ajustar os avisos.
 5. **Telegram.** Com o Telegram de alguém conectado, mande um teste. Não mostre o token.
    ```bash
-   cd /opt/sennaguard/backend && runuser -u sennaguard -- env $(grep -v '^#' /etc/sennaguard/sennaguard.env | xargs) \
-     /opt/sennaguard/.venv/bin/python -c "import telegram,time; telegram.para_usuarios([ID], '✅ Teste do SennaGuard'); time.sleep(5)"
+   cd /opt/noc-senai-tcc/sennaguard/backend && runuser -u sennaguard -- env $(grep -v '^#' /etc/sennaguard/sennaguard.env | xargs) \
+     /opt/noc-senai-tcc/sennaguard/.venv/bin/python -c "import telegram,time; telegram.para_usuarios([ID], '✅ Teste do SennaGuard'); time.sleep(5)"
    ```
 6. **Celular.** Abrir o painel no celular, numa rede da Matriz ou da Filial: barra inferior, cartões e chat.
 7. **Backup.** Em **Backups → Fazer backup agora**, aparecem versões do R-MATRIZ e do R-FILIAL.

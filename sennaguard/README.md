@@ -1,6 +1,6 @@
 # SennaGuard
 
-Painel do NOC do projeto [noc-senai-tcc](https://github.com/MathZiraA/noc-senai-tcc): estado do enlace Fibra x Rádio entre Matriz e Filial, alertas com a análise do Analista IA, chamados com o livro encadeado por SHA-256, equipamentos e usuários, com login e acesso por perfil.
+Painel web do NOC. Faz parte do monorepo [noc-senai-tcc](https://github.com/MathZiraA/noc-senai-tcc) (este diretório, `sennaguard/`): estado do enlace Fibra x Rádio entre Matriz e Filial, alertas com a análise do Analista IA, chamados com o livro encadeado por SHA-256, equipamentos e usuários, com login e acesso por perfil.
 
 ## Perfis de acesso
 
@@ -57,9 +57,11 @@ Passo a passo completo para **Linux** (servidor do NOC ou teste local) e **Windo
 
 ## No servidor do NOC (Debian 12, junto do Zabbix)
 
+O repositório é privado: o servidor clona com uma **deploy key read-only** (passo a passo em [`docs/INSTALACAO.md`](docs/INSTALACAO.md)).
+
 ```bash
-git clone https://github.com/MathZiraA/sennaguard.git /opt/sennaguard
-bash /opt/sennaguard/deploy/instalar.sh      # pede o e-mail e a senha do primeiro administrador
+git clone git@github-noc:MathZiraA/noc-senai-tcc.git /opt/noc-senai-tcc   # via deploy key (ver INSTALACAO.md)
+bash /opt/noc-senai-tcc/sennaguard/deploy/instalar.sh      # pede o e-mail e a senha do primeiro administrador
 ```
 
 O instalador:
@@ -80,8 +82,8 @@ O instalador também prepara as integrações:
 
 | Tarefa | Comando |
 | --- | --- |
-| Atualizar para a última versão do GitHub | `bash /opt/sennaguard/deploy/atualizar.sh` |
-| Redefinir a senha de alguém pelo terminal | `cd /opt/sennaguard/backend && sudo -u sennaguard env $(cat /etc/sennaguard/sennaguard.env \| xargs) ../.venv/bin/python gerenciar.py redefinir-senha --email x@y` |
+| Atualizar para a última versão do GitHub | `bash /opt/noc-senai-tcc/sennaguard/deploy/atualizar.sh` |
+| Redefinir a senha de alguém pelo terminal | `cd /opt/noc-senai-tcc/sennaguard/backend && sudo -u sennaguard env $(cat /etc/sennaguard/sennaguard.env \| xargs) ../.venv/bin/python gerenciar.py redefinir-senha --email x@y` |
 | Ver o log | `journalctl -u sennaguard -f` |
 
 ## Desenvolvimento (Windows ou Linux)

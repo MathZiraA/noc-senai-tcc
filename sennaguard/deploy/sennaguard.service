@@ -6,10 +6,10 @@ Wants=network-online.target
 [Service]
 User=sennaguard
 Group=sennaguard
-WorkingDirectory=/opt/sennaguard/backend
+WorkingDirectory=/opt/noc-senai-tcc/sennaguard/backend
 EnvironmentFile=/etc/sennaguard/sennaguard.env
 # Só escuta no próprio servidor: quem acessa de fora passa pelo Apache (HTTPS)
-ExecStart=/opt/sennaguard/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8010 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-server-header
+ExecStart=/opt/noc-senai-tcc/sennaguard/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8010 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-server-header
 Restart=on-failure
 RestartSec=3
 

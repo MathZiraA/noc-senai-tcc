@@ -6,13 +6,13 @@
 
 Você é uma sessão do Claude com terminal no servidor do NOC (Debian 12, como root). Sua tarefa é deixar o **SennaGuard** funcionando com dados reais: verificar o servidor, conferir a instalação feita pelo usuário, ligar o sinal das antenas no Zabbix pela API, preparar os acessos SSH aos roteadores e validar tudo. Tokens, senhas e comandos que mudam os roteadores ficam com o usuário (Matheus): você prepara e pede, ele executa.
 
-O SennaGuard é um painel web do NOC do TCC (repositório público `MathZiraA/sennaguard`: o clone não pede login nem token). Ele lê o Zabbix 7.0 que já roda neste servidor e foi montado pelo projeto `MathZiraA/noc-senai-tcc`.
+O SennaGuard é um painel web do NOC do TCC (monorepo privado `MathZiraA/noc-senai-tcc`, o painel vive em `sennaguard/`: o clone exige uma **deploy key read-only** no servidor). Ele lê o Zabbix 7.0 que já roda neste servidor e foi montado pelo projeto `MathZiraA/noc-senai-tcc`.
 
 | Item | Valor |
 | --- | --- |
 | Servidor | `192.168.10.50` (LAN da Matriz), Debian 12, Zabbix 7.0, Apache com HTTPS e CA própria do NOC |
 | Endereço público do painel | `https://192.168.10.50/sennaguard/` (Apache → `127.0.0.1:8010`) |
-| Código | `/opt/sennaguard` (backend em `backend/`, interface compilada em `frontend/dist`) |
+| Código | `/opt/noc-senai-tcc/sennaguard` (backend em `backend/`, interface compilada em `frontend/dist`) |
 | Serviço | `sennaguard.service`, usuário de sistema `sennaguard`, logs em `journalctl -u sennaguard` |
 | Configuração | `/etc/sennaguard/sennaguard.env` (640, root:sennaguard) |
 | Segredos | `/etc/sennaguard/{gemini_key,anthropic_key,mikrotik_key,mikrotik_teste_key}` (600, dono sennaguard) |
@@ -34,11 +34,11 @@ Quando o Claude roda num notebook da LAN da Matriz, e não no próprio servidor,
 - Blocos de várias linhas: mande pela entrada padrão, sem colocar o script dentro de aspas:
   - shell: `ssh root@192.168.10.50 'bash -s' <<'EOF' … EOF`
   - Python: `ssh root@192.168.10.50 'python3 -' <<'PY' … PY`
-  - Python com o ambiente do serviço (Etapa 5): `ssh root@192.168.10.50 "cd /opt/sennaguard/backend && runuser -u sennaguard -- env \$(grep -v '^#' /etc/sennaguard/sennaguard.env | xargs) /opt/sennaguard/.venv/bin/python -" <<'PY' … PY`
+  - Python com o ambiente do serviço (Etapa 5): `ssh root@192.168.10.50 "cd /opt/noc-senai-tcc/sennaguard/backend && runuser -u sennaguard -- env \$(grep -v '^#' /etc/sennaguard/sennaguard.env | xargs) /opt/noc-senai-tcc/sennaguard/.venv/bin/python -" <<'PY' … PY`
 - Para gravar um script no servidor (ex.: `/root/sennaguard_antenas.py`): `ssh root@192.168.10.50 'cat > /root/sennaguard_antenas.py' <<'PY' … PY`.
 - **Nenhum segredo vem para o notebook:** não copie tokens, chaves nem o `.env` para a máquina local, nem por `scp`.
-- Para ler este roteiro antes do clone, baixe direto do GitHub (público): `curl -s https://raw.githubusercontent.com/MathZiraA/sennaguard/main/docs/IMPLANTACAO-SERVIDOR.md`. Depois do clone ele também fica em `/opt/sennaguard/docs/`.
-- O `git clone` a sessão mesma faz (o repositório é público). O passo interativo (`instalar.sh`) o usuário faz numa janela SSH separada. O WinBox e o navegador do painel ficam no próprio notebook.
+- O repositório é privado, então o `raw.githubusercontent` não abre sem token. Depois do clone, este roteiro fica em `/opt/noc-senai-tcc/sennaguard/docs/`.
+- O `git clone` usa a deploy key read-only já configurada no servidor (repositório privado). O passo interativo (`instalar.sh`) o usuário faz numa janela SSH separada. O WinBox e o navegador do painel ficam no próprio notebook.
 
 ## Regras de segurança
 
@@ -62,7 +62,7 @@ Siga as etapas nesta ordem. Quando uma linha for do usuário, pare, diga exatame
 | --- | --- | --- | --- |
 | 1 | Verificar o servidor antes da instalação | **Sessão** | lista de pendências (ou "tudo certo") |
 | 2a | Criar o bot do Telegram | Usuário | token do bot |
-| 2b | `git clone` do repositório público em `/opt/sennaguard` | **Sessão** | código no servidor |
+| 2b | `git clone` do monorepo privado (deploy key) em `/opt/noc-senai-tcc` | **Sessão** | código no servidor |
 | 2c | `bash deploy/instalar.sh` (responde token do Telegram e senha do admin) | Usuário | painel no ar e bloco RouterOS impresso no fim |
 | 2d | Conferir serviço, Apache, `.env` e permissões | **Sessão** | instalação conferida |
 | 3a | Preparar os comandos RouterOS (`zabbix-ia` no R-MATRIZ, `sennaguard-teste`, lista de redes autorizadas) | **Sessão** | bloco pronto para colar |
@@ -93,9 +93,9 @@ grep -E '^(SERVIDOR_IP|HOST_FILIAL|FIBRA_FILIAL|RADIO_FILIAL|LAN_FILIAL|LOOPBACK
 ss -ltnp | grep -c ':8010 ' || true          # 0 = livre
 curl -sI https://deb.nodesource.com | head -1; curl -sI https://pypi.org | head -1
 
-# Repositório público acessível (deve imprimir um hash e refs/heads/main) e destino livre
-git ls-remote https://github.com/MathZiraA/sennaguard.git main
-test -e /opt/sennaguard && echo "JÁ EXISTE /opt/sennaguard" || echo "ok  /opt/sennaguard livre"
+# Repositório acessível pela deploy key (deve imprimir um hash e refs/heads/main) e destino livre
+git ls-remote https://github.com/MathZiraA/noc-senai-tcc.git main
+test -e /opt/noc-senai-tcc/sennaguard && echo "JÁ EXISTE /opt/noc-senai-tcc/sennaguard" || echo "ok  /opt/noc-senai-tcc/sennaguard livre"
 ```
 
 Teste o token do Zabbix sem exibi-lo:
@@ -114,7 +114,7 @@ Como interpretar:
 - `/root/.ssh/id_ed25519_mikrotik` faltando: o backup das configurações não vai funcionar. Avise o usuário; essa chave é a do Analista IA.
 - Qualquer outro `FALTA`, serviço inativo ou token do Zabbix sem resposta: **pare** e explique ao usuário antes de seguir.
 - `git ls-remote` falhando: sem internet ou o repositório voltou a ser privado. Pare e avise o usuário.
-- `/opt/sennaguard` já existe: é uma instalação anterior. Não apague; pergunte ao usuário se é para atualizar (`bash /opt/sennaguard/deploy/atualizar.sh`) em vez de instalar.
+- `/opt/noc-senai-tcc/sennaguard` já existe: é uma instalação anterior. Não apague; pergunte ao usuário se é para atualizar (`bash /opt/noc-senai-tcc/sennaguard/deploy/atualizar.sh`) em vez de instalar.
 - Porta 8010 ocupada: descubra o processo com `ss -ltnp | grep 8010` e pergunte ao usuário o que fazer.
 
 Terminando sem bloqueios, diga ao usuário: "Pode instalar", com o passo a passo da Etapa 2.
@@ -123,11 +123,11 @@ Terminando sem bloqueios, diga ao usuário: "Pode instalar", com o passo a passo
 
 **Passe ao usuário, exatamente assim:**
 
-**Você (sessão) clona o código.** O repositório é público, então não há login nem token:
+**Você (sessão) clona o código.** O repositório é privado: a deploy key read-only do servidor cuida do acesso (sem login interativo):
 
 ```bash
-git clone https://github.com/MathZiraA/sennaguard.git /opt/sennaguard
-git -C /opt/sennaguard log --oneline -1          # anote o commit no relatório
+git clone https://github.com/MathZiraA/noc-senai-tcc.git /opt/noc-senai-tcc
+git -C /opt/noc-senai-tcc/sennaguard log --oneline -1          # anote o commit no relatório
 ```
 
 **Depois passe ao usuário, exatamente assim:**
@@ -136,7 +136,7 @@ git -C /opt/sennaguard log --oneline -1          # anote o commit no relatório
 2. No terminal do servidor, como root:
 
 ```bash
-bash /opt/sennaguard/deploy/instalar.sh
+bash /opt/noc-senai-tcc/sennaguard/deploy/instalar.sh
 ```
 
 O instalador pergunta o token do bot (Enter vazio desliga o Telegram) e o e-mail, o nome e a senha do primeiro administrador. No fim, ele imprime `SennaGuard no ar: https://…/sennaguard/` e um bloco de 4 linhas RouterOS para o usuário `sennaguard-teste`. **Peça ao usuário para colar esse bloco aqui na conversa**: você vai usá-lo na Etapa 3. Ele só aparece na primeira instalação.
@@ -312,11 +312,11 @@ Substitua `-60` pelo valor de `RADIO_SINAL_MIN_DBM` se o `noc.conf` tiver outro.
 
 O código do modo real foi escrito a partir do `noc-senai-tcc` e testado com respostas simuladas, mas nunca contra este Zabbix. Aqui você chama as mesmas funções do backend, com a mesma configuração do serviço, e compara com o Zabbix. Tudo é leitura, exceto o backup, que só grava em `/var/lib/sennaguard/backups`.
 
-**Não edite o código em `/opt/sennaguard`.** As atualizações vêm do GitHub com `git pull --ff-only`, que falha se houver mudanças locais. Divergências vão para o relatório, com a saída exata; a correção é feita no repositório.
+**Não edite o código em `/opt/noc-senai-tcc/sennaguard`.** As atualizações vêm do GitHub com `git pull --ff-only`, que falha se houver mudanças locais. Divergências vão para o relatório, com a saída exata; a correção é feita no repositório.
 
 ```bash
-cd /opt/sennaguard/backend
-runuser -u sennaguard -- env $(grep -v '^#' /etc/sennaguard/sennaguard.env | xargs) /opt/sennaguard/.venv/bin/python - <<'PY'
+cd /opt/noc-senai-tcc/sennaguard/backend
+runuser -u sennaguard -- env $(grep -v '^#' /etc/sennaguard/sennaguard.env | xargs) /opt/noc-senai-tcc/sennaguard/.venv/bin/python - <<'PY'
 import json, fonte, livro, backup, ia, telegram
 print("1 simulação:", fonte.SIMULACAO)
 v = fonte.visao()
@@ -354,7 +354,7 @@ Compare com o Zabbix (pela interface ou pela API, como na Etapa 1):
 Teste também o bot do Telegram, sem mostrar o token. Deve imprimir o @ do bot:
 
 ```bash
-cd /opt/sennaguard/backend && runuser -u sennaguard -- env $(grep -v '^#' /etc/sennaguard/sennaguard.env | xargs) /opt/sennaguard/.venv/bin/python -c "import telegram; print(telegram._api('getMe')['username'] if telegram.ativo() else 'sem token')"
+cd /opt/noc-senai-tcc/sennaguard/backend && runuser -u sennaguard -- env $(grep -v '^#' /etc/sennaguard/sennaguard.env | xargs) /opt/noc-senai-tcc/sennaguard/.venv/bin/python -c "import telegram; print(telegram._api('getMe')['username'] if telegram.ativo() else 'sem token')"
 ```
 
 Por fim, peça ao usuário para abrir `https://192.168.10.50/sennaguard/` e confirmar três coisas: o cabeçalho não diz "dados simulados", o login não mostra "Modo demonstração" e o chat "Pergunte ao NOC" responde "como está a rede?".

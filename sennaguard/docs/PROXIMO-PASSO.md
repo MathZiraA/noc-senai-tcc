@@ -14,11 +14,11 @@ Você é uma sessão do Claude com acesso ao servidor do NOC (`192.168.10.50`), 
 3. Antes de executar, diga ao usuário qual tarefa vai fazer e quanto ela mexe: só leitura, atualização do painel ou algo que precisa dele.
 4. Baixe e siga o roteiro da tarefa. As **Regras de segurança** de `docs/IMPLANTACAO-SERVIDOR.md` valem sempre.
 5. Só quando o roteiro terminar **sem pendências**, registre o passo:
-   `echo "$(date -Is) <ID> ok $(git -C /opt/sennaguard log --oneline -1 | cut -c1-7)" >> /var/lib/sennaguard/passos-feitos.log`
+   `echo "$(date -Is) <ID> ok $(git -C /opt/noc-senai-tcc/sennaguard log --oneline -1 | cut -c1-7)" >> /var/lib/sennaguard/passos-feitos.log`
    Com pendência do usuário, não registre: na próxima vez a tarefa é retomada.
 6. Entregue o relatório pedido no roteiro. Termine dizendo qual é a próxima tarefa da tabela, se houver.
 
-Os roteiros ficam em `https://raw.githubusercontent.com/MathZiraA/sennaguard/main/docs/<arquivo>`.
+Os roteiros ficam em `https://raw.githubusercontent.com/MathZiraA/noc-senai-tcc/main/sennaguard/docs/<arquivo>`.
 
 ## Tarefas
 

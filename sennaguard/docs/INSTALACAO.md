@@ -44,27 +44,40 @@ O servidor precisa ter, montado pelo [noc-senai-tcc](https://github.com/MathZira
    apt-get update && apt-get install -y git
    ```
 
-2. Baixe o repositório **exatamente** em `/opt/sennaguard` (o instalador confere o caminho):
+2. **Deploy key (o repositório é privado).** Gere uma chave só-leitura no servidor e cadastre no GitHub:
 
    ```bash
-   git clone https://github.com/MathZiraA/sennaguard.git /opt/sennaguard
+   ssh-keygen -t ed25519 -C deploy-noc -f /root/.ssh/id_ed25519_deploy -N ''
+   cat /root/.ssh/id_ed25519_deploy.pub
    ```
 
-3. Rode o instalador:
+   No GitHub: repositório **noc-senai-tcc** → *Settings → Deploy keys → Add deploy key* → cole a chave e **deixe "Allow write access" desmarcado**. Depois diga ao Git para usar essa chave:
 
    ```bash
-   bash /opt/sennaguard/deploy/instalar.sh
+   printf 'Host github-noc\n  HostName github.com\n  User git\n  IdentityFile /root/.ssh/id_ed25519_deploy\n  IdentitiesOnly yes\n' >> /root/.ssh/config
+   ```
+
+3. Baixe o monorepo em `/opt/noc-senai-tcc` (o painel vive em `sennaguard/`; o instalador confere o caminho):
+
+   ```bash
+   git clone git@github-noc:MathZiraA/noc-senai-tcc.git /opt/noc-senai-tcc
+   ```
+
+4. Rode o instalador:
+
+   ```bash
+   bash /opt/noc-senai-tcc/sennaguard/deploy/instalar.sh
    ```
 
    Ele vai perguntar:
    - o token do bot do Telegram (crie no `@BotFather`; Enter para pular);
    - o e-mail, o nome e a senha do primeiro administrador (só na primeira vez).
 
-4. No fim aparece `SennaGuard no ar: https://<IP>/sennaguard/`. Abra no navegador e entre com o administrador que acabou de criar.
+5. No fim aparece `SennaGuard no ar: https://<IP>/sennaguard/`. Abra no navegador e entre com o administrador que acabou de criar.
 
-5. Se aparecer o bloco de comandos RouterOS, cole no terminal do R-MATRIZ (WinBox → New Terminal). Ele cria o usuário `sennaguard-teste`, usado só pelo teste de failover.
+6. Se aparecer o bloco de comandos RouterOS, cole no terminal do R-MATRIZ (WinBox → New Terminal). Ele cria o usuário `sennaguard-teste`, usado só pelo teste de failover.
 
-6. Nos PCs da Filial, instale a CA do NOC (`http://<IP>/NOC-SENAI-CA.crt`), como já é feito para o Zabbix, e acesse `https://<IP>/sennaguard/`.
+7. Nos PCs da Filial, instale a CA do NOC (`http://<IP>/NOC-SENAI-CA.crt`), como já é feito para o Zabbix, e acesse `https://<IP>/sennaguard/`.
 
 ### Conferir
 
@@ -77,7 +90,7 @@ journalctl -u sennaguard -f                    # log ao vivo
 ### Atualizar para a última versão
 
 ```bash
-bash /opt/sennaguard/deploy/atualizar.sh
+bash /opt/noc-senai-tcc/sennaguard/deploy/atualizar.sh
 ```
 
 Mantém o banco, os usuários e a configuração (`/etc/sennaguard/sennaguard.env`).
@@ -102,7 +115,7 @@ Funciona em Debian, Ubuntu, Mint e derivados. Não precisa de root depois da ins
 2. Baixe o repositório:
 
    ```bash
-   git clone https://github.com/MathZiraA/sennaguard.git ~/sennaguard
+   git clone https://github.com/MathZiraA/noc-senai-tcc.git ~/sennaguard
    cd ~/sennaguard
    ```
 
@@ -162,7 +175,7 @@ Os comandos abaixo são para o **PowerShell**. Não precisa ser administrador, e
 
    ```powershell
    cd $HOME\Documents
-   git clone https://github.com/MathZiraA/sennaguard.git
+   git clone https://github.com/MathZiraA/noc-senai-tcc.git
    cd sennaguard
    ```
 
@@ -275,6 +288,6 @@ O **backup dos roteadores** e o **teste de failover** usam chaves SSH dos MikroT
 | `Activate.ps1 não pode ser carregado` | não precisa ativar: use `.venv\Scripts\python ...` como nos passos |
 | `npm.ps1 não pode ser carregado` (PowerShell) | use `npm.cmd` e `npx.cmd`, ou rode no Prompt de Comando |
 | `cd /d` dá erro de "parâmetro posicional" | `/d` é do Prompt de Comando; no PowerShell use só `cd` |
-| No servidor: `Clone o repositório em /opt/sennaguard` | o instalador só roda a partir de `/opt/sennaguard` |
+| No servidor: `Clone o repositório em /opt/noc-senai-tcc/sennaguard` | o instalador só roda a partir de `/opt/noc-senai-tcc/sennaguard` |
 | No servidor: `O serviço não respondeu` | veja `journalctl -u sennaguard -n 50` |
-| Esqueceu a senha do administrador (servidor) | `cd /opt/sennaguard/backend && sudo -u sennaguard env $(cat /etc/sennaguard/sennaguard.env \| xargs) ../.venv/bin/python gerenciar.py redefinir-senha --email x@y` |
+| Esqueceu a senha do administrador (servidor) | `cd /opt/noc-senai-tcc/sennaguard/backend && sudo -u sennaguard env $(cat /etc/sennaguard/sennaguard.env \| xargs) ../.venv/bin/python gerenciar.py redefinir-senha --email x@y` |

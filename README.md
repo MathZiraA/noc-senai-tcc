@@ -12,6 +12,7 @@ Projeto de TCC (SENAI 2026): rede Matriz/Filial com dois enlaces (fibra principa
 | [`docs/equipamentos.html`](docs/equipamentos.html) | Ficha da bancada: o que está configurado em cada equipamento e o histórico de mudanças (gerada por `bancada/gerar_ficha.py`) |
 | [`bancada/`](bancada) | Configuração automática dos MikroTik (gerar, testar, aplicar, conferir) e o [passo a passo](bancada/PASSO-A-PASSO.md) para remontar |
 | [`noc/`](noc) | Scripts Python que configuram o Zabbix pela API e o serviço do Analista IA. Na VM ficam em `/root/noc` |
+| [`sennaguard/`](sennaguard) | **Painel web do NOC** (FastAPI + React): login por perfil, chamados, backups, mapa, teste de failover. Instala em `/opt/noc-senai-tcc/sennaguard` — ver [`sennaguard/README.md`](sennaguard/README.md) |
 | [`routeros/`](routeros) | Scripts dos MikroTiks (R-MATRIZ, R-FILIAL, switches, nova filial) e o bloco de integração com o NOC |
 | [`grafana/`](grafana) | Dashboard do Grafana e arquivos de provisionamento (o da fonte de dados é só exemplo) |
 | [`sistema/`](sistema) | Unidade systemd do analista e tarefas do cron |
