@@ -1,0 +1,47 @@
+[Unit]
+Description=SennaGuard - painel do NOC (API + interface)
+After=network-online.target zabbix-server.service
+Wants=network-online.target
+
+[Service]
+User=sennaguard
+Group=sennaguard
+WorkingDirectory=/opt/sennaguard/backend
+EnvironmentFile=/etc/sennaguard/sennaguard.env
+# Só escuta no próprio servidor: quem acessa de fora passa pelo Apache (HTTPS)
+ExecStart=/opt/sennaguard/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8010 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-server-header
+Restart=on-failure
+RestartSec=3
+
+NoNewPrivileges=true
+# Só o ping da sonda de 1 s (sonda.py): com NoNewPrivileges o ping não ganha o cap_net_raw do próprio arquivo
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/sennaguard
+# Sandbox: só rede (IPv4/IPv6/local), sem acesso a kernel, dispositivos, relógio ou outros processos
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+PrivateDevices=true
+PrivateIPC=true
+RemoveIPC=true
+KeyringMode=private
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+UMask=0077
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=multi-user.target

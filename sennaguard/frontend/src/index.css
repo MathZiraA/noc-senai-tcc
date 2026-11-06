@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/* Sala do NOC à noite: grafite violeta, cards um tom acima, LED de link e enlace de fibra (violeta). */
+@theme {
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-lateral: #17161b;     /* barra lateral: um tom abaixo do fundo */
+  --color-rack: #1c1b21;        /* fundo da área de trabalho */
+  --color-painel: #222127;      /* cards */
+  --color-painel-alto: #2b2a31; /* pílulas, chips, menus, diálogos */
+  --color-fenda: #18171c;       /* campos: afundados no painel */
+
+  --color-tinta: #f1f0f5;
+  --color-tinta-2: #bdbbc6;
+  --color-tinta-3: #8d8b97;
+  --color-tinta-4: #5f5d68;
+
+  --color-fibra: #8f7cf0;       /* enlace principal e cor da marca */
+  --color-radio: #5ccabf;       /* enlace de backup */
+  --color-led: #3fcf86;         /* link up, situação normal */
+
+  /* Severidades no tom da referência: vermelho-rosado para crítico, magenta-lilás para aviso */
+  --color-desastre: #ee5d76;
+  --color-alta: #ec7c8f;
+  --color-media: #d08be6;
+  --color-aviso: #b39af4;
+
+  --color-fio: rgb(255 255 255 / 0.07);
+  --color-fio-forte: rgb(255 255 255 / 0.13);
+  --color-limite: #b9566f;      /* linhas de limite tracejadas dos gráficos */
+  --color-normal: #6b5560;      /* linha de referência "Normal" */
+  --color-eixo: #3d3c44;
+
+  --color-titulo: #d9d7e0;      /* título de página em migalha */
+  --color-ativo: #3a3049;       /* item ativo da barra lateral */
+  --color-avatar: #4a3d6b;
+  --color-quieto: #3a3940;      /* botão cinza cheio */
+  --color-quieto-hover: #45444c;
+  --color-contorno: #4a4952;    /* borda do botão de contorno */
+  --color-pilula-hover: #34333b;
+  --color-destaque: #2a2228;    /* fundo da pílula do alerta mais grave */
+  --color-balao: #2c2b32;       /* tooltip e balão do incidente */
+  --color-fibra-hover: #9d8cf5;
+  --color-risco: #6a5bd0;       /* risco de alerta na régua do caminho */
+  --color-queda: #9a3d50;       /* bloco de queda na régua do caminho */
+}
+
+/* Tema claro: mesma hierarquia, valores invertidos (escolhido no menu do usuário). */
+:root[data-tema="claro"] {
+  color-scheme: light;
+  --color-lateral: #efedf4;
+  --color-rack: #f6f5f9;
+  --color-painel: #ffffff;
+  --color-painel-alto: #eeecf3;
+  --color-fenda: #f3f2f7;
+  --color-tinta: #1b1a21;
+  --color-tinta-2: #4b4956;
+  --color-tinta-3: #75727f;
+  --color-tinta-4: #a6a3ae;
+  --color-fibra: #6f5ae0;
+  --color-radio: #23968b;
+  --color-led: #1f9d5f;
+  --color-desastre: #d9415c;
+  --color-alta: #d9606f;
+  --color-media: #b45ccf;
+  --color-aviso: #8a6fe0;
+  --color-fio: rgb(28 22 48 / 0.09);
+  --color-fio-forte: rgb(28 22 48 / 0.16);
+  --color-limite: #d9718a;
+  --color-normal: #c9b3bd;
+  --color-eixo: #d6d3de;
+  --color-titulo: #2a2833;
+  --color-ativo: #e6e0fb;
+  --color-avatar: #6f5ae0;
+  --color-quieto: #e9e7ef;
+  --color-quieto-hover: #dedbe7;
+  --color-contorno: #cfccd8;
+  --color-pilula-hover: #e4e1ec;
+  --color-destaque: #fdeef1;
+  --color-balao: #ffffff;
+  --color-fibra-hover: #5d47d4;
+  --color-risco: #8a7bea;
+  --color-queda: #e07a8f;
+}
+
+html { color-scheme: dark; }
+:root[data-tema="claro"] .sombra-clara { box-shadow: 0 1px 2px rgb(28 22 48 / .06), 0 4px 12px rgb(28 22 48 / .05); }
+body {
+  @apply bg-rack text-tinta font-sans antialiased;
+  font-size: 13px;
+  font-feature-settings: "cv11", "ss01";
+}
+h1, h2, h3 { text-wrap: balance; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Pulso do tráfego andando no trilho ativo. */
+@keyframes fluxo { to { stroke-dashoffset: -24; } }
+.trilho-ativo { animation: fluxo 0.9s linear infinite; }
+@keyframes respira { 50% { opacity: .35; } }
+.respira { animation: respira 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .trilho-ativo, .respira { animation: none; }
+}
+
+:focus-visible { outline: 2px solid var(--color-fibra); outline-offset: 2px; border-radius: 6px; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--color-fio-forte); border-radius: 10px; border: 3px solid var(--color-rack); }
+
+@keyframes aparece { from { opacity: 0; } }
+@keyframes gaveta { from { opacity: 0; transform: translateX(24px); } }
+@keyframes surge { from { opacity: 0; transform: translate(-50%, -48%) scale(.97); } }
+@media (prefers-reduced-motion: reduce) {
+  [data-state=open] { animation-name: aparece !important; }
+}
+@keyframes gaveta-esq { from { opacity: 0; transform: translateX(-24px); } }
+@keyframes surge-chat { from { opacity: 0; transform: translateY(12px) scale(.98); } }
