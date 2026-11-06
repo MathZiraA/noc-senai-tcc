@@ -1,5 +1,3 @@
-> **Cópia de 26/10/2026, desatualizada.** A versão viva é a [Documentação geral](https://claude.ai/artifact/UEsPH3zeYA2Exj1LSUC5yq) (seção 28: WAN, Matriz, backups e auditoria de 03/11). O documento de entrega é a [Documentação Técnica Oficial](https://claude.ai/artifact/5YfWXRHmDa4ck4NKFZbAx4).
-
 # NOC SENAI — Zabbix + Analista IA: Documentação Técnica
 
 Oct 3, 2026 · @Matheus
@@ -427,12 +425,12 @@ Na VM também ficam: o ambiente Python em `/opt/noc-analista` (SDKs `google-gena
 
 ### Instalador para o servidor dedicado
 
-O NOC inteiro se instala num Debian 12 limpo com um comando, `bash instalar_noc.sh`, a partir do repositório. Testado em 05/10/2026 rodando sobre o próprio protótipo: as 10 etapas passaram, nada foi duplicado e Zabbix, Grafana, IA, página de status e tarefas agendadas continuaram funcionando. Ainda não foi testado num servidor totalmente vazio.
+O NOC inteiro se instala num Debian 12 limpo com um comando, `bash instalacao/instalar-noc.sh`, a partir do repositório. Testado em 05/10/2026 rodando sobre o próprio protótipo: as 10 etapas passaram, nada foi duplicado e Zabbix, Grafana, IA, página de status e tarefas agendadas continuaram funcionando. Ainda não foi testado num servidor totalmente vazio.
 
-1. `git clone https://github.com/MathZiraA/noc-senai-tcc.git` e `cd noc-senai-tcc`.
-2. `bash instalar_noc.sh`: na primeira vez ele cria `/etc/noc/noc.conf` e para.
+1. Copie o projeto para `/opt/noc-senai-tcc` (cópia/rsync/pendrive — não é por git) e entre nele: `cd /opt/noc-senai-tcc`.
+2. `bash instalacao/instalar-noc.sh`: na primeira vez ele cria `/etc/noc/noc.conf` e para.
 3. Ajuste `/etc/noc/noc.conf`: `SERVIDOR_IP` (IP do servidor na LAN da Matriz) e, se mudarem, os IPs da rede e o e-mail.
-4. `bash instalar_noc.sh` de novo. Ele pergunta, sem mostrar na tela, o token da API do Zabbix (explicando como criá-lo), a senha de app do Gmail e a chave do Gemini.
+4. `bash instalacao/instalar-noc.sh` de novo. Ele pergunta, sem mostrar na tela, o token da API do Zabbix (explicando como criá-lo), a senha de app do Gmail e a chave do Gemini.
 5. No fim, cole no R-FILIAL o arquivo `routeros-r-filial-noc.rsc` que ele gera, já com o IP do servidor.
 
 | Etapa | O que faz |
@@ -629,7 +627,7 @@ As antenas `RADIO-P2P-MATRIZ` e `RADIO-P2P-FILIAL` já são monitoradas por ping
 
 ### Cópia da VM para o VMware ESXi
 
-A VM do protótipo foi exportada em 14/10/2026 no formato OVA (5,3 GB, sistema marcado como Debian 12 64 bits, placas Intel e1000) e enviada à release `vm-prototipo-2026-10-14` do repositório privado no GitHub, em 3 partes de até 1,9 GB (o GitHub aceita até 2 GB por arquivo de release; o repositório em si não aceita arquivos acima de 100 MB). O guia `docs/VM-ESXI.md` explica como juntar as partes, conferir o SHA-256 (`770b63b0...fddc2ce`), importar no ESXi e trocar os IPs. A VM contém as credenciais do protótipo: o repositório deve continuar privado.
+A VM do protótipo foi exportada em 14/10/2026 no formato OVA (5,3 GB, sistema marcado como Debian 12 64 bits, placas Intel e1000) e enviada à release `vm-prototipo-2026-10-14` do repositório privado no GitHub, em 3 partes de até 1,9 GB (o GitHub aceita até 2 GB por arquivo de release; o repositório em si não aceita arquivos acima de 100 MB). O guia `instalacao/vm-esxi.md` explica como juntar as partes, conferir o SHA-256 (`770b63b0...fddc2ce`), importar no ESXi e trocar os IPs. A VM contém as credenciais do protótipo: o repositório deve continuar privado.
 
 ### Testes realizados (14/10/2026, por simulação)
 
@@ -917,7 +915,7 @@ add chain=forward action=drop in-interface-list=WAN_PUBLIC
 
 ### R-FILIAL: integração com o NOC (`routeros-r-filial-noc.rsc`)
 
-Colar logo depois do script da Filial. O instalador (`instalar_noc.sh`) e o gerador da bancada geram esta mesma versão já com o IP do servidor real no lugar de `192.168.10.50`. A chave abaixo é a **pública** do Analista IA (pode ficar no documento; a privada nunca sai do servidor).
+Colar logo depois do script da Filial. O instalador (`instalacao/instalar-noc.sh`) e o gerador da bancada geram esta mesma versão já com o IP do servidor real no lugar de `192.168.10.50`. A chave abaixo é a **pública** do Analista IA (pode ficar no documento; a privada nunca sai do servidor).
 
 ```text
 # ====================================================================
@@ -1125,7 +1123,7 @@ O notebook usa o Wi-Fi como saída padrão, então o ping até a outra rede prec
 
 ## 18. Passo a passo para remontar a bancada
 
-Os roteadores guardam a configuração mesmo desligados: para remontar, basta ligar os cabos nesta ordem e conferir. Só é preciso reconfigurar se um roteador for resetado (parte 18.8). O mesmo roteiro está no repositório em `bancada/PASSO-A-PASSO.md`.
+Os roteadores guardam a configuração mesmo desligados: para remontar, basta ligar os cabos nesta ordem e conferir. Só é preciso reconfigurar se um roteador for resetado (parte 18.8). O mesmo roteiro está no repositório em `instalacao/bancada-remontar.md`.
 
 ### 18.1 Material
 
@@ -1521,7 +1519,7 @@ O NOC saiu do protótipo e roda no servidor de rack: o Zabbix, o Analista IA e o
 | Host | Dell PowerEdge T440 com VMware ESXi 8.0U3 (gerência hoje em 172.16.31.25, na rede da escola) |
 | VM | Debina-SennaGuard, hostname noc-senai, Debian 12.15, 2 vCPU, 8 GB, 250 GB |
 | IP | 192.168.10.50/24, gateway e DNS 192.168.10.1 (perfil "Wired connection 1" do NetworkManager) |
-| Instalação | `servidor/preparar_servidor.sh` + `instalar_noc.sh` (Zabbix 7.0, banco, HTTPS, Grafana, Analista IA, e-mail, chamados, backup) |
+| Instalação | `instalacao/preparar-servidor.sh` + `instalacao/instalar-noc.sh` (Zabbix 7.0, banco, HTTPS, Grafana, Analista IA, e-mail, chamados, backup) |
 | Validação | `validar_bancada.py` 17 de 18 OK; simulação de queda: alerta, análise da IA, e-mail com a análise e normalização enviados |
 
 - **Antenas por SNMP v1:** o airOS 6 não responde SNMP v2c. A interface SNMP das antenas no Zabbix passou para v1 (`fix_redundancia.py`) e o sinal, o ruído, o CCQ e o airMAX passaram a ser coletados (sinal da Filial entre -44 e -54 dBm).
@@ -1563,8 +1561,8 @@ O SennaGuard, painel web do NOC, está no ar em `https://192.168.10.50/sennaguar
 
 | Item | Situação |
 | --- | --- |
-| Código | repositório público MathZiraA/sennaguard em `/opt/sennaguard`, serviço `sennaguard` (porta 8010 atrás do Apache) |
-| Atualização | `bash /opt/sennaguard/deploy/atualizar.sh` (git pull + reinstala, mantém banco e configuração) |
+| Código | monorepo MathZiraA/noc-senai-tcc, painel em `/opt/noc-senai-tcc/sennaguard`, serviço `sennaguard` (porta 8010 atrás do Apache) |
+| Atualização | `bash /opt/noc-senai-tcc/instalacao/atualizar-sennaguard.sh` (copie a versão nova para /opt/noc-senai-tcc e reinstala, mantém banco e configuração) |
 | Contas | admins Matheus e Henrique Piffer; 1 cliente |
 | Telegram | bot @SennaGuardBot conectado |
 | IA | Gemini (mesma chave do Analista IA) |
@@ -1708,3 +1706,56 @@ Cuidados aprendidos na instalação do notebook:
 - Pelo assistente do Windows (clicar duas vezes no `.crt`), escolher o repositório **Autoridades de Certificação Raiz Confiáveis**. A primeira tentativa foi para "Autoridades de Certificação Intermediárias", e o navegador continuou sem confiar.
 - Rodar o `certutil` fora da pasta do arquivo dá "O sistema não pode encontrar o arquivo especificado": usar o caminho completo.
 - Para conferir no PowerShell: `Get-ChildItem Cert:\CurrentUser\Root | Where-Object Subject -like "*NOC SENAI*"`. A CA é válida até 17/10/2036.
+
+## 28. Redundância WAN, monitoramento da Matriz e backups (03/11/2026)
+
+### Redundância WAN no R-MATRIZ
+
+| Item | LINK VIVO (principal) | LINK TIN (backup) |
+| --- | --- | --- |
+| Porta / IP (DHCP da escola) | ether2-INTERNET · 172.16.31.41 | ether4-TIN · 172.16.31.39 |
+| Rota padrão | DEF-VIVO, distância 1 | DEF-TIN, distância 2 |
+| Gateway (preso à porta) | `172.16.31.254%ether2-INTERNET` | `172.16.31.254%ether4-TIN` |
+| IP de teste (rota /32 + blackhole) | 1.0.0.1 | 9.9.9.9 |
+
+- Netwatch a cada 5 s (5 pings, cai com 60% de perda): a VIVO caindo desliga a DEF-VIVO e tudo sai pelo TIN em \~5 a 10 s; quando volta, a rota é religada sozinha. As conexões são limpas a cada troca.
+- A ether4 saiu da bridge-LAN. Ela era a porta reservada da iDRAC (sem cabo): a iDRAC fica sem porta própria no R-MATRIZ.
+- Problemas resolvidos na implantação: as duas portas na mesma rede exigem o gateway com `%porta`; a rede da escola bloqueia ping ao OpenDNS (208.67.222.222), por isso o teste da VIVO é 1.0.0.1; `ping interface=` não serve para testar um IP fora da rede local (não usa o gateway).
+- Limite: os dois cabos vêm da mesma rede da escola; o failover cobre cabo ou porta, não a queda da internet da escola.
+- Teste em 03/11: cabo da ether2 retirado, troca para o TIN, alerta e e-mail recebidos, volta para a VIVO ao religar.
+- Script: `routeros/wan-redundancia.rsc`.
+
+### Monitoramento do R-MATRIZ
+
+- Host R-MATRIZ no Zabbix (SNMP v2c só leitura para 192.168.10.50, regra "NOC: Zabbix SNMP" no topo do firewall), template Mikrotik by SNMP. Script `noc/monitorar_matriz.py`.
+- Por link: estado, latência e perda (ping a 1.0.0.1 e 9.9.9.9 a cada 5 s), IP (tabela de endereços via SNMP) e "Link de internet ativo".
+- Alertas: LINK VIVO caiu (Alta), LINK TIN caiu (Média), SEM INTERNET (Desastre); e-mail pela ação do grupo e investigação do Analista IA.
+- Temperatura: o hEX S da Matriz trabalha a \~54 °C; aviso só acima de 65 °C (`{$TEMP_WARN}` no host).
+- Grafana: linha Internet (link ativo, VIVO, TIN, latências) e download por link (`noc/grafana_wan.py`).
+- SennaGuard: cartão Internet e gráfico VIVO x TIN só para a equipe (a API não entrega esses dados ao Cliente); a TV mostra por qual link a rede sai.
+
+### Outros ajustes do dia
+
+- Gráficos do painel de redundância do Zabbix estavam vazios: o filtro de host era "R-FILIAL" e o nome visível é "R-FILIAL (RouterOS Filial SENAI)"; trocado para "R-FILIAL\*" (backup em `/root/noc/dashboard-401.bak-20261103.json`).
+- Sinal do rádio: alertas na faixa da CTI, aviso acima de -50 dBm e abaixo de -62 dBm (crítico -70). Na bancada está em -33 dBm: falta ajustar potência/posição das antenas.
+- Alerta "Link down" da ether3-LAN da Filial desativado (porta sem uso).
+- Seção 11 da documentação oficial reconstruída a partir do histórico (tinha ficado só o título vazio).
+
+### Backups
+
+- O painel guarda o `/export terse` de cada roteador (sem senhas, chaves e usuários) às 3 h e no botão "Fazer backup agora", só quando muda. Agora cada versão pode ser baixada (.rsc) e a página tem o guia de restauração: preferir o backup binário do próprio roteador (Files → Restore); senão `/system reset-configuration no-defaults=yes run-after-reset=ARQUIVO.rsc` e recriar o admin e os usuários zabbix-ia e sennaguard-teste com as chaves.
+- Com o servidor desligado fora da bancada, o backup das 3 h quase não roda: fazer um backup manual depois de cada mudança.
+- O backup binário diário dos roteadores nunca apagava os antigos: `routeros/limpar-backups.rsc` passa para rodízio de 7 arquivos (`backup_<lado>_0` a `_6`).
+
+### Auditoria de escopo e confiabilidade (03/11/2026, 17:40)
+
+Varredura como avaliador da CTI. Corrigido:
+
+- Os scripts do repositório não batiam com os roteadores reais (faltavam WAN, SNMP da Matriz e usuários do NOC): a configuração real exportada fica em `routeros/estado-atual` e passa a ser a referência.
+- `https://192.168.10.50/` abria a página padrão do Apache: agora abre o SennaGuard (backup `noc-ssl.conf.bak-20261103`).
+- Página de status da Filial (cron a cada minuto, zero acessos) aposentada: o SennaGuard faz o mesmo. Script de fim da manutenção da montagem (expirada em 20/10) aposentado e a manutenção apagada. Crons guardados em `/root/noc/cron-*.bak-20261103`.
+- 11 itens internos do Zabbix sem coletor (VMware, Java, IPMI etc.) apareciam como "não suportado": desativados.
+- E-mail de alerta só a partir de Atenção (alertas informativos não viram e-mail).
+- Alerta da ether3 da Filial (desativado) ainda aparecia aberto: fechado com comentário.
+- Apache ignorava `flushpackets`/`timeout` do tempo real do SennaGuard ("worker sharing"): worker do SSE criado antes do geral.
+- Documentação oficial: topologia, portas, rotas e faixa do rádio atualizadas e nova seção "Escopo, decisões e limitações". Ficha: antenas, PCs (DHCP com opção 121 dispensa IP fixo), servidor e iDRAC (via switch na ether3).
