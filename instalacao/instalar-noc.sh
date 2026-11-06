@@ -2,16 +2,16 @@
 # ====================================================================
 # Instalador do NOC SENAI — Zabbix 7.0 + Grafana + Analista IA + HTTPS + backup
 #
-# Uso (como root, num Debian 12 limpo, dentro da pasta do repositório):
+# Uso (como root, num Debian 12 limpo, com o projeto já no servidor):
 #   1. cp noc.conf.exemplo /etc/noc/noc.conf   e ajuste os IPs (o instalador faz a cópia se faltar)
-#   2. bash instalar_noc.sh
+#   2. bash instalacao/instalar-noc.sh
 #
 # Pode ser rodado de novo a qualquer momento: cada etapa pula o que já está pronto.
 # Senhas e chaves são PERGUNTADAS (sem aparecer na tela) e guardadas em arquivos que só o root lê.
 # ====================================================================
 set -euo pipefail
 
-REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"   # raiz do projeto (pasta acima de instalacao/)
 CONF=/etc/noc/noc.conf
 NOC=/root/noc
 VENV=/opt/noc-analista
@@ -189,7 +189,7 @@ cat <<EOF
    Zabbix ............ https://$SERVIDOR_IP/zabbix
    Grafana (TV) ...... https://$SERVIDOR_IP:3000/d/noc-redundancia?kiosk
    Grafana (admin) ... usuário admin, senha em /root/.grafana_admin
-   SennaGuard ........ https://$SERVIDOR_IP/sennaguard/ (instalar à parte: repositório sennaguard)
+   SennaGuard ........ https://$SERVIDOR_IP/sennaguard/ (instale depois: bash instalacao/instalar-sennaguard.sh)
    Certificado da CA . http://$SERVIDOR_IP/NOC-SENAI-CA.crt
  Próximo passo: colar $RSC no $HOST_FILIAL.
  Log completo: $LOG

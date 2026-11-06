@@ -38,46 +38,23 @@ O servidor precisa ter, montado pelo [noc-senai-tcc](https://github.com/MathZira
 
 ### Passo a passo (como root)
 
-1. Instale o Git:
+1. Coloque o projeto no servidor em **`/opt/noc-senai-tcc`** (cópia pela rede, `rsync`/`scp` por SSH ou pendrive — **não** é por git). O painel fica em `sennaguard/` dentro dele.
+
+2. Rode o instalador:
 
    ```bash
-   apt-get update && apt-get install -y git
-   ```
-
-2. **Deploy key (o repositório é privado).** Gere uma chave só-leitura no servidor e cadastre no GitHub:
-
-   ```bash
-   ssh-keygen -t ed25519 -C deploy-noc -f /root/.ssh/id_ed25519_deploy -N ''
-   cat /root/.ssh/id_ed25519_deploy.pub
-   ```
-
-   No GitHub: repositório **noc-senai-tcc** → *Settings → Deploy keys → Add deploy key* → cole a chave e **deixe "Allow write access" desmarcado**. Depois diga ao Git para usar essa chave:
-
-   ```bash
-   printf 'Host github-noc\n  HostName github.com\n  User git\n  IdentityFile /root/.ssh/id_ed25519_deploy\n  IdentitiesOnly yes\n' >> /root/.ssh/config
-   ```
-
-3. Baixe o monorepo em `/opt/noc-senai-tcc` (o painel vive em `sennaguard/`; o instalador confere o caminho):
-
-   ```bash
-   git clone git@github-noc:MathZiraA/noc-senai-tcc.git /opt/noc-senai-tcc
-   ```
-
-4. Rode o instalador:
-
-   ```bash
-   bash /opt/noc-senai-tcc/sennaguard/deploy/instalar.sh
+   bash /opt/noc-senai-tcc/instalacao/instalar-sennaguard.sh
    ```
 
    Ele vai perguntar:
    - o token do bot do Telegram (crie no `@BotFather`; Enter para pular);
    - o e-mail, o nome e a senha do primeiro administrador (só na primeira vez).
 
-5. No fim aparece `SennaGuard no ar: https://<IP>/sennaguard/`. Abra no navegador e entre com o administrador que acabou de criar.
+3. No fim aparece `SennaGuard no ar: https://<IP>/sennaguard/`. Abra no navegador e entre com o administrador que acabou de criar.
 
-6. Se aparecer o bloco de comandos RouterOS, cole no terminal do R-MATRIZ (WinBox → New Terminal). Ele cria o usuário `sennaguard-teste`, usado só pelo teste de failover.
+4. Se aparecer o bloco de comandos RouterOS, cole no terminal do R-MATRIZ (WinBox → New Terminal). Ele cria o usuário `sennaguard-teste`, usado só pelo teste de failover.
 
-7. Nos PCs da Filial, instale a CA do NOC (`http://<IP>/NOC-SENAI-CA.crt`), como já é feito para o Zabbix, e acesse `https://<IP>/sennaguard/`.
+5. Nos PCs da Filial, instale a CA do NOC (`http://<IP>/NOC-SENAI-CA.crt`), como já é feito para o Zabbix, e acesse `https://<IP>/sennaguard/`.
 
 ### Conferir
 
@@ -89,8 +66,10 @@ journalctl -u sennaguard -f                    # log ao vivo
 
 ### Atualizar para a última versão
 
+Copie a versão nova do projeto para `/opt/noc-senai-tcc` (mantendo `/etc/sennaguard` e `/var/lib/sennaguard`) e rode:
+
 ```bash
-bash /opt/noc-senai-tcc/sennaguard/deploy/atualizar.sh
+bash /opt/noc-senai-tcc/instalacao/atualizar-sennaguard.sh
 ```
 
 Mantém o banco, os usuários e a configuração (`/etc/sennaguard/sennaguard.env`).

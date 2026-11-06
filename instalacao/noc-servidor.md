@@ -7,7 +7,7 @@
 > - **VM:** 2 vCPU, 8 GB de RAM, 60 GB de disco, **uma** placa de rede no port group da rede da Matriz
 >   (a internet vem pelo R-MATRIZ, porta ether2). Na instalação do Debian, deixe a rede em DHCP.
 > - **Depois do Debian instalado**, no console da VM, como root, um script faz o resto (rede fixa 192.168.10.50,
->   pacotes, repositório, noc.conf, chave SSH do Analista IA e o `instalar_noc.sh`):
+>   pacotes, repositório, noc.conf, chave SSH do Analista IA e o `instalacao/instalar-noc.sh`):
 >
 >   ```
 >   apt-get install -y curl
@@ -20,7 +20,7 @@
 >   usuário e o token do GitHub, o token da API do Zabbix, a senha de app do Gmail e a chave do Gemini.
 
 O servidor de produção é um PC de torre com o Debian 12 instalado direto no disco (sem máquina virtual). Depois da
-instalação básica, o `instalar_noc.sh` monta o NOC inteiro: Zabbix 7.0, banco, Apache com HTTPS, Grafana, Analista IA,
+instalação básica, o `instalacao/instalar-noc.sh` monta o NOC inteiro: Zabbix 7.0, banco, Apache com HTTPS, Grafana, Analista IA,
 e-mail, dashboards, mapa, página de status, backup diário e tarefas agendadas.
 
 ## Requisitos
@@ -106,9 +106,9 @@ necessário. Para o Claude acessar, instalar a chave pública dele em `/root/.ss
 ```
 apt install -y git
 git clone https://github.com/MathZiraA/noc-senai-tcc.git && cd noc-senai-tcc
-bash instalar_noc.sh        # 1ª vez: cria /etc/noc/noc.conf e para
+bash instalacao/instalar-noc.sh        # 1ª vez: cria /etc/noc/noc.conf e para
 nano /etc/noc/noc.conf      # SERVIDOR_IP=192.168.10.50 e os IPs da rede (já são os padrões)
-bash instalar_noc.sh        # instala tudo; pede o token do Zabbix, a senha de app do Gmail e a chave do Gemini
+bash instalacao/instalar-noc.sh        # instala tudo; pede o token do Zabbix, a senha de app do Gmail e a chave do Gemini
 ```
 
 O repositório é privado: o `git clone` pede o usuário do GitHub e um token de acesso (Settings → Developer settings →

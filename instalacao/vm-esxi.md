@@ -7,7 +7,7 @@ do GitHub).
 > **Atenção:** a VM contém as credenciais do protótipo funcionando (tokens do Zabbix, chave do Gemini, senha de app
 > do Gmail dentro do Zabbix, chave privada da CA do NOC, chaves SSH, senhas do banco e do Grafana). Mantenha o
 > repositório **privado** e só dê acesso a quem pode ter essas credenciais. Para entregar a terceiros, prefira o
-> instalador (`instalar_noc.sh`) num Debian limpo.
+> instalador (`instalacao/instalar-noc.sh`) num Debian limpo.
 
 ## 1. Baixar e juntar as partes
 
@@ -54,7 +54,7 @@ nmcli con mod NAT-Internet ipv4.method auto ipv4.addresses "" ipv4.gateway "" ip
 nmcli con up NAT-Internet
 # se o IP da LAN da Matriz mudar, ajuste também NOC-Matriz-Estatico e o /etc/noc/noc.conf (SERVIDOR_IP)
 nano /etc/noc/noc.conf
-cd /root/noc-senai-tcc && bash instalar_noc.sh   # reaplica certificado, Zabbix e bloco RouterOS com os IPs novos
+cd /root/noc-senai-tcc && bash instalacao/instalar-noc.sh   # reaplica certificado, Zabbix e bloco RouterOS com os IPs novos
 ```
 
 Depois, para o servidor real, troque `CLIENTE_EMAIL` no `/etc/noc/noc.conf` pelo e-mail do cliente e rode o instalador

@@ -53,15 +53,14 @@ Cada passo entra num histórico encadeado por SHA-256, e a tela de Chamados acus
 
 ## Instalação
 
-Passo a passo completo para **Linux** (servidor do NOC ou teste local) e **Windows**: [`docs/INSTALACAO.md`](docs/INSTALACAO.md).
+Os instaladores e os guias ficam na pasta [`instalacao/`](../instalacao) do projeto. Passo a passo completo (servidor e teste local no Windows/Linux): [`instalacao/sennaguard.md`](../instalacao/sennaguard.md).
 
 ## No servidor do NOC (Debian 12, junto do Zabbix)
 
-O repositório é privado: o servidor clona com uma **deploy key read-only** (passo a passo em [`docs/INSTALACAO.md`](docs/INSTALACAO.md)).
+Com o projeto já em `/opt/noc-senai-tcc` (cópia/rsync/pendrive — **não** por git) e o NOC instalado:
 
 ```bash
-git clone git@github-noc:MathZiraA/noc-senai-tcc.git /opt/noc-senai-tcc   # via deploy key (ver INSTALACAO.md)
-bash /opt/noc-senai-tcc/sennaguard/deploy/instalar.sh      # pede o e-mail e a senha do primeiro administrador
+bash /opt/noc-senai-tcc/instalacao/instalar-sennaguard.sh   # pede o e-mail e a senha do primeiro administrador
 ```
 
 O instalador:
@@ -82,7 +81,7 @@ O instalador também prepara as integrações:
 
 | Tarefa | Comando |
 | --- | --- |
-| Atualizar para a última versão do GitHub | `bash /opt/noc-senai-tcc/sennaguard/deploy/atualizar.sh` |
+| Atualizar (após copiar a versão nova para `/opt/noc-senai-tcc`) | `bash /opt/noc-senai-tcc/instalacao/atualizar-sennaguard.sh` |
 | Redefinir a senha de alguém pelo terminal | `cd /opt/noc-senai-tcc/sennaguard/backend && sudo -u sennaguard env $(cat /etc/sennaguard/sennaguard.env \| xargs) ../.venv/bin/python gerenciar.py redefinir-senha --email x@y` |
 | Ver o log | `journalctl -u sennaguard -f` |
 
@@ -104,4 +103,4 @@ Sem `ZABBIX_URL`/`ZABBIX_TOKEN` a API roda em **simulação**: valores da bancad
 - `frontend/src/components/Trilho.tsx`: o trilho do caminho ativo (Matriz ⇄ Filial)
 - `deploy/`: instalador, serviço systemd e configuração do Apache
 
-Roteiro de implantação para uma sessão do Claude no servidor: [`docs/IMPLANTACAO-SERVIDOR.md`](docs/IMPLANTACAO-SERVIDOR.md).
+Guia de instalação do painel: [`instalacao/sennaguard.md`](../instalacao/sennaguard.md).

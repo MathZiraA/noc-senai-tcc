@@ -10,9 +10,10 @@ Projeto de TCC (SENAI 2026): rede Matriz/Filial com dois enlaces (fibra principa
 | --- | --- |
 | [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md) | Documentação técnica completa (topologia, servidor, monitoramento, dashboards, e-mail, IA, segurança, dia da montagem, operação, testes na bancada real) |
 | [`docs/equipamentos.html`](docs/equipamentos.html) | Ficha da bancada: o que está configurado em cada equipamento e o histórico de mudanças (gerada por `bancada/gerar_ficha.py`) |
-| [`bancada/`](bancada) | Configuração automática dos MikroTik (gerar, testar, aplicar, conferir) e o [passo a passo](bancada/PASSO-A-PASSO.md) para remontar |
+| [`bancada/`](bancada) | Configuração automática dos MikroTik (gerar, testar, aplicar, conferir); o passo a passo para remontar está em [`instalacao/bancada-remontar.md`](instalacao/bancada-remontar.md) |
 | [`noc/`](noc) | Scripts Python que configuram o Zabbix pela API e o serviço do Analista IA. Na VM ficam em `/root/noc` |
 | [`sennaguard/`](sennaguard) | **Painel web do NOC** (FastAPI + React): login por perfil, chamados, backups, mapa, teste de failover. Instala em `/opt/noc-senai-tcc/sennaguard` — ver [`sennaguard/README.md`](sennaguard/README.md) |
+| [`instalacao/`](instalacao) | Instaladores e guias para montar tudo num servidor novo (NOC + SennaGuard + bancada) |
 | [`routeros/`](routeros) | Scripts dos MikroTiks (R-MATRIZ, R-FILIAL, switches, nova filial) e o bloco de integração com o NOC |
 | [`grafana/`](grafana) | Dashboard do Grafana e arquivos de provisionamento (o da fonte de dados é só exemplo) |
 | [`sistema/`](sistema) | Unidade systemd do analista e tarefas do cron |
@@ -51,14 +52,15 @@ Os dois MikroTik hEX S (RouterOS 7.24.5) e as duas antenas Ubiquiti PowerBeam M5
 
 ## Instalação num servidor novo (Debian 12, como root)
 
-Um comando monta tudo: Zabbix 7.0, banco, Apache, HTTPS com CA própria, Grafana, Analista IA, e-mail, dashboards, mapa, página de status, backup diário e tarefas agendadas.
+Os instaladores e os guias ficam na pasta [`instalacao/`](instalacao). Coloque o projeto no servidor em `/opt/noc-senai-tcc` (cópia, `rsync` ou pendrive — **não** é por `git`) e rode um comando que monta tudo: Zabbix 7.0, banco, Apache, HTTPS com CA própria, Grafana, Analista IA, e-mail, dashboards, mapa, página de status, backup diário e tarefas agendadas.
 
 ```bash
-git clone https://github.com/MathZiraA/noc-senai-tcc.git && cd noc-senai-tcc
-bash instalar_noc.sh            # 1ª vez: cria /etc/noc/noc.conf e para
-nano /etc/noc/noc.conf          # ajuste SERVIDOR_IP e os IPs da rede
-bash instalar_noc.sh            # instala e configura tudo
+cp /opt/noc-senai-tcc/noc.conf.exemplo /etc/noc/noc.conf   # 1ª vez: ajuste SERVIDOR_IP e os IPs da rede
+nano /etc/noc/noc.conf
+bash /opt/noc-senai-tcc/instalacao/instalar-noc.sh         # instala e configura tudo
 ```
+
+Depois, o painel: `bash /opt/noc-senai-tcc/instalacao/instalar-sennaguard.sh`.
 
 Na segunda execução o instalador **pergunta** (sem mostrar na tela):
 
@@ -68,7 +70,7 @@ Na segunda execução o instalador **pergunta** (sem mostrar na tela):
 
 No fim ele gera o bloco RouterOS já com o IP do servidor, para colar no R-FILIAL. O instalador pode ser rodado de novo a qualquer momento: cada etapa pula o que já está pronto. Endereços e nomes ficam em `/etc/noc/noc.conf` (modelo: [`noc.conf.exemplo`](noc.conf.exemplo)); nenhum script tem IP fixo.
 
-Detalhes, testes e solução de problemas estão em [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md).
+Passo a passo completo, preparo da VM e solução de problemas em [`instalacao/`](instalacao). Documentação técnica em [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md).
 
 ## Segurança
 

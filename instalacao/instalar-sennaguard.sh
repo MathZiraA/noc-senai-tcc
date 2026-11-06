@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 # Instala ou atualiza o SennaGuard no servidor do NOC (Debian 12, como root), ao lado do Zabbix.
-# O SennaGuard vive em sennaguard/ dentro do monorepo privado MathZiraA/noc-senai-tcc.
+# O SennaGuard vive em sennaguard/ dentro do projeto noc-senai-tcc.
 #
-#   git clone https://github.com/MathZiraA/noc-senai-tcc.git /opt/noc-senai-tcc
-#   bash /opt/noc-senai-tcc/sennaguard/deploy/instalar.sh
-#
-# Repo privado: o servidor precisa de uma deploy key read-only (ver sennaguard/docs/INSTALACAO.md).
+# Coloque o projeto no servidor em /opt/noc-senai-tcc (cópia, rsync, pendrive — como preferir) e rode:
+#   bash /opt/noc-senai-tcc/instalacao/instalar-sennaguard.sh
 #
 # Publica em https://<SERVIDOR_IP>/sennaguard/ pelo Apache que já serve o Zabbix (HTTPS com a CA do NOC).
 # Os PCs da Filial chegam por OSPF (fibra ou rádio): o R-MATRIZ já libera 192.168.20.0/24 -> 192.168.10.0/24.
 # Pode rodar de novo a qualquer momento: cada etapa pula o que já está pronto.
 set -euo pipefail
 
-APP=/opt/noc-senai-tcc/sennaguard
+# Raiz do projeto = pasta acima de instalacao/. O app fica em sennaguard/ dentro dela.
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+APP="$REPO/sennaguard"
 ETC=/etc/sennaguard
 DADOS=/var/lib/sennaguard
 PORTA=8010
@@ -20,8 +20,9 @@ NOC_CONF=/etc/noc/noc.conf
 LIVRO=/var/lib/noc-analista/chamados.jsonl
 
 [ "$(id -u)" = 0 ] || { echo "Rode como root."; exit 1; }
-cd "$(dirname "$0")/.."
-[ "$(pwd)" = "$APP" ] || { echo "Rode a partir de $APP (clone o monorepo: git clone ...noc-senai-tcc.git /opt/noc-senai-tcc)."; exit 1; }
+[ -d "$APP/backend" ] || { echo "Não achei o código em $APP. Coloque o projeto em /opt/noc-senai-tcc e rode de novo."; exit 1; }
+# O serviço systemd (sennaguard/deploy/sennaguard.service) usa o caminho fixo /opt/noc-senai-tcc/sennaguard.
+[ "$APP" = /opt/noc-senai-tcc/sennaguard ] || echo "AVISO: o projeto não está em /opt/noc-senai-tcc; o serviço systemd espera esse caminho."
 conf() { grep -E "^\s*$1\s*=" "$NOC_CONF" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d "\"' " || true; }
 
 echo "==> 1/7 Pacotes"
