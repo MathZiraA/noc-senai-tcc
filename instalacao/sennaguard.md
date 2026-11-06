@@ -94,8 +94,8 @@ Funciona em Debian, Ubuntu, Mint e derivados. Não precisa de root depois da ins
 2. Baixe o repositório:
 
    ```bash
-   git clone https://github.com/MathZiraA/noc-senai-tcc.git ~/sennaguard
-   cd ~/sennaguard
+   git clone https://github.com/MathZiraA/noc-senai-tcc.git
+   cd noc-senai-tcc/sennaguard
    ```
 
 3. Instale a API num ambiente virtual:
@@ -155,7 +155,7 @@ Os comandos abaixo são para o **PowerShell**. Não precisa ser administrador, e
    ```powershell
    cd $HOME\Documents
    git clone https://github.com/MathZiraA/noc-senai-tcc.git
-   cd sennaguard
+   cd noc-senai-tcc\sennaguard
    ```
 
 3. Instale a API num ambiente virtual:

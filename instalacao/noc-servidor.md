@@ -6,18 +6,21 @@
 > - **Versão:** Debian **12.15.0** amd64, imagem `debian-12.15.0-amd64-netinst.iso` (a 13 não serve).
 > - **VM:** 2 vCPU, 8 GB de RAM, 60 GB de disco, **uma** placa de rede no port group da rede da Matriz
 >   (a internet vem pelo R-MATRIZ, porta ether2). Na instalação do Debian, deixe a rede em DHCP.
-> - **Depois do Debian instalado**, no console da VM, como root, um script faz o resto (rede fixa 192.168.10.50,
->   pacotes, repositório, noc.conf, chave SSH do Analista IA e o `instalacao/instalar-noc.sh`):
+> - **Depois do Debian instalado**, copie a pasta do projeto para `/opt/noc-senai-tcc` (cópia pela rede, `rsync`/`scp`
+>   ou pendrive — **não** é por git). Exemplo a partir do seu PC:
 >
 >   ```
->   apt-get install -y curl
->   curl -fsSL -H "Authorization: token SEU_TOKEN" -o preparar_servidor.sh \
->     https://raw.githubusercontent.com/MathZiraA/noc-senai-tcc/main/servidor/preparar_servidor.sh
->   bash preparar_servidor.sh
+>   rsync -a --exclude .git --exclude .venv --exclude node_modules ./noc-senai-tcc/ root@192.168.10.50:/opt/noc-senai-tcc/
 >   ```
 >
->   `SEU_TOKEN` = token de leitura do GitHub (o repositório é privado). O script pede, sem mostrar na tela, o
->   usuário e o token do GitHub, o token da API do Zabbix, a senha de app do Gmail e a chave do Gemini.
+> - Depois, no console da VM, como root, um script faz o resto (rede fixa 192.168.10.50, pacotes, `noc.conf`,
+>   chave SSH do Analista IA e o `instalacao/instalar-noc.sh`):
+>
+>   ```
+>   bash /opt/noc-senai-tcc/instalacao/preparar-servidor.sh
+>   ```
+>
+>   Ele pede, sem mostrar na tela, o token da API do Zabbix, a senha de app do Gmail e a chave do Gemini.
 
 O servidor de produção é um PC de torre com o Debian 12 instalado direto no disco (sem máquina virtual). Depois da
 instalação básica, o `instalacao/instalar-noc.sh` monta o NOC inteiro: Zabbix 7.0, banco, Apache com HTTPS, Grafana, Analista IA,
@@ -103,16 +106,16 @@ necessário. Para o Claude acessar, instalar a chave pública dele em `/root/.ss
 
 ## 6. NOC
 
+Copie a pasta do projeto para `/opt/noc-senai-tcc` (cópia pela rede, `rsync`/`scp` ou pendrive — **não** é por git). Depois:
+
 ```
-apt install -y git
-git clone https://github.com/MathZiraA/noc-senai-tcc.git && cd noc-senai-tcc
+cd /opt/noc-senai-tcc
 bash instalacao/instalar-noc.sh        # 1ª vez: cria /etc/noc/noc.conf e para
 nano /etc/noc/noc.conf      # SERVIDOR_IP=192.168.10.50 e os IPs da rede (já são os padrões)
 bash instalacao/instalar-noc.sh        # instala tudo; pede o token do Zabbix, a senha de app do Gmail e a chave do Gemini
 ```
 
-O repositório é privado: o `git clone` pede o usuário do GitHub e um token de acesso (Settings → Developer settings →
-Personal access tokens), digitados por quem for o dono da conta.
+Na VM do ESXi, o `instalacao/preparar-servidor.sh` faz a rede fixa e os pacotes antes deste passo.
 
 ## 7. Conferir
 

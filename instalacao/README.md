@@ -39,6 +39,10 @@ Publica o painel em `https://<SERVIDOR_IP>/sennaguard/` pelo mesmo Apache. Reapr
 
 Coloque a versão nova do projeto em `/opt/noc-senai-tcc` (mantendo `/etc/noc`, `/etc/sennaguard` e `/var/lib/*`) e rode de novo o instalador correspondente. Para o painel há um atalho: [`atualizar-sennaguard.sh`](atualizar-sennaguard.sh).
 
+## Endurecimento de segurança (opcional)
+
+As configurações de segurança do servidor (fail2ban, nftables, SSH) ficam em [`servidor/seguranca/`](../servidor/seguranca) e são aplicadas por `servidor/seguranca/aplicar.sh`, como root, depois do NOC instalado.
+
 ## referencia/
 
 A pasta [`referencia/`](referencia) guarda roteiros antigos de implantação do SennaGuard (de quando o deploy era por `git`). Ficam como histórico — o guia válido é o [`sennaguard.md`](sennaguard.md).

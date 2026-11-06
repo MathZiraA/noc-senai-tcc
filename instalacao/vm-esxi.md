@@ -54,7 +54,7 @@ nmcli con mod NAT-Internet ipv4.method auto ipv4.addresses "" ipv4.gateway "" ip
 nmcli con up NAT-Internet
 # se o IP da LAN da Matriz mudar, ajuste também NOC-Matriz-Estatico e o /etc/noc/noc.conf (SERVIDOR_IP)
 nano /etc/noc/noc.conf
-cd /root/noc-senai-tcc && bash instalacao/instalar-noc.sh   # reaplica certificado, Zabbix e bloco RouterOS com os IPs novos
+cd /opt/noc-senai-tcc && bash instalacao/instalar-noc.sh   # reaplica certificado, Zabbix e bloco RouterOS com os IPs novos
 ```
 
 Depois, para o servidor real, troque `CLIENTE_EMAIL` no `/etc/noc/noc.conf` pelo e-mail do cliente e rode o instalador
