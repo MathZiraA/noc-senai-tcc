@@ -82,8 +82,13 @@ export default function Shell() {
   return (
     <div className="flex min-h-screen">
       <aside className={`sticky top-0 hidden h-screen shrink-0 flex-col bg-lateral px-3.5 pb-5 pt-7 transition-[width] duration-200 md:flex ${recolhida ? 'w-[76px]' : 'w-[240px]'}`}>
-        <div className={`mb-12 flex items-center ${recolhida ? 'justify-center' : 'justify-between pl-3'}`}>
-          {!recolhida && <span className="text-[15px] font-medium tracking-[0.28em] text-tinta">SENNA<span className="text-fibra">G</span>UARD</span>}
+        <div className={`mb-12 flex items-center ${recolhida ? 'justify-center' : 'justify-between pl-1.5'}`}>
+          {!recolhida && (
+            <span className="flex items-center gap-2.5">
+              <LogoSG size={22} />
+              <span className="text-[15.5px] font-semibold tracking-[-0.015em] text-tinta">SennaGuard</span>
+            </span>
+          )}
           <button onClick={alternar} aria-label={recolhida ? 'Abrir menu' : 'Recolher menu'}
             className="grid size-7 place-items-center rounded-md text-tinta-2 transition-colors hover:bg-white/5 hover:text-tinta">
             {recolhida ? <CaretDoubleRight size={16} /> : <CaretDoubleLeft size={16} />}
@@ -132,7 +137,7 @@ export default function Shell() {
         <header className="flex h-[64px] items-center gap-3 px-4 md:h-[76px] md:px-10">
           {/* Bloco da organização, como o "Amazon · Administration" da referência */}
           <div className="flex items-center gap-3">
-            <div className="grid size-8 place-items-center rounded-full bg-white text-[14px] font-bold text-[#1c1b21] ring-1 ring-fio-forte">S</div>
+            <LogoSG size={18} tile />
             <div className="leading-tight">
               <div className="text-[12.5px] font-semibold text-tinta">SENAI</div>
               <div className="text-[12px] text-tinta-2">NOC Matriz · Filial</div>
@@ -222,6 +227,19 @@ export default function Shell() {
         <ConectarTelegram conectado={!!eu?.telegram} disponivel={!!eu?.telegram_disponivel} />
       </Modal>
     </div>
+  )
+}
+
+/** Marca SennaGuard: "S" angular geométrico. `tile` usa o roxo da marca de fundo com o "S" em branco. */
+export function LogoSG({ size = 28, tile = false }: { size?: number; tile?: boolean }) {
+  const s = (
+    <svg viewBox="0 0 32 32" width={size} height={size} fill="none" aria-hidden>
+      <path d="M23 8H11v7h10v9H9" stroke="currentColor" strokeWidth="4.3" strokeLinecap="square" strokeLinejoin="miter" />
+    </svg>
+  )
+  if (!tile) return <span className="text-fibra">{s}</span>
+  return (
+    <span className="grid shrink-0 place-items-center rounded-[9px] bg-fibra text-white" style={{ width: size + 12, height: size + 12 }}>{s}</span>
   )
 }
 

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { useApi } from '../lib/api'
 import { useSessao } from '../lib/sessao'
-import { Marca } from '../components/Shell'
+import { LogoSG } from '../components/Shell'
 
 export default function Login() {
   const { entrar } = useSessao()
@@ -23,9 +23,9 @@ export default function Login() {
     <div className="grid min-h-screen place-items-center px-4 py-10">
       <div className="w-full max-w-[380px]">
         <div className="mb-8 flex items-center gap-3">
-          <Marca />
+          <LogoSG size={30} tile />
           <div className="leading-tight">
-            <div className="text-[14px] font-bold tracking-[0.14em]">SENNAGUARD</div>
+            <div className="text-[16px] font-semibold tracking-[-0.015em]">SennaGuard</div>
             <div className="text-[11px] text-tinta-3">NOC Matriz · Filial</div>
           </div>
         </div>
