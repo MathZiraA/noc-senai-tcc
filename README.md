@@ -1,77 +1,103 @@
-# NOC SENAI — Monitoramento de redundância Fibra x Rádio com Zabbix e IA
+# NOC SENAI — Monitoramento de Redundância de Enlace
 
-Projeto de TCC (SENAI 2026): rede Matriz/Filial com dois enlaces (fibra principal e rádio de backup, OSPF) monitorada por Zabbix 7.0, com Grafana, página de status e um **Analista NOC com IA** que investiga cada incidente e envia o relatório por e-mail.
+![Debian 12](https://img.shields.io/badge/Debian-12-A81D33?logo=debian&logoColor=white)
+![Zabbix 7.0 LTS](https://img.shields.io/badge/Zabbix-7.0_LTS-D40000?logo=zabbix&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-dashboards-F46800?logo=grafana&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React_19-TypeScript-3178C6?logo=react&logoColor=white)
+![RouterOS 7](https://img.shields.io/badge/MikroTik-RouterOS_7-293239?logo=mikrotik&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-2f2f2f)
 
-![Arquitetura](docs/arquitetura.png)
+Centro de Operações de Rede (NOC) que monitora a redundância **Fibra/Rádio** entre duas unidades, detecta o *failover* em segundos e investiga cada incidente com um analista assistido por IA. Projeto de TCC (SENAI, 2026) construído sobre a mesma stack de um ambiente de produção: Zabbix 7.0, Grafana, um painel web próprio (SennaGuard) e roteadores MikroTik em bancada real.
 
-## O que tem aqui
+![Painel do NOC — visão do enlace em tempo real](docs/img/painel.jpg)
 
-| Pasta | Conteúdo |
+## Visão geral
+
+A Matriz e a Filial se interligam por dois caminhos sob OSPF: a **fibra** (custo 10) transporta o tráfego e o **rádio** (custo 100) assume quando a fibra degrada ou cai. O NOC instrumenta esse enlace de ponta a ponta — da coleta SNMP e dos testes de alcance até o alerta por e-mail — e mede, a cada queda, o tempo exato que a rede leva para convergir no caminho de backup.
+
+Três pilares sustentam a operação:
+
+- **Observabilidade.** Zabbix 7.0 coleta SNMP e testa cada enlace por *ping*; uma sonda dedicada de 1 s detecta queda em ~2 s. Dashboards no Zabbix e no Grafana (modo TV) expõem o estado em tempo real.
+- **Resposta assistida por IA.** Ao abrir um incidente, um analista baseado em LLM investiga Zabbix e MikroTik por ferramentas somente leitura e entrega linha do tempo, causa provável, impacto e ações recomendadas.
+- **Operação.** O painel SennaGuard concentra alertas, chamados com SLA, manutenções, backups de configuração e testes de *failover*, com acesso segregado por perfil.
+
+## Arquitetura
+
+![Arquitetura do NOC, do enlace ao alerta](docs/arquitetura.png)
+
+O servidor é uma VM Debian 12 sobre VMware ESXi, posicionada na LAN da Matriz. O Zabbix detecta a queda e dispara o alerta; em paralelo, aciona o analista de IA, que investiga e devolve o laudo ao evento — que vira o segundo e-mail. Nenhum script carrega endereços fixos: topologia e credenciais ficam em `/etc/noc/noc.conf` e em arquivos `chmod 600`, fora do repositório.
+
+| Pasta | Responsabilidade |
 | --- | --- |
-| [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md) | Documentação técnica completa (topologia, servidor, monitoramento, dashboards, e-mail, IA, segurança, dia da montagem, operação, testes na bancada real) |
-| [`docs/equipamentos.html`](docs/equipamentos.html) | Ficha da bancada: o que está configurado em cada equipamento e o histórico de mudanças (gerada por `bancada/gerar_ficha.py`) |
-| [`bancada/`](bancada) | Configuração automática dos MikroTik (gerar, testar, aplicar, conferir); o passo a passo para remontar está em [`instalacao/bancada-remontar.md`](instalacao/bancada-remontar.md) |
-| [`noc/`](noc) | Scripts Python que configuram o Zabbix pela API e o serviço do Analista IA. Na VM ficam em `/root/noc` |
-| [`sennaguard/`](sennaguard) | **Painel web do NOC** (FastAPI + React): login por perfil, chamados, backups, mapa, teste de failover. Instala em `/opt/noc-senai-tcc/sennaguard` — ver [`sennaguard/README.md`](sennaguard/README.md) |
-| [`instalacao/`](instalacao) | Instaladores e guias para montar tudo num servidor novo (NOC + SennaGuard + bancada) |
-| [`routeros/`](routeros) | Scripts dos MikroTiks (R-MATRIZ, R-FILIAL, switches, nova filial) e o bloco de integração com o NOC |
-| [`grafana/`](grafana) | Dashboard do Grafana e arquivos de provisionamento (o da fonte de dados é só exemplo) |
-| [`sistema/`](sistema) | Unidade systemd do analista e tarefas do cron |
-| [`historico/`](historico) | Scripts da primeira versão (feitos com o Gemini), com as senhas removidas |
+| [`noc/`](noc) | Orquestração do Zabbix via API, serviço do Analista IA, dashboards e chamados (Python) |
+| [`sennaguard/`](sennaguard) | Painel web do NOC — API FastAPI + interface React/TypeScript |
+| [`routeros/`](routeros) | Configuração dos MikroTik e switches (OSPF, netwatch, firewall, redundância WAN) |
+| [`grafana/`](grafana) | Dashboards e provisionamento do Grafana |
+| [`instalacao/`](instalacao) | Instaladores e guias de implantação em servidor novo |
+| [`docs/`](docs/DOCUMENTACAO.md) | Documentação técnica de referência |
 
-## Componentes
+## Capacidades
 
-- **Zabbix 7.0** em VM Debian 12 (`192.168.10.50` na rede da Matriz, `192.168.137.50` pelo NAT do notebook).
-- **Monitoramento:** ping em cada enlace a cada 10 s, alcance da LAN da Filial a cada 1 s, caminho ativo calculado, SNMP do R-FILIAL (template *Mikrotik by SNMP*).
-- **9 triggers:** fibra caída/failover, rádio caído, Filial isolada, failover lento, fibra instável, latência alta e 3 de previsão de degradação do rádio.
-- **Tempo de failover** medido em segundos a cada queda da fibra.
-- **Dashboards:** Zabbix (3 páginas, incluindo mapa da topologia) e Grafana (`:3000`, tela para TV).
-- **Página de status** para os usuários da Filial em `/status`.
-- **E-mail** via Gmail: alerta, análise da IA e normalização.
-- **Analista IA:** Google Gemini (camada gratuita) com 6 ferramentas somente leitura; Claude opcional.
+**Monitoramento e detecção**
+- SNMP do R-FILIAL e das antenas; *ping* de cada enlace a cada 10 s e alcance da LAN remota a cada 1 s.
+- Loopback `/32` por roteador como *router-id* OSPF e alvo de monitoramento, alcançável pela fibra ou pelo rádio.
+- Nove *triggers* que distinguem fibra caída com rádio assumindo, rádio caído, Filial isolada, *failover* lento e fibra instável — e antecipam a queda quando o rádio começa a degradar.
+- Cronometragem do *failover* em segundos a cada evento.
 
-## Revisão CTI (10/2026)
+**Resposta a incidentes**
+- Analista de IA (Google Gemini) com seis ferramentas somente leitura sobre Zabbix e MikroTik.
+- Chamados automáticos (`NOC-xxx`) para quedas acima de 1 h, com e-mail formal ao cliente.
+- Registro de chamados em livro encadeado por **SHA-256**, com verificação de integridade.
 
-Pedidos da reunião com a CTI, já implementados (detalhes na seção 14 da documentação):
+**Operação (SennaGuard)**
+- Acesso por perfil (Administrador, Analista, Operador, Cliente), validado no servidor.
+- Backups diários de configuração dos roteadores, com *diff* entre versões e explicação por IA.
+- Teste de *failover* sob aprovação, manutenções programadas, base de conhecimento, notificações por Telegram, relatórios de SLA em PDF e modo TV.
 
-- **Portas:** ether1 = rádio, sfp1 = fibra óptica (SFP), ether2 = reserva, ether3/4/5 = rede local em `bridge-LAN`.
-- **Loopback /32** em cada roteador (`10.255.255.1` / `10.255.255.2`): router-id do OSPF e endereço de monitoramento, alcançável pela fibra ou pelo rádio.
-- **Fibra degradada:** alertas de latência, perda, piora em relação ao normal e previsão, mesmo sem a fibra cair.
-- **Troca por qualidade:** netwatch no MikroTik (RouterOS 7.4+) sobe o custo OSPF da fibra para 200 quando ela degrada, e o tráfego vai para o rádio.
-- **Chamados:** queda que passa de 1 h gera o chamado `NOC-<n>` com e-mail formal ao cliente e registro num livro encadeado por SHA-256 (`noc/chamados.py --verificar`).
-- **Antenas** monitoradas como hosts próprios.
-- **Testes:** `simular_queda.py --cenario queda|degradacao|chamado`.
+## Stack
 
-## Bancada real (16/10/2026)
+| Camada | Tecnologia |
+| --- | --- |
+| Monitoramento | Zabbix 7.0 LTS, SNMP, Grafana |
+| Servidor | Debian 12 em VMware ESXi, Apache + HTTPS com CA própria |
+| Backend | Python, FastAPI, SQLite |
+| Frontend | React 19, TypeScript, Tailwind CSS, Vite |
+| IA | Google Gemini (ferramentas somente leitura) |
+| Rede | MikroTik hEX S (RouterOS 7), Ubiquiti PowerBeam M5, OSPF |
 
-Os dois MikroTik hEX S (RouterOS 7.24.5) e as duas antenas Ubiquiti PowerBeam M5 estão configurados e testados:
+## Interface
 
-- **Fibra** (sfp1): OSPF fechado, ~0,6 ms. **Rádio** (ether1): sinal de -53/-52 dBm, 0% de perda à distância, 6,4 ms.
-- **Failover:** queda da fibra resolvida em 3,9 s pelo rádio; volta para a fibra sem perda.
-- Detalhes nas seções 19 a 21 da documentação e na ficha `docs/equipamentos.html`.
+O SennaGuard entrega o estado do NOC com login por perfil, tempo real via SSE e temas claro/escuro.
 
-## Instalação num servidor novo (Debian 12, como root)
+![Acesso ao SennaGuard](docs/img/login.jpg)
 
-Os instaladores e os guias ficam na pasta [`instalacao/`](instalacao). Coloque o projeto no servidor em `/opt/noc-senai-tcc` (cópia, `rsync` ou pendrive — **não** é por `git`) e rode um comando que monta tudo: Zabbix 7.0, banco, Apache, HTTPS com CA própria, Grafana, Analista IA, e-mail, dashboards, mapa, página de status, backup diário e tarefas agendadas.
+## Resultados em bancada real
 
-```bash
-cp /opt/noc-senai-tcc/noc.conf.exemplo /etc/noc/noc.conf   # 1ª vez: ajuste SERVIDOR_IP e os IPs da rede
-nano /etc/noc/noc.conf
-bash /opt/noc-senai-tcc/instalacao/instalar-noc.sh         # instala e configura tudo
-```
+Validado com dois MikroTik hEX S (RouterOS 7.24.5) e duas antenas Ubiquiti PowerBeam M5:
 
-Depois, o painel: `bash /opt/noc-senai-tcc/instalacao/instalar-sennaguard.sh`.
+| Métrica | Resultado |
+| --- | --- |
+| Latência da fibra (sfp1) | ~0,6 ms, OSPF estável |
+| Enlace de rádio (ether1) | sinal de −53/−52 dBm, 0% de perda, 6,4 ms |
+| Convergência no *failover* | **3,9 s** da queda da fibra até o rádio assumir |
+| Retorno à fibra | sem perda |
 
-Na segunda execução o instalador **pergunta** (sem mostrar na tela):
+## Implantação
 
-1. o **token da API do Zabbix**: ele explica como entrar com a senha padrão, trocá-la e criar o token;
-2. a **senha de app do Gmail** da conta que envia os alertas;
-3. a **chave do Google Gemini** (opcional; sem ela, tudo funciona menos o Analista IA).
+Instalação completa em um Debian 12 limpo a partir de um único instalador, documentada em [`instalacao/`](instalacao). O NOC (Zabbix, banco, Apache com HTTPS, Grafana, Analista IA, e-mail, backup) sobe com um comando; o painel sobe com outro. Endereços e segredos são parametrizados, nunca versionados.
 
-No fim ele gera o bloco RouterOS já com o IP do servidor, para colar no R-FILIAL. O instalador pode ser rodado de novo a qualquer momento: cada etapa pula o que já está pronto. Endereços e nomes ficam em `/etc/noc/noc.conf` (modelo: [`noc.conf.exemplo`](noc.conf.exemplo)); nenhum script tem IP fixo.
+## Roadmap
 
-Passo a passo completo, preparo da VM e solução de problemas em [`instalacao/`](instalacao). Documentação técnica em [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md).
+- **Alta disponibilidade** do próprio NOC: réplica da VM e backup puxado para fora do servidor, mitigando o ponto único de falha.
+- **SNMPv3** com autenticação e privacidade, substituindo a comunidade v2c.
+- **Segmentação** do plano de gerência em VLAN dedicada.
+- **Auto-monitoramento do servidor** e endurecimento contra DoS na camada web.
 
 ## Segurança
 
-Nenhuma senha, token ou chave está neste repositório. Credenciais ficam em arquivos `chmod 600` na VM (`/root/.zabbix_token`, `/root/.zabbix_token_analista`, `/root/.gemini_key`, `/root/.grafana_admin`). Nos scripts RouterOS as senhas aparecem como `<SENHA_...>` para preencher na hora de colar.
+Nenhuma senha, token ou chave está versionada. Credenciais residem em arquivos `chmod 600` no servidor; nos scripts RouterOS as senhas aparecem como marcadores a preencher na aplicação. O acesso ao painel usa HTTPS com CA própria, sessões `HttpOnly`/`SameSite`, bloqueio por tentativas e autorização por perfil no servidor.
+
+## Licença
+
+Distribuído sob a licença [MIT](LICENSE).

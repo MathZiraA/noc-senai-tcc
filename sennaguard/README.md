@@ -1,6 +1,12 @@
 # SennaGuard
 
-Painel web do NOC. Faz parte do monorepo [noc-senai-tcc](https://github.com/MathZiraA/noc-senai-tcc) (este diretório, `sennaguard/`): estado do enlace Fibra x Rádio entre Matriz e Filial, alertas com a análise do Analista IA, chamados com o livro encadeado por SHA-256, equipamentos e usuários, com login e acesso por perfil.
+Painel web do NOC, parte do monorepo [noc-senai-tcc](https://github.com/MathZiraA/noc-senai-tcc) (diretório `sennaguard/`). Apresenta, em tempo real, o estado do enlace Fibra/Rádio entre Matriz e Filial, os alertas com o laudo do Analista IA, os chamados com SLA e livro encadeado por SHA-256, e a gestão de equipamentos e usuários — com acesso segregado por perfil.
+
+![Painel SennaGuard](../docs/img/painel.jpg)
+
+## Arquitetura
+
+Backend em **FastAPI** (Python) e interface em **React/TypeScript**, publicados pelo mesmo Apache do Zabbix em `https://<servidor>/sennaguard/`. O painel não coleta métricas por conta própria: lê o Zabbix pela API, os roteadores por SSH somente leitura e o livro de chamados do Analista IA. Uma sonda dedicada de 1 s complementa o Zabbix e reflete quedas em ~2 s; a interface recebe as mudanças em tempo real por SSE.
 
 ## Perfis de acesso
 
@@ -13,7 +19,7 @@ Painel web do NOC. Faz parte do monorepo [noc-senai-tcc](https://github.com/Math
 
 Quem abre chamado é sempre o cliente; a equipe do NOC atende. O teste de failover derruba a fibra de propósito: o Analista pede e só o Administrador aprova.
 
-Senhas com scrypt, sessão em cookie `HttpOnly` + `SameSite=Strict` (12 h), bloqueio de 5 min após 5 senhas erradas, e sempre pelo menos um administrador ativo.
+**Segurança do acesso:** senhas com *scrypt*, sessão em cookie `HttpOnly` + `SameSite=Strict` (12 h), bloqueio temporário após tentativas malsucedidas e a garantia de ao menos um administrador ativo. Toda autorização é verificada no servidor, por perfil.
 
 ## Chamados
 

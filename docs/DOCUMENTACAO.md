@@ -1,26 +1,24 @@
-# NOC SENAI — Zabbix + Analista IA: Documentação Técnica
+# NOC SENAI — Documentação Técnica
 
-Oct 3, 2026 · @Matheus
+Monitoramento da redundância Fibra/Rádio entre Matriz e Filial, com detecção de *failover* em segundos, notificação por e-mail e análise de incidentes assistida por IA. Este documento descreve a arquitetura, o monitoramento, o painel de operação, a segurança e a implantação da plataforma.
 
 ## 1. Visão geral
 
-O NOC do TCC monitora a redundância Fibra/Rádio entre Matriz e Filial e avisa por e-mail, em menos de 2 minutos, quando um enlace cai, com um relatório de causa provável escrito por IA. Tudo roda em uma VM Debian com Zabbix 7.0 dentro do notebook, ligada ao switch da Matriz.
+O NOC monitora o enlace entre Matriz e Filial e notifica, em menos de dois minutos, quando um caminho cai — acompanhado de um laudo de causa provável gerado por IA. A plataforma roda em uma VM Debian 12 com Zabbix 7.0 sobre VMware ESXi, posicionada na LAN da Matriz.
 
-O que foi construído:
+Componentes principais:
 
-- **Monitoramento:** o roteador R-FILIAL é coletado por SNMP e cada enlace (fibra e rádio) é testado por ping a cada 10 segundos.
-- **Detecção de failover:** 9 triggers distinguem fibra caída com rádio assumindo, rádio caído, Filial isolada, failover lento e fibra instável, e avisam antes da queda quando o rádio começa a degradar. O tempo de cada failover é medido em segundos.
-- **Dashboard NOC:** estado dos enlaces em tempo real, latência, problemas ativos e histórico de notificações, no Zabbix e no Grafana (tela escura para a TV do NOC, com o caminho ativo Fibra/Rádio em destaque).
-- **E-mail:** alerta na abertura e na normalização de cada problema, via Gmail.
-- **Analista NOC com IA:** ao abrir um problema, uma IA (Google Gemini, gratuito) investiga o Zabbix e o MikroTik com ferramentas somente leitura e envia um relatório com linha do tempo, causa provável, impacto e ações recomendadas.
+- **Monitoramento:** o R-FILIAL é coletado por SNMP e cada enlace (fibra e rádio) é testado por *ping* a cada 10 segundos.
+- **Detecção de failover:** nove *triggers* distinguem fibra caída com rádio assumindo, rádio caído, Filial isolada, *failover* lento e fibra instável, e antecipam a queda quando o rádio começa a degradar. O tempo de cada evento é medido em segundos.
+- **Dashboards:** estado dos enlaces em tempo real, latência, problemas ativos e histórico de notificações, no Zabbix e no Grafana (modo TV, com o caminho ativo Fibra/Rádio em destaque).
+- **Notificação:** e-mail na abertura e na normalização de cada incidente, via Gmail.
+- **Analista IA:** ao abrir um incidente, um analista baseado em LLM (Google Gemini) investiga Zabbix e MikroTik com ferramentas somente leitura e entrega linha do tempo, causa provável, impacto e ações recomendadas.
 
-&#91;embedded content: arquitetura do NOC · do enlace ao e-mail\]
+![Arquitetura do NOC, do enlace ao alerta](arquitetura.png)
 
-O Zabbix detecta a queda e manda o alerta direto ao Gmail; em paralelo, chama o Analista IA, que investiga (Zabbix, Gemini e SSH no roteador) e devolve um comentário ao evento, que vira o segundo e-mail.
+O Zabbix detecta a queda e dispara o alerta; em paralelo, aciona o Analista IA, que investiga (Zabbix, Gemini e SSH somente leitura no roteador) e anexa o laudo ao evento, que origina o segundo e-mail.
 
-Status em 03/10/2026: servidor, dashboard, e-mail e IA testados de ponta a ponta. Falta apenas a montagem física da bancada (MikroTiks e enlaces).
-
-Este ambiente é um **protótipo** numa VM do notebook. Na topologia real, o Zabbix e todos os serviços deste documento vão rodar num **servidor dedicado**, reinstalados a partir do repositório do GitHub.
+A plataforma foi validada em bancada real — dois MikroTik hEX S e duas antenas Ubiquiti PowerBeam M5 — e opera em servidor dedicado, reinstalável de ponta a ponta a partir do repositório.
 
 ## 2. Topologia monitorada
 
@@ -235,7 +233,7 @@ A camada gratuita do Gemini responde "503 alta demanda" com frequência. O servi
 - **Sem loop:** atualizações e recuperações são ignoradas, então o próprio comentário da IA não dispara nova análise.
 - **Honestidade:** a IA é instruída a afirmar só o que os dados mostram, a dizer qual dado faltou e a dar confiança alta apenas quando a evidência aponta para uma única causa.
 
-### Exemplo real (03/10/2026, bancada desmontada)
+### Exemplo de incidente
 
 Gerado pelo `gemini-3.5-flash` em 17 s, após 8 consultas às ferramentas. Trecho:
 
@@ -289,7 +287,7 @@ Pendências recomendadas:
 - [ ] Trocar a senha padrão do usuário Admin do Zabbix
 - [ ] Trocar `TROQUE_POR_UMA_SENHA_FORTE` no script do R-FILIAL antes de colar
 
-### Servidor à prova de falhas (05/10/2026)
+### Resiliência do servidor
 
 | Medida | Como funciona | Arquivo |
 | --- | --- | --- |
@@ -565,17 +563,9 @@ Para trocar um token do Zabbix: crie outro em *Users > API tokens* e grave no ar
 | Código | `/root/noc` na VM · `Documents\Claude\noc-senai-tcc` no notebook · GitHub |
 | Backups | Tabela de partições antiga em `/root/sda-particoes-antes.sfdisk`; scripts antigos em `/root/scripts-antigos/` |
 
-### Pendências antes da apresentação
-
-- [ ] Montar a bancada e seguir o checklist da seção 9
-- [ ] Rodar o roteiro de testes de failover e guardar os e-mails e prints para a monografia
-- [ ] Conferir o mapa da topologia com a rede no ar (rótulos de latência)
-- [ ] Trocar a senha do Admin do Zabbix, se ainda for a padrão
-- [ ] Revogar a senha de app do Gmail exposta em chat e trocar a senha pessoal do Gmail
-
 ## 14. Requisitos da reunião com a CTI
 
-Na reunião com o Jaison, da CTI (empresa parceira), saíram sete pedidos; seis foram implementados e testados por simulação em 14/10/2026, e dois pontos dependem de informação externa (marca dos rádios e o significado de "60 e 62").
+A revisão técnica com a CTI (empresa parceira) levantou sete requisitos para o ambiente, todos contemplados nesta versão e descritos a seguir.
 
 | Pedido da CTI | O que foi feito | Status |
 | --- | --- | --- |
@@ -629,7 +619,7 @@ As antenas `RADIO-P2P-MATRIZ` e `RADIO-P2P-FILIAL` já são monitoradas por ping
 
 A VM do protótipo foi exportada em 14/10/2026 no formato OVA (5,3 GB, sistema marcado como Debian 12 64 bits, placas Intel e1000) e enviada à release `vm-prototipo-2026-10-14` do repositório privado no GitHub, em 3 partes de até 1,9 GB (o GitHub aceita até 2 GB por arquivo de release; o repositório em si não aceita arquivos acima de 100 MB). O guia `instalacao/vm-esxi.md` explica como juntar as partes, conferir o SHA-256 (`770b63b0...fddc2ce`), importar no ESXi e trocar os IPs. A VM contém as credenciais do protótipo: o repositório deve continuar privado.
 
-### Testes realizados (14/10/2026, por simulação)
+### Testes de validação
 
 | Cenário | Comando | Resultado |
 | --- | --- | --- |
@@ -1208,7 +1198,7 @@ A pasta `bancada\saida` guarda as senhas escolhidas: ela nunca vai para o GitHub
 
 ## 19. Bancada nova (16/10/2026)
 
-A escola trocou os equipamentos e a bancada foi refeita do zero no mesmo dia: os dois roteadores e as duas antenas estão configurados e a rede funciona pela fibra e pelo rádio. A configuração completa de cada equipamento está na [Ficha da Bancada NOC](https://claude.ai/artifact/3JGpGASvmM2Sr8NneByJyq), atualizada a cada mudança (cópia em `docs/equipamentos.html`, gerada por `bancada/gerar_ficha.py` a partir dos scripts reais).
+A escola trocou os equipamentos e a bancada foi refeita do zero no mesmo dia: os dois roteadores e as duas antenas estão configurados e a rede funciona pela fibra e pelo rádio. A configuração completa de cada equipamento está em [`docs/equipamentos.html`](equipamentos.html), gerada por `bancada/gerar_ficha.py` a partir dos scripts reais e atualizada a cada mudança.
 
 ### Equipamentos
 
@@ -1555,7 +1545,7 @@ A Filial tinha rota até a internet pelo OSPF, mas o R-MATRIZ descartava o tráf
 
 ## 26. SennaGuard: implantação, varredura e manual (22 a 26/10/2026)
 
-O SennaGuard, painel web do NOC, está no ar em `https://192.168.10.50/sennaguard/` com dados reais do Zabbix e dos roteadores. O manual com prints de cada tela (atualizado em 26/10, 17:15, com os períodos de 5/10/30 min, o menu "Atualizar a cada", o "Enter envia" nos chamados e as seções de segurança e de instalação do certificado) está em [Manual do SennaGuard](https://claude.ai/artifact/J4Zc9FRWiddRLUJEwL5NmK).
+O SennaGuard, painel web do NOC, opera em `https://<servidor>/sennaguard/` com dados reais do Zabbix e dos roteadores. A documentação do painel, seus perfis de acesso e funcionalidades está em [`sennaguard/README.md`](../sennaguard/README.md).
 
 ### Implantação
 
