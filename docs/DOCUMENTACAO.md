@@ -130,7 +130,7 @@ Dica para a apresentação: o botão de tela cheia (modo quiosque) no canto supe
 
 ### Grafana — a tela da TV do NOC
 
-O Grafana 13.2 com o plugin oficial do Zabbix (6.8.0) mostra o painel **NOC - Redundância Fibra x Rádio** em `http://192.168.137.50:3000`, com tema escuro e atualização a cada 10 s. Ele só lê dados: coleta, alertas, e-mail e IA continuam no Zabbix.
+O Grafana 13.2 com o plugin oficial do Zabbix (6.8.0) mostra o painel **NOC - Redundância Fibra x Rádio** em `https://<servidor>:3000`, com tema escuro e atualização a cada 10 s. Ele só lê dados: coleta, alertas, e-mail e IA continuam no Zabbix.
 
 | Painel | O que mostra |
 | --- | --- |
@@ -143,7 +143,7 @@ O Grafana 13.2 com o plugin oficial do Zabbix (6.8.0) mostra o painel **NOC - Re
 
 Como usar:
 
-- **TV do NOC:** abrir `http://192.168.137.50:3000/d/noc-redundancia?kiosk`. O acesso de visitante é somente leitura e não pede login.
+- **TV do NOC:** abrir `https://<servidor>:3000/d/noc-redundancia?kiosk`. O acesso de visitante é somente leitura e não pede login.
 - **Administração:** usuário `admin`; a senha aleatória está na VM, em `/root/.grafana_admin`.
 - **Conexão com o Zabbix:** fonte de dados "Zabbix NOC" com o usuário `grafana-leitura` (somente leitura, token próprio).
 - **Configuração:** tudo por provisionamento (`setup_grafana.py`); para mudar o painel, edite o script e rode-o de novo. Para conferir, rode `testar_grafana.py`.
@@ -156,7 +156,7 @@ O mapa **Topologia NOC SENAI - Fibra x Rádio** desenha Matriz (zona azul) e Fil
 
 ### Página de status para os usuários da Filial
 
-Uma página simples, sem termos técnicos, em `http://192.168.10.50/status` (rede da empresa) e `http://192.168.137.50/status` (notebook), atualizada a cada minuto por `status_page.py` (cron) e servida pelo Apache.
+Uma página simples, sem termos técnicos, em `https://<servidor>/status`, atualizada a cada minuto por `status_page.py` (cron) e servida pelo Apache.
 
 - **Situação agora:** "Funcionando normalmente", "Funcionando pelo link reserva" ou "Sem conexão com a Matriz".
 - **Disponibilidade:** percentual das últimas 24 h e 7 dias, com uma barra colorida por dia.
@@ -291,8 +291,8 @@ Pendências recomendadas:
 
 | Medida | Como funciona | Arquivo |
 | --- | --- | --- |
-| HTTPS em tudo | Zabbix, página de status (Apache, porta 443) e Grafana (porta 3000) usam um certificado assinado pela **CA própria do NOC**, válido para `192.168.137.50`, `192.168.10.50` e `noc.senai.local`. Acessos por `http://` de fora são redirecionados para `https://`; os scripts internos continuam usando `http://localhost` | `setup_https.sh` |
-| Certificado da CA no navegador | Instale `NOC-SENAI-CA.crt` no Windows (abaixo) e o navegador mostra o cadeado sem aviso. Também disponível em `http://192.168.137.50/NOC-SENAI-CA.crt` e na pasta `certificado/` do GitHub | `certificado/NOC-SENAI-CA.crt` |
+| HTTPS em tudo | Zabbix, página de status (Apache, porta 443) e Grafana (porta 3000) usam um certificado assinado pela **CA própria do NOC**, válido para `192.168.10.50` e `noc.senai.local`. Acessos por `http://` de fora são redirecionados para `https://`; os scripts internos continuam usando `http://localhost` | `setup_https.sh` |
+| Certificado da CA no navegador | Instale `NOC-SENAI-CA.crt` no Windows (abaixo) e o navegador mostra o cadeado sem aviso. Também disponível em `https://<servidor>/NOC-SENAI-CA.crt` e na pasta `certificado/` do GitHub | `certificado/NOC-SENAI-CA.crt` |
 | Backup diário | Todo dia às 02:30: dump do banco do Zabbix + configurações (Zabbix, Grafana, Apache, scripts, CA, cron, serviço, credenciais) em `/var/backups/noc`, guardando 7 dias, só o root lê. Primeiro backup: 5 MB, dump verificado íntegro | `backup_noc.sh` |
 | Alerta de backup | Item "Backup NOC - tamanho total" no host *Zabbix server*; se o backup não rodar em 26 h, abre o problema "Backup diário do NOC não rodou nas últimas 26h" | `setup_backup.py` |
 | Snapshot da VM | Snapshot `estavel-2026-10-05-https-backup` no VMware: em caso de problema, *VM > Snapshot > Revert* volta a este estado em 1 minuto | VMware |
@@ -468,18 +468,18 @@ Todos os endereços web usam **HTTPS** (ex.: `https://<servidor>/zabbix`, `https
 
 ### Endereços e acessos
 
-Do notebook use sempre os endereços `192.168.137.x` (rede interna do VMware, funcionam com ou sem a bancada). Da rede da empresa (Matriz ou Filial) use `192.168.10.50`.
+Da rede da empresa (Matriz ou Filial), o servidor responde em `192.168.10.50`. Os endereços abaixo usam `<servidor>` para esse IP.
 
 | O quê | Endereço | Usuário | Senha | Onde a senha está / como obter |
 | --- | --- | --- | --- | --- |
-| Zabbix (web) | `http://192.168.137.50/zabbix` · `http://192.168.10.50/zabbix` | `Admin` |  | A que você definiu; se nunca trocou, ainda é a padrão de instalação do Zabbix (trocar!) |
-| Mapa da topologia | `http://192.168.137.50/zabbix/zabbix.php?action=map.view&sysmapid=5` | `Admin` |  | Mesma do Zabbix |
-| Grafana — TV do NOC (sem login) | `http://192.168.137.50:3000/d/noc-redundancia?kiosk` | visitante | — | Somente leitura, não pede senha |
-| Grafana — administração | `http://192.168.137.50:3000` | `admin` |  | Na VM: `cat /root/.grafana_admin` (gerada aleatoriamente) |
-| Página de status | `http://192.168.137.50/status` · `http://192.168.10.50/status` | — | — | Pública na rede, sem login |
-| VM — SSH | `ssh aluno@192.168.137.50` | `aluno` |  | Senha do usuário criada na instalação do Debian |
+| Zabbix (web) | `https://<servidor>/zabbix` | `Admin` |  | A que você definiu; se nunca trocou, ainda é a padrão de instalação do Zabbix (trocar!) |
+| Mapa da topologia | `https://<servidor>/zabbix/zabbix.php?action=map.view&sysmapid=5` | `Admin` |  | Mesma do Zabbix |
+| Grafana — TV do NOC (sem login) | `https://<servidor>:3000/d/noc-redundancia?kiosk` | visitante | — | Somente leitura, não pede senha |
+| Grafana — administração | `https://<servidor>:3000` | `admin` |  | Na VM: `cat /root/.grafana_admin` (gerada aleatoriamente) |
+| Página de status | `https://<servidor>/status` | — | — | Pública na rede, sem login |
+| VM — SSH | `ssh aluno@<servidor>` | `aluno` |  | Senha do usuário criada na instalação do Debian |
 | VM — administrador | `su -` dentro da sessão SSH | `root` |  | Senha de root criada na instalação do Debian |
-| VM — SSH por chave (sem senha) | `ssh -i ~/.ssh/id_ed25519_zabbix root@192.168.137.50` | `root` | — | Chave `id_ed25519_zabbix` na pasta `.ssh` do seu usuário no notebook |
+| VM — SSH por chave (sem senha) | `ssh -i ~/.ssh/id_ed25519_zabbix root@<servidor>` | `root` | — | Chave `id_ed25519_zabbix` na pasta `.ssh` do seu usuário no notebook |
 | VM — console | Janela da VM no VMware Workstation | `aluno` / `root` |  | Mesmas senhas acima |
 | Banco do Zabbix (MariaDB) | `localhost:3306`, base `zabbix` | `zabbix` |  | Na VM: `grep DBPassword /etc/zabbix/zabbix_server.conf` |
 | R-MATRIZ (Winbox/SSH) | `192.168.10.1` | `admin_senai` |  | A definida no script `r-matriz.rsc` ao colar (`<SENHA_ADMIN_MATRIZ>`) |
