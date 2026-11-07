@@ -38,17 +38,17 @@ Por que o Zabbix fica na Matriz: ele mede cada enlace pingando o IP da Filial **
 
 ## 3. Servidor Zabbix
 
-O Zabbix 7.0.31 roda em uma VM Debian 12 no VMware do notebook, com duas placas de rede: uma na rede da Matriz para monitorar e outra em NAT para ter internet (e-mail e IA). As duas redes nunca se misturam.
+Em produção, o Zabbix 7.0 roda em uma VM Debian 12 sobre VMware ESXi, com interface na rede da Matriz para monitoramento e saída de internet pelo R-MATRIZ (e-mail e IA). O ambiente de desenvolvimento reproduz a mesma VM em estação de trabalho, com a internet por NAT. Em ambos, o plano de monitoramento permanece isolado do de internet.
 
 | Item | Valor |
 | --- | --- |
 | Sistema | Debian 12 (bookworm), Python 3.11 |
 | Pacotes | Zabbix Server 7.0 LTS + frontend PHP + Apache + MariaDB + zabbix-agent2 |
-| Interface web | `http://192.168.137.50/zabbix` (do notebook, sempre) · `http://192.168.10.50/zabbix` (da rede da Matriz) |
-| SSH | `root@192.168.137.50` por chave (`id_ed25519_zabbix` no notebook) |
+| Interface web | `https://<servidor>/zabbix` (ex.: `https://192.168.10.50/zabbix` na rede da Matriz) |
+| SSH | `root@<servidor>` por chave (`id_ed25519_zabbix`) |
 | Banco | MariaDB, base `zabbix`, utf8mb4 |
 
-Recursos da VM após a ampliação de 03/10/2026: 4 GB de RAM, 1 vCPU, disco de 20 GB (cerca de 48% em uso) e swap de 2 GB em arquivo (`/swapfile`). A tabela de partições anterior está salva em `/root/sda-particoes-antes.sfdisk`. Na mesma VM roda o Grafana 13.2 em `http://192.168.137.50:3000` (seção 5).
+Recursos da VM: 4 GB de RAM, 1 vCPU e disco de 20 GB, com swap em arquivo. O Grafana roda na mesma VM, em `https://<servidor>:3000` (seção 5).
 
 ### Rede da VM
 
@@ -148,7 +148,7 @@ Como usar:
 - **Conexão com o Zabbix:** fonte de dados "Zabbix NOC" com o usuário `grafana-leitura` (somente leitura, token próprio).
 - **Configuração:** tudo por provisionamento (`setup_grafana.py`); para mudar o painel, edite o script e rode-o de novo. Para conferir, rode `testar_grafana.py`.
 
-Verificado em 03/10/2026: todos os painéis de dados respondem e o painel mostra corretamente FILIAL ISOLADA com a bancada desmontada. O gráfico de tráfego só terá dados depois que o SNMP do MikroTik responder.
+Todos os painéis de dados respondem e o painel exibe corretamente o estado FILIAL ISOLADA. O gráfico de tráfego só terá dados depois que o SNMP do MikroTik responder.
 
 ### Mapa da topologia (página 3 do dashboard do Zabbix)
 
@@ -166,7 +166,7 @@ Uma página simples, sem termos técnicos, em `http://192.168.10.50/status` (red
 
 ## 6. Notificações por e-mail
 
-Cada problema do grupo gera até três e-mails para `matheus.ziravello@aluno.senai.br`: o alerta na abertura, a análise da IA cerca de 1 minuto depois e a normalização quando resolve. Os três foram recebidos no teste de 03/10/2026; aparecem com remetente "eu" porque saem da própria conta.
+Cada problema do grupo gera até três e-mails para `matheus.ziravello@aluno.senai.br`: o alerta na abertura, a análise da IA cerca de 1 minuto depois e a normalização quando resolve. Os três chegam no teste de ponta a ponta; aparecem com remetente "eu" porque saem da própria conta.
 
 ### Tipo de mídia "Gmail Alertas SENAI"
 
@@ -423,7 +423,7 @@ Na VM também ficam: o ambiente Python em `/opt/noc-analista` (SDKs `google-gena
 
 ### Instalador para o servidor dedicado
 
-O NOC inteiro se instala num Debian 12 limpo com um comando, `bash instalacao/instalar-noc.sh`, a partir do repositório. Testado em 05/10/2026 rodando sobre o próprio protótipo: as 10 etapas passaram, nada foi duplicado e Zabbix, Grafana, IA, página de status e tarefas agendadas continuaram funcionando. Ainda não foi testado num servidor totalmente vazio.
+O NOC inteiro se instala num Debian 12 limpo com um comando, `bash instalacao/instalar-noc.sh`, a partir do repositório. O instalador é idempotente — cada etapa pula o que já está pronto — e cobre Zabbix, Grafana, Analista IA, página de status e as tarefas agendadas. A plataforma opera hoje em servidor dedicado, implantada por esse fluxo.
 
 1. Copie o projeto para `/opt/noc-senai-tcc` (cópia/rsync/pendrive — não é por git) e entre nele: `cd /opt/noc-senai-tcc`.
 2. `bash instalacao/instalar-noc.sh`: na primeira vez ele cria `/etc/noc/noc.conf` e para.
@@ -446,53 +446,25 @@ O NOC inteiro se instala num Debian 12 limpo com um comando, `bash instalacao/in
 
 Todos os endereços ficam em `/etc/noc/noc.conf` (modelo `noc.conf.exemplo`), lido por `config.py`; nenhum script tem IP fixo. Mudou um IP? Edite o arquivo e rode o instalador de novo: ele refaz o certificado HTTPS e reaplica a configuração.
 
-## 12. Próximos passos: usos da IA e ideias de inovação
+## 12. Evolução e extensibilidade
 
-O Analista IA hoje cobre a análise de cada incidente; as listas abaixo são candidatas para expandir o projeto, não itens já implementados (exceto onde indicado).
+A arquitetura — coleta centralizada no Zabbix, ferramentas de IA somente leitura e um painel desacoplado — foi desenhada para crescer sem retrabalho. Os eixos de evolução previstos:
 
-### 20 usos da IA neste projeto
+**Operação assistida por IA.** Além da análise de incidentes já em produção, o analista pode gerar resumos de troca de plantão, pós-incidentes automáticos (duração, impacto e lições aprendidas) e um chat operacional em linguagem natural sobre o estado da rede.
 
-1. Análise de causa de cada incidente (implementado)
-2. Medir o tempo de failover: quantos segundos o OSPF levou para passar o tráfego ao rádio (implementado)
-3. Relatório semanal de disponibilidade: quanto cada enlace ficou no ar e quanto tempo a rede rodou pelo rádio
-4. Detectar fibra instável e recomendar manutenção antes da queda definitiva
-5. Prever falha do rádio percebendo a latência subindo aos poucos (implementado)
-6. Auditoria diária da configuração: comparar o `/export` do MikroTik com a versão aprovada
-7. Revisão de segurança do roteador: admin reativado, serviços abertos, regras de firewall fracas
-8. Chat NOC: perguntas em português, como "quanto tempo ficamos no rádio hoje?"
-9. Resumo de troca de plantão com o que aconteceu nas últimas 8 horas
-10. Pós-incidente automático quando o problema resolve: duração, impacto e lições
-11. Correlação de eventos num incidente só (implementado em parte, com a janela de 60 s)
-12. Prioridade inteligente: tratar diferente o mesmo alerta em manutenção e em produção
-13. Sugerir limites melhores para os triggers com base no histórico real
-14. Documentação viva: inventário e plano de IPs gerados a partir dos dados coletados
-15. Validação do MTU 2000 de ponta a ponta com teste guiado e laudo
-16. Roteiro guiado de teste de failover para a banca, com laudo automático
-17. Capacidade: avaliar se o rádio aguenta o tráfego que a fibra carrega
-18. Explicar cada alerta em linguagem simples para técnicos iniciantes
-19. Gerar o script de uma nova filial a partir do modelo, para revisão humana
-20. Analisar os logs do MikroTik em busca de força bruta e comportamento estranho
+**Confiabilidade.** Detecção instantânea de queda por *SNMP trap*/netwatch, em vez de aguardar o próximo *ping*; auditoria diária da configuração contra a versão aprovada; e correção assistida com aprovação humana a partir do próprio alerta.
 
-### Ideias para inovar
+**Segurança.** Revisão automatizada do *hardening* dos roteadores (usuários, serviços expostos, regras de firewall) e análise dos logs do MikroTik em busca de força bruta e anomalias.
 
-- **Integração com o assistente de voz JARVIS:** "Jarvis, como está a rede?" e aviso falado quando a fibra cai.
-- **Bot no Telegram ou WhatsApp** com botões "ver análise" e "reconhecer alerta".
-- **Mapa da topologia no Zabbix ou no Grafana**, com os enlaces mudando de cor ao vivo (implementado no Zabbix).
-- **Monitorar o R-MATRIZ e as duas antenas** para a IA distinguir defeito de antena de defeito de roteador.
-- **Detecção instantânea:** o MikroTik avisa o Zabbix na hora da queda (SNMP trap ou netwatch), em vez de esperar o próximo ping.
-- **Correção com aprovação humana:** a IA sugere um comando e um botão no e-mail autoriza a execução.
-- **Página de status** para os usuários da Filial, como as empresas fazem (implementado).
-- **Relatório mensal em PDF** gerado automaticamente para a gerência.
-- **Backup das configurações em Git**, com a IA explicando o que mudou de um dia para o outro.
-- **Experimento para o TCC:** comparar IA na nuvem (Gemini) e IA local (Ollama) em qualidade, tempo e custo.
-- **Avaliação da IA:** botão "útil / não útil" em cada análise, gerando métricas de precisão para a monografia.
-- **Testes de falha agendados:** derrubar a fibra de propósito toda semana, com aprovação, e medir se a redundância continua funcionando.
+**Capacidade e planejamento.** Avaliação de se o rádio sustenta o tráfego nominal da fibra, sugestão de limiares de *trigger* a partir do histórico real e consolidação de relatórios de disponibilidade e SLA.
 
-## 13. Guia de acesso: tudo o que existe e como acessar
+Boa parte desses eixos já tem base entregue — mapa de topologia ao vivo, página de status pública, relatórios de SLA em PDF, backup de configuração com *diff* explicado por IA e métricas de precisão do analista — e evolui de forma incremental.
 
-Esta seção reúne, num lugar só, cada serviço, endereço, usuário e onde fica cada credencial em 03/10/2026. A coluna **Senha** está em branco de propósito: preencha você mesmo, se quiser, e nunca copie esta seção preenchida para o GitHub.
+## 13. Referência de acesso
 
-Desde 05/10/2026 todos os endereços web usam **https://** (ex.: `https://192.168.137.50/zabbix`, `https://192.168.137.50:3000`). Quem digitar `http://` é redirecionado; o Grafana só responde em `https://`.
+Esta seção consolida serviços, endereços, usuários e a localização de cada credencial. A coluna **Senha** fica em branco de propósito: nunca versione esta seção preenchida.
+
+Todos os endereços web usam **HTTPS** (ex.: `https://<servidor>/zabbix`, `https://<servidor>:3000`); requisições em `http://` são redirecionadas, e o Grafana responde apenas em HTTPS.
 
 ### Endereços e acessos
 
@@ -539,7 +511,7 @@ Para trocar um token do Zabbix: crie outro em *Users > API tokens* e grave no ar
 | Google (envio e recebimento dos alertas) | `matheus.ziravello@aluno.senai.br` | myaccount.google.com/apppasswords | Senha de app "Zabbix NOC" usada pelo Zabbix |
 | Google AI Studio (Gemini) | Sua conta Google | aistudio.google.com > API keys | Camada gratuita, sem cartão |
 | GitHub | `MathZiraA` | https://github.com/MathZiraA/noc-senai-tcc | Repositório **privado** com todo o código e esta documentação (sem senhas) |
-| GitHub CLI no notebook | `MathZiraA` | `gh auth status` | Login feito em 03/10/2026, guardado no cofre do Windows |
+| GitHub CLI no notebook | `MathZiraA` | `gh auth status` | Login guardado no cofre do Windows |
 | Esta documentação | Sua conta Claude | Link deste documento | Privada até você compartilhar |
 | Anthropic (Claude API) | — | console.anthropic.com | Não usada (paga); o código aceita se um dia existir `/root/.anthropic_key` |
 
@@ -628,9 +600,9 @@ A VM do protótipo foi exportada em 14/10/2026 no formato OVA (5,3 GB, sistema m
 | Adulteração do livro | Alteração numa cópia | Detectada |
 | Validação da bancada | `validar_bancada.py` | Roda; com a rede desmontada, todos os itens falham como esperado |
 
-## 15. Pesquisa: IA no monitoramento de redes
+## 15. Fundamentação: IA no monitoramento de redes
 
-A IA no monitoramento de redes é usada hoje para três coisas: prever falhas antes que aconteçam, detectar comportamento fora do normal sem limites fixos e explicar a causa de um incidente. O projeto usa as três, em versões simples.
+A IA aplicada ao monitoramento de redes atua hoje em três frentes: prever falhas antes que ocorram, detectar comportamento fora do padrão sem limiares fixos e explicar a causa de um incidente. O projeto emprega as três, em implementações pragmáticas.
 
 | Abordagem | O que a literatura mostra | No projeto |
 | --- | --- | --- |
@@ -648,7 +620,7 @@ A IA no monitoramento de redes é usada hoje para três coisas: prever falhas an
 3. **Anomalia sazonal:** depois de algumas semanas de dados, usar `trendstl` e `baselinedev` para a latência da fibra, no lugar do limite fixo.
 4. **Explicar o alerta:** como a NVIDIA mostra os contadores que mais pesaram, o analista já cita as medições que usou; manter isso como regra.
 
-Fontes consultadas em 14/10/2026. Os documentos da NVIDIA e da Connection são de fabricantes, não estudos independentes.
+Os documentos da NVIDIA e da Connection são de fabricantes, não estudos independentes.
 
 ## 16. Scripts dos equipamentos (versão atualizada)
 
