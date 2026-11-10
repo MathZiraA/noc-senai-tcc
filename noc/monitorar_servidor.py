@@ -24,17 +24,18 @@ GRUPO = "Rede SENAI - Equipamentos"   # mesmo grupo do R-FILIAL/R-MATRIZ: o e-ma
 
 # Limites de alerta — ajustáveis por macro no host, sem mexer no código.
 MACROS = {
-    "{$NOC_SYN_MAX}": "200",        # conexões SYN_RECV (meia-abertas): acima disso = possível SYN flood
-    "{$NOC_HTTP_MAX}": "500",       # conexões estabelecidas em 80/443
-    "{$NOC_TOPTALKER_MAX}": "100",  # conexões vindas de um único IP
+    # Calibrados para a rede do projeto (tráfego normal baixo); ajuste conforme o ambiente.
+    "{$NOC_SYN_MAX}": "100",        # conexões SYN_RECV (meia-abertas): acima disso = possível SYN flood
+    "{$NOC_HTTP_MAX}": "120",       # conexões estabelecidas em 80/443
+    "{$NOC_TOPTALKER_MAX}": "50",   # conexões vindas de um único IP
     "{$NOC_APACHE_MAX}": "150",     # MaxRequestWorkers do Apache (prefork padrão)
-    "{$NOC_APACHE_PCT}": "90",      # % dos workers ocupados que dispara "saturado"
+    "{$NOC_APACHE_PCT}": "60",      # % dos workers ocupados que dispara "saturado"
     "{$NOC_CPU_MAX}": "90",         # % de CPU
-    "{$NOC_LOAD_MAX}": "4",         # carga média de 1 min
+    "{$NOC_LOAD_MAX}": "3",         # carga média de 1 min
     "{$NOC_RAM_MAX}": "90",         # % de RAM usada
     "{$NOC_DISK_MAX}": "90",        # % do disco / usado
-    "{$NOC_SSHFAIL_MAX}": "20",     # falhas de SSH por minuto
-    "{$NOC_DROPS_MAX}": "50",       # pacotes/s descartados pelo firewall
+    "{$NOC_SSHFAIL_MAX}": "10",     # falhas de SSH por minuto
+    "{$NOC_DROPS_MAX}": "10",       # pacotes/s descartados pelo firewall
 }
 
 

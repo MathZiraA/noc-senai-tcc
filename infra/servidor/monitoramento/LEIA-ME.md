@@ -41,12 +41,12 @@ Caem no grupo *Rede SENAI - Equipamentos*, então já disparam o e-mail e a inve
 
 | Alerta | Severidade | Condição (macro ajustável) |
 | --- | --- | --- |
-| Possível SYN flood | Alta | `SYN_RECV` > `{$NOC_SYN_MAX}` (200) por 1 min |
-| Possível flood HTTP | Alta | conexões no site > `{$NOC_HTTP_MAX}` (500) por 1 min |
-| Flood de origem única | Alta | um IP > `{$NOC_TOPTALKER_MAX}` (100) conexões |
-| Apache saturado | Alta | workers ocupados > `{$NOC_APACHE_MAX}`·`{$NOC_APACHE_PCT}`% |
-| SSH sob força bruta | Média | falhas de SSH > `{$NOC_SSHFAIL_MAX}` (20)/min |
-| Firewall descartando muito | Aviso | descartes/s > `{$NOC_DROPS_MAX}` (50) |
+| Possível SYN flood | Alta | `SYN_RECV` > `{$NOC_SYN_MAX}` (100) por 1 min |
+| Possível flood HTTP | Alta | conexões no site > `{$NOC_HTTP_MAX}` (120) por 1 min |
+| Flood de origem única | Alta | um IP > `{$NOC_TOPTALKER_MAX}` (50) conexões |
+| Apache saturado | Alta | workers ocupados > `{$NOC_APACHE_MAX}`·`{$NOC_APACHE_PCT}`% (90) |
+| SSH sob força bruta | Média | falhas de SSH > `{$NOC_SSHFAIL_MAX}` (10)/min |
+| Firewall descartando muito | Aviso | descartes/s > `{$NOC_DROPS_MAX}` (10) |
 | CPU / carga / RAM altas | Média | acima do limite por 5 min |
 | Disco quase cheio | Alta | uso de `/` > `{$NOC_DISK_MAX}` (90%) |
 | Servidor sem telemetria | Alta | sem dados do agente por 3 min |
