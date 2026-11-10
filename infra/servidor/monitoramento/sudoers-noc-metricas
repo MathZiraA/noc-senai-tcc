@@ -1,0 +1,6 @@
+# NOC SENAI — permite ao usuário do agente (zabbix) ler, sem senha, apenas os comandos
+# de consulta de segurança. Nenhum deles altera o sistema (somente leitura).
+# Instalar em /etc/sudoers.d/noc-metricas (modo 0440) e validar com: visudo -cf /etc/sudoers.d/noc-metricas
+zabbix ALL=(root) NOPASSWD: /usr/bin/fail2ban-client status, /usr/bin/fail2ban-client status *
+zabbix ALL=(root) NOPASSWD: /usr/sbin/nft list counter inet filter noc_drop_input
+zabbix ALL=(root) NOPASSWD: /usr/bin/journalctl -q _SYSTEMD_UNIT=ssh.service --since *
