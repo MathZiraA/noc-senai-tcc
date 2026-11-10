@@ -43,14 +43,14 @@ print("\n2. Enlaces até a Filial")
 fibra, radio = ping(C["FIBRA_FILIAL"]), ping(C["RADIO_FILIAL"])
 mostrar(fibra, f"fibra: R-FILIAL responde em {C['FIBRA_FILIAL']}", dica="fibra/módulos SFP nas portas sfp1 dos dois roteadores")
 mostrar(radio, f"rádio: R-FILIAL responde em {C['RADIO_FILIAL']}", dica="rádios associados? ether1 dos roteadores nos PoE?")
-mostrar(ping(C["ANTENA_MATRIZ"]), f"antena da Matriz ({C['ANTENA_MATRIZ']})", dica="IP/gateway da antena (bancada/saida/RADIOS.txt)")
+mostrar(ping(C["ANTENA_MATRIZ"]), f"antena da Matriz ({C['ANTENA_MATRIZ']})", dica="IP/gateway da antena (infra/bancada/saida/RADIOS.txt)")
 mostrar(ping(C["ANTENA_FILIAL"]), f"antena da Filial ({C['ANTENA_FILIAL']})", dica="o enlace de rádio está associado?")
 
 print("\n3. Filial")
 mostrar(ping(C["LAN_FILIAL"]), f"LAN da Filial ({C['LAN_FILIAL']})", dica="OSPF não está trocando rotas (veja item 5)")
 mostrar(ping(C["LOOPBACK_FILIAL"]), f"loopback do R-FILIAL ({C['LOOPBACK_FILIAL']}): monitoramento pelos dois links",
         dica="interface 'loopback' com o /32 e o interface-template passive no OSPF do R-FILIAL")
-mostrar(ping("192.168.20.10"), "PC-FILIAL (192.168.20.10)", dica="rode bancada/saida/pc-filial.ps1 no PC (como administrador)")
+mostrar(ping("192.168.20.10"), "PC-FILIAL (192.168.20.10)", dica="rode infra/bancada/saida/pc-filial.ps1 no PC (como administrador)")
 
 print("\n4. Acesso do NOC ao R-FILIAL")
 snmp = subprocess.run(["snmpget", "-v2c", "-c", C["SNMP_COMMUNITY"], "-t", "3", "-r", "1", C["LAN_FILIAL"],

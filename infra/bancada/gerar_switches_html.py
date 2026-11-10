@@ -3,14 +3,14 @@
 Lê routeros/switches.rsc (a mesma fonte do gerar_configs.py), então a página nunca diverge do arquivo.
 A senha pode ser digitada na página: ela só substitui o <SENHA_...> no texto copiado, no navegador de quem
 está usando; não é gravada nem enviada a lugar nenhum.
-Uso:  python bancada\\gerar_switches_html.py
+Uso:  python infra\\bancada\\gerar_switches_html.py
 """
 import html
 from pathlib import Path
 
 from gerar_ficha import CSS  # mesma identidade visual da ficha da bancada
 
-RAIZ = Path(__file__).resolve().parent.parent
+RAIZ = Path(__file__).resolve().parent.parent.parent
 DESTINO = RAIZ / "docs" / "switches.html"
 texto = (RAIZ / "routeros" / "switches.rsc").read_text(encoding="utf-8")
 

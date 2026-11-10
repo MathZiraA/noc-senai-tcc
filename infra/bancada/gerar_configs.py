@@ -1,27 +1,27 @@
-"""Gera os arquivos finais da bancada em bancada/saida/ (pasta ignorada pelo Git).
+"""Gera os arquivos finais da bancada em infra/bancada/saida/ (pasta ignorada pelo Git).
 
-Rode no notebook:  python bancada\\gerar_configs.py
+Rode no notebook:  python infra\\bancada\\gerar_configs.py
 Pergunta as senhas (sem mostrar na tela) e monta, a partir de routeros/:
   R-MATRIZ.rsc, R-FILIAL.rsc .... configuração completa (R-FILIAL já inclui a integração com o NOC)
   SW-MATRIZ.rsc, SW-FILIAL.rsc .. switches MikroTik gerenciáveis (opcional)
   noc-analista.pub .............. chave SSH de leitura do Analista IA (vai junto para o R-FILIAL)
   pc-matriz.ps1, pc-filial.ps1 .. IP fixo dos PCs
   RADIOS.txt .................... ficha para configurar os rádios pela página web
-Os .rsc contêm as senhas que você digitou: apague bancada/saida/ depois de configurar.
+Os .rsc contêm as senhas que você digitou: apague infra/bancada/saida/ depois de configurar.
 """
 import getpass
 import secrets
 import sys
 from pathlib import Path
 
-RAIZ = Path(__file__).resolve().parent.parent
+RAIZ = Path(__file__).resolve().parent.parent.parent
 MODELOS = RAIZ / "routeros"
 SAIDA = Path(__file__).resolve().parent / "saida"
 CHAVE_ANALISTA = ("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ6p8g/oAtn3KK0x8Tze43LoZ5JZ6vePhG3ihVcCquum "
                   "noc-analista@zabbix")
 
 # O MikroTik roda o arquivo logo depois do reset: espera as interfaces subirem antes de configurar
-INICIO = """# Gerado por bancada/gerar_configs.py — aplicado com:
+INICIO = """# Gerado por infra/bancada/gerar_configs.py — aplicado com:
 #   /system reset-configuration no-defaults=yes skip-backup=yes run-after-reset={arquivo}
 :delay 15s
 :log info "NOC SENAI: aplicando {arquivo}"
@@ -115,8 +115,8 @@ MTU                 2000 (ou o máximo aceito)   2000 (ou o máximo aceito)
 
 Depois de configurar: do PC-MATRIZ, "ping 10.0.2.4" deve responder.
 """)
-    print("\nPronto. Próximo passo: bancada\\enviar_mikrotik.ps1 (veja bancada\\LEIA-ME.md).")
-    print("ATENÇÃO: os .rsc têm as senhas que você digitou. Apague bancada\\saida depois.")
+    print("\nPronto. Próximo passo: infra\\bancada\\enviar_mikrotik.ps1 (veja infra\\bancada\\LEIA-ME.md).")
+    print("ATENÇÃO: os .rsc têm as senhas que você digitou. Apague infra\\bancada\\saida depois.")
 
 
 if __name__ == "__main__":

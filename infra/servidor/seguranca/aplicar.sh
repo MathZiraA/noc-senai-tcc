@@ -4,7 +4,7 @@
 #   - firewall nftables: entra só 22 (Matriz e rede da escola), 80/443/3000 (LANs da Matriz e da Filial) e ping
 #   - SSH sem X11, 3 tentativas por conexão, root só por chave; fail2ban bane 1 h após 5 erros em 10 min
 #   - Apache sem versão no cabeçalho; Avahi desligado; atualizações de segurança automáticas
-# Uso, como root:  bash servidor/seguranca/aplicar.sh
+# Uso, como root:  bash infra/servidor/seguranca/aplicar.sh
 # O firewall entra com trava: se a sessão cair, ele se desfaz sozinho em 180 s. Confirme digitando "ok".
 # ====================================================================
 set -euo pipefail

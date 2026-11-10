@@ -169,9 +169,9 @@ passo "9/10 Grafana, serviços e tarefas agendadas"
 "$PY" setup_grafana.py
 chown -R grafana:grafana /var/lib/grafana
 systemctl enable grafana-server >>"$LOG" 2>&1 && systemctl restart grafana-server
-cp "$REPO/sistema/noc-analista.service" /etc/systemd/system/
+cp "$REPO/infra/sistema/noc-analista.service" /etc/systemd/system/
 systemctl daemon-reload && systemctl enable noc-analista >>"$LOG" 2>&1 && systemctl restart noc-analista
-cp "$REPO"/sistema/cron.d/noc-* /etc/cron.d/ && chmod 644 /etc/cron.d/noc-*
+cp "$REPO"/infra/sistema/cron.d/noc-* /etc/cron.d/ && chmod 644 /etc/cron.d/noc-*
 chmod 700 "$NOC/backup_noc.sh"
 ok "analista, Grafana, backup diário e registro de failover"
 

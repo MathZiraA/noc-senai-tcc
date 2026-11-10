@@ -28,19 +28,24 @@ Três pilares sustentam a operação:
 
 O servidor é uma VM Debian 12 sobre VMware ESXi, posicionada na LAN da Matriz. O Zabbix detecta a queda e dispara o alerta; em paralelo, aciona o analista de IA, que investiga e devolve o laudo ao evento — que vira o segundo e-mail. Nenhum script carrega endereços fixos: topologia e credenciais ficam em `/etc/noc/noc.conf` e em arquivos `chmod 600`, fora do repositório.
 
+O repositório separa as **duas frentes** do projeto — a infraestrutura de rede (NOC) e a plataforma web (SennaGuard) — em uma estrutura enxuta:
+
 | Pasta | Responsabilidade |
 | --- | --- |
 | [`noc/`](noc) | Orquestração do Zabbix via API, serviço do Analista IA, dashboards e chamados (Python) |
 | [`sennaguard/`](sennaguard) | Painel web do NOC — API FastAPI + interface React/TypeScript |
 | [`routeros/`](routeros) | Configuração dos MikroTik e switches (OSPF, netwatch, firewall, redundância WAN) |
-| [`grafana/`](grafana) | Dashboards e provisionamento do Grafana |
+| [`infra/`](infra) | Infraestrutura de apoio: bancada, provisionamento do Grafana, segurança do servidor e unidades de sistema |
 | [`instalacao/`](instalacao) | Instaladores e guias de implantação em servidor novo |
-| [`docs/`](docs/DOCUMENTACAO.md) | Documentação técnica de referência |
+| [`docs/`](docs/DOCUMENTACAO.md) | Documentação técnica de referência e a apresentação do projeto |
+| [`arquivo/`](arquivo) | Material legado mantido como referência histórica |
+
+A **documentação técnica completa**, dividida em *Parte 1 — Infraestrutura de Rede (NOC)* e *Parte 2 — Plataforma SennaGuard*, está em [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md). A apresentação final (`.pptx`/`.pdf`) está em [`docs/apresentacao/`](docs/apresentacao).
 
 ## Capacidades
 
 **Monitoramento e detecção**
-- SNMP do R-FILIAL e das antenas; *ping* de cada enlace a cada 10 s e alcance da LAN remota a cada 1 s.
+- SNMP do R-FILIAL e das antenas; *ping* de cada enlace a cada 5 s e alcance da LAN remota a cada 1 s.
 - Loopback `/32` por roteador como *router-id* OSPF e alvo de monitoramento, alcançável pela fibra ou pelo rádio.
 - Nove *triggers* que distinguem fibra caída com rádio assumindo, rádio caído, Filial isolada, *failover* lento e fibra instável — e antecipam a queda quando o rádio começa a degradar.
 - Cronometragem do *failover* em segundos a cada evento.

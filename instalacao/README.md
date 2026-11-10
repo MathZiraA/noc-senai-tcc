@@ -1,6 +1,6 @@
 # Instalação do NOC SENAI
 
-Tudo o que é preciso para montar o projeto num servidor, reunido nesta pasta. O **código-fonte** fica nas pastas do projeto (`noc/`, `sennaguard/`, `routeros/`, `grafana/`…); aqui ficam só os **instaladores e os guias**.
+Tudo o que é preciso para montar o projeto num servidor, reunido nesta pasta. O **código-fonte** fica nas pastas do projeto (`noc/`, `sennaguard/`, `routeros/`) e a infraestrutura de apoio em `infra/`; aqui ficam só os **instaladores e os guias**.
 
 > **Como o código chega ao servidor:** este projeto **não** se instala puxando do GitHub. Coloque a pasta do projeto no servidor em **`/opt/noc-senai-tcc`** do jeito que preferir (cópia pela rede, `rsync`/`scp` por SSH, ou pendrive) e rode os instaladores a partir dela. O GitHub é só onde o código é versionado.
 
@@ -41,7 +41,7 @@ Coloque a versão nova do projeto em `/opt/noc-senai-tcc` (mantendo `/etc/noc`, 
 
 ## Endurecimento de segurança (opcional)
 
-As configurações de segurança do servidor (fail2ban, nftables, SSH) ficam em [`servidor/seguranca/`](../servidor/seguranca) e são aplicadas por `servidor/seguranca/aplicar.sh`, como root, depois do NOC instalado.
+As configurações de segurança do servidor (fail2ban, nftables, SSH) ficam em [`infra/servidor/seguranca/`](../infra/servidor/seguranca) e são aplicadas por `infra/servidor/seguranca/aplicar.sh`, como root, depois do NOC instalado.
 
 ## referencia/
 

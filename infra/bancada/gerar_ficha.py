@@ -2,12 +2,12 @@
 
 Os scripts vêm direto de routeros/ (com as senhas como <SENHA_...>), então a página nunca diverge do que é
 aplicado. O estado de cada equipamento e o histórico de mudanças ficam em EQUIPAMENTOS e MUDANCAS, abaixo:
-ao mudar algo na bancada, atualize aqui e rode  python bancada\\gerar_ficha.py
+ao mudar algo na bancada, atualize aqui e rode  python infra\\bancada\\gerar_ficha.py
 """
 import html
 from pathlib import Path
 
-RAIZ = Path(__file__).resolve().parent.parent
+RAIZ = Path(__file__).resolve().parent.parent.parent
 DESTINO = RAIZ / "docs" / "equipamentos.html"
 ATUALIZADO = "26/10/2026 17:30"
 

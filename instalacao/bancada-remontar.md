@@ -64,11 +64,11 @@ até o R-MATRIZ. Para ver o caminho: desligue o Wi-Fi um momento e rode `tracert
 ## 6. Conferência completa (PowerShell, na pasta do repositório)
 
 ```
-powershell -ExecutionPolicy Bypass -File bancada\conferir.ps1 -IP 192.168.20.1
+powershell -ExecutionPolicy Bypass -File infra\bancada\conferir.ps1 -IP 192.168.20.1
 ```
 
 Senha: a do **admin_senai do R-FILIAL**. No fim ele mostra um resumo dos pings; o arquivo completo fica em
-`bancada\saida\conferir-192.168.20.1.txt`. O que tem de aparecer:
+`infra\bancada\saida\conferir-192.168.20.1.txt`. O que tem de aparecer:
 
 | No arquivo | Esperado |
 | --- | --- |
@@ -80,7 +80,7 @@ Senha: a do **admin_senai do R-FILIAL**. No fim ele mostra um resumo dos pings; 
 
 ## 7. Rádio (quando as antenas estiverem montadas)
 
-1. Configure as antenas pela página web delas, com a ficha `bancada\saida\RADIOS.txt`
+1. Configure as antenas pela página web delas, com a ficha `infra\bancada\saida\RADIOS.txt`
    (Matriz = Access Point PtP, Filial = Station, modo bridge, IPs 10.0.2.3 e 10.0.2.4, MTU 2000).
 2. Cabo de cada antena na **ether1** do seu roteador.
 3. Rode o `conferir.ps1` de novo: tem de aparecer **2 vizinhos OSPF** (sfp1 e ether1) e o PING-RADIO com 0% de
@@ -119,13 +119,13 @@ exemplo, conector sujo); a lógica pode ser vista em `/tool netwatch print detai
 Os modelos em `routeros/` já têm tudo o que foi corrigido na montagem real (fibra na sfp1, DHCP, MTU, OSPF v7).
 
 1. Notebook na **ether3** do roteador de fábrica (o notebook pega IP 192.168.88.x).
-2. Se a versão for 6.x (WinBox, aba Neighbors): `powershell -ExecutionPolicy Bypass -File bancada\atualizar_v7.ps1`
+2. Se a versão for 6.x (WinBox, aba Neighbors): `powershell -ExecutionPolicy Bypass -File infra\bancada\atualizar_v7.ps1`
    (Enter nas senhas; 2 a 3 minutos).
 3. Gere de novo os arquivos com as senhas (os da pasta `saida` de 14/10 são anteriores às correções):
-   `python bancada\gerar_configs.py` (Enter no IP do Zabbix e na comunidade; senhas do admin_senai; `n` nos switches).
-4. Teste sem aplicar: `powershell -ExecutionPolicy Bypass -File bancada\testar.ps1 -Equipamento R-MATRIZ`
+   `python infra\bancada\gerar_configs.py` (Enter no IP do Zabbix e na comunidade; senhas do admin_senai; `n` nos switches).
+4. Teste sem aplicar: `powershell -ExecutionPolicy Bypass -File infra\bancada\testar.ps1 -Equipamento R-MATRIZ`
    → tem de terminar com "No syntax errors found".
-5. Aplique: `powershell -ExecutionPolicy Bypass -File bancada\enviar_mikrotik.ps1 -Equipamento R-MATRIZ`
+5. Aplique: `powershell -ExecutionPolicy Bypass -File infra\bancada\enviar_mikrotik.ps1 -Equipamento R-MATRIZ`
    (Enter nas senhas; o roteador reinicia e se configura sozinho em ~1 minuto).
 6. Confira (parte 6).
 
@@ -135,5 +135,5 @@ Quando quiser o monitoramento: notebook na **ether3 do R-MATRIZ**, VM ligada (pl
 do cabo, IP fixo 192.168.10.50). Na VM: `cd /root/noc && /opt/noc-analista/bin/python validar_bancada.py`.
 E-mail e IA precisam de internet na VM (placa NAT); o monitoramento dos enlaces funciona sem internet.
 
-**Senhas:** os arquivos de `bancada\saida` contêm as senhas que você escolheu. Essa pasta nunca vai para o GitHub;
+**Senhas:** os arquivos de `infra\bancada\saida` contêm as senhas que você escolheu. Essa pasta nunca vai para o GitHub;
 apague-a quando o TCC terminar.
