@@ -327,6 +327,8 @@ O menu exibe apenas as funções permitidas; qualquer operação fora do perfil 
 
 ## 18. Alertas com análise por IA
 
+![Alertas e incidentes dos últimos 7 dias](img/alertas.jpg)
+
 Lista os problemas detectados nos últimos 7 dias em todos os equipamentos; cada alerta relevante recebe uma análise do Analista IA, estruturada em quatro partes:
 
 1. **Resumo** — descrição do ocorrido em uma frase.
@@ -337,6 +339,8 @@ Lista os problemas detectados nos últimos 7 dias em todos os equipamentos; cada
 Cada análise solicita a avaliação "foi útil?"; as respostas compõem o indicador de precisão da IA, exibido no topo da tela.
 
 ## 19. Chamados com histórico auditável
+
+![Chamados com livro encadeado por SHA-256](img/chamados.jpg)
 
 Chamados abertos por usuários e chamados gerados automaticamente pelo NOC são reunidos em uma única tela.
 
@@ -349,6 +353,8 @@ Cada registro é encadeado em um **livro por SHA-256**: contém o resumo criptog
 
 ## 20. Equipamentos e topologia ao vivo
 
+![Topologia ao vivo, sinal do rádio e estado dos equipamentos](img/equipamentos.jpg)
+
 Mostra o caminho em uso, o sinal do rádio e a disponibilidade de cada host monitorado pelo Zabbix.
 
 - **Caminho ativo:** R-MATRIZ → R-FILIAL com fibra (custo 10) e rádio (custo 100); o enlace em uso é destacado e animado.
@@ -359,6 +365,8 @@ Um equipamento é sinalizado em vermelho apenas quando não responde em nenhuma 
 
 ## 21. Manutenção, testes de failover e backups
 
+![Backups de configuração com comparação linha a linha](img/backups.jpg)
+
 Rotinas operacionais executadas e registradas pela própria plataforma.
 
 - **Manutenção programada:** agenda janelas de trabalho — o Zabbix continua medindo, mas as notificações ficam suspensas. A Filial é avisada pelo Telegram no agendamento e 1 h antes.
@@ -366,6 +374,8 @@ Rotinas operacionais executadas e registradas pela própria plataforma.
 - **Backups de configuração:** exportação diária às 3 h dos dois roteadores (`/export terse`, sem senhas). Gera nova versão apenas quando há alteração e compara versões linha a linha, com explicação pela IA. Cada versão pode ser baixada (`.rsc`) e a página traz o guia de restauração.
 
 ## 22. Conhecimento, usuários e assistente
+
+![Gestão de usuários, perfis e telas de TV](img/usuarios.jpg)
 
 Recursos que preservam o conhecimento da equipe e controlam o acesso à plataforma.
 
